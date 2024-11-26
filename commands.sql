@@ -207,3 +207,31 @@ CREATE TABLE SIGNIFICADO (
 -- Agregar restricción CHECK a la columna Tipo en la tabla SIGNIFICADO
 ALTER TABLE SIGNIFICADO
 ADD CONSTRAINT chk_tipo CHECK (Tipo IN ('Oc', 'Se'));
+
+-- Insertar datos de prueba en SIGNIFICADO
+INSERT INTO SIGNIFICADO (Tipo, Descripcion) VALUES 
+('Oc', 'Boda'),
+('Se', 'Amor'),
+('Oc', 'Cumpleaños'),
+('Se', 'Felicidad'),
+('Oc', 'Aniversario'),
+('Se', 'Tristeza'),
+('Oc', 'Graduación'),
+('Se', 'Amistad'),
+('Oc', 'Nacimiento'),
+('Se', 'Perdón'),
+('Oc', 'Despedida'),
+('Se', 'Agradecimiento'),
+('Oc', 'San Valentín'),
+('Se', 'Alegría'),
+('Oc', 'Funeral'),
+('Se', 'Paz'),
+('Oc', 'Despedida'),
+('Se', 'Perdón'),
+('Oc', 'San Valentín'),
+('Se', 'Alegría'),
+('Oc', 'Funeral');
+
+
+-- Verificar que los datos han sido insertados correctamente
+SELECT * FROM SIGNIFICADO;
