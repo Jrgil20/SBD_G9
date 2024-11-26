@@ -287,3 +287,18 @@ INSERT INTO ENLACES (Descripcion, IdColor, idCorte) VALUES
 -- Verificar que los datos han sido insertados correctamente
 SELECT * FROM ENLACES;
 
+-- create CATALOGOPRODUCTOR
+CREATE TABLE CATALOGOPRODUCTOR (
+  idProductora NUMERIC NOT NULL,
+  idCorte NUMERIC NOT NULL,
+  vbn NUMERIC NOT NULL,
+  nombrepropio VARCHAR NOT NULL,
+  descripcion VARCHAR NOT NULL,
+  PRIMARY KEY (idProductora, idCorte, vbn)
+);
+
+-- Agregar claves foráneas y restricción UNIQUE
+ALTER TABLE CATALOGOPRODUCTOR
+ADD CONSTRAINT FK1 FOREIGN KEY (idCorte) REFERENCES FLOR_CORTES(corteId),
+ADD CONSTRAINT FK2 FOREIGN KEY (idProductora) REFERENCES PRODUCTORAS(productoraId),
+ADD CONSTRAINT unique_vbn UNIQUE (vbn);
