@@ -86,7 +86,7 @@ CREATE SEQUENCE floristerias_seq START 1;
 
 -- create floristerias
 CREATE TABLE FLORISTERIAS (
-  idFloristeria NUMERIC PRIMARY KEY DEFAULT nextval('floristerias_seq'),
+  floristeriaId NUMERIC PRIMARY KEY DEFAULT nextval('floristerias_seq'),
   nombre VARCHAR NOT NULL,
   email VARCHAR NOT NULL,
   paginaWeb VARCHAR NOT NULL,
@@ -129,7 +129,7 @@ CREATE SEQUENCE cliente_natural_seq START 1;
 
 -- create CLIENTE_NATURAL
 CREATE TABLE CLIENTE_NATURAL (
-  idCliNatural NUMERIC PRIMARY KEY DEFAULT nextval('cliente_natural_seq'),
+  cliNaturalId NUMERIC PRIMARY KEY DEFAULT nextval('cliente_natural_seq'),
   documentoIdentidad NUMERIC NOT NULL,
   primernombre VARCHAR NOT NULL,
   primerApellido VARCHAR NOT NULL,
@@ -153,7 +153,7 @@ CREATE SEQUENCE cliente_juridico_seq START 1;
 
 -- create CLIENTE_JURIDICO
 CREATE TABLE CLIENTE_JURIDICO (
-  idCliJuridico NUMERIC PRIMARY KEY DEFAULT nextval('cliente_juridico_seq'),
+  cliJuridicoId NUMERIC PRIMARY KEY DEFAULT nextval('cliente_juridico_seq'),
   RIF NUMERIC NOT NULL UNIQUE,
   nombre VARCHAR NOT NULL
 );
@@ -174,8 +174,8 @@ CREATE SEQUENCE flor_cortes_seq START 1;
 
 -- create FLOR_CORTES
 CREATE TABLE FLOR_CORTES (
-  Id_Corte NUMERIC PRIMARY KEY DEFAULT nextval('flor_cortes_seq'),
-  "nombre Común" VARCHAR NOT NULL,
+  corteId NUMERIC PRIMARY KEY DEFAULT nextval('flor_cortes_seq'),
+  nombreComun VARCHAR NOT NULL,
   Descripcion VARCHAR NOT NULL,
   genero_especie VARCHAR NOT NULL,
   etimologia VARCHAR NOT NULL,
@@ -184,7 +184,7 @@ CREATE TABLE FLOR_CORTES (
 );
 
 -- Insertar datos de prueba en FLOR_CORTES
-INSERT INTO FLOR_CORTES ("nombre Común", Descripcion, genero_especie, etimologia, colores, temperatura) VALUES 
+INSERT INTO FLOR_CORTES (nombreComun, Descripcion, genero_especie, etimologia, colores, temperatura) VALUES 
 ('Rosa', 'Flor ornamental popular', 'Rosa gallica', 'De la palabra latina "rosa"', 'Rojo, Blanco, Amarillo, Rosa', 18),
 ('Tulipán', 'Flor bulbosa de primavera', 'Tulipa gesneriana', 'Del turco "tülbend" que significa turbante', 'Rojo, Amarillo, Púrpura, Blanco', 15),
 ('Orquídea', 'Flor exótica y diversa', 'Orchidaceae', 'Del griego "orchis" que significa testículo', 'Púrpura, Blanco, Rosa, Amarillo', 20),
@@ -199,7 +199,7 @@ CREATE SEQUENCE significado_seq START 1;
 
 -- create SIGNIFICADO
 CREATE TABLE SIGNIFICADO (
-  IdSignifi NUMERIC PRIMARY KEY DEFAULT nextval('significado_seq'),
+  SignificadoId NUMERIC PRIMARY KEY DEFAULT nextval('significado_seq'),
   Tipo VARCHAR NOT NULL,
   Descripcion VARCHAR NOT NULL
 );
@@ -241,7 +241,7 @@ CREATE SEQUENCE color_seq START 1;
 
 -- create COLOR
 CREATE TABLE COLOR (
-  IdColor NUMERIC PRIMARY KEY DEFAULT nextval('color_seq'),
+  ColorId NUMERIC PRIMARY KEY DEFAULT nextval('color_seq'),
   Nombre VARCHAR NOT NULL,
   Descripcion VARCHAR NOT NULL
 );
@@ -249,7 +249,7 @@ CREATE TABLE COLOR (
 -- Insertar datos de prueba en COLOR
 INSERT INTO COLOR (Nombre, Descripcion) VALUES 
 ('Blanco', 'Las flores blancas son magníficas, únicas, y no tradicionales. Son perfectas para una nueva relación o para decir a tu pareja lo perfecta que es para ti. También son las flores para expresar la pureza de tu amor. Buenas ideas son rosas u orquídeas blancas.'),
-('Rojo', ' El rojo es el color tradicional del amor y del romance. Una docena de rosas rojas es el clásico regalo romántico.'),
+('Rojo', 'El rojo es el color tradicional del amor y del romance. Una docena de rosas rojas es el clásico regalo romántico.'),
 ('Blanco y Rojo', 'Las flores rojas y blancas son una combinación llamativa y que encarnan todos los sentimientos y emociones de un verdadero vínculo.'),
 ('Rosado', 'Es el color femenino por excelencia. Las rosas rosadas son perfectas como regalo romántico, y representan la ingenuidad, bondad, ternura, buen sentimiento y ausencia de todo mal.'),
 ('Amarillo', 'Si quieres hacer las cosas más lentas es el color a enviar, el amarillo es el color de la amistad. Irradia siempre en todas partes y sobre toda las cosas, es el color de la luz.'),
@@ -262,3 +262,19 @@ INSERT INTO COLOR (Nombre, Descripcion) VALUES
 
 -- Verificar que los datos han sido insertados correctamente
 SELECT * FROM COLOR;
+
+-- create sequence for ENLACES
+CREATE SEQUENCE enlaces_seq START 1;
+
+-- create ENLACES
+CREATE TABLE ENLACES (
+  Idenlace NUMERIC PRIMARY KEY DEFAULT nextval('enlaces_seq'),
+  Descripcion VARCHAR NOT NULL,
+  IdColor NUMERIC,
+  idCorte NUMERIC
+);
+
+-- Agregar claves foráneas
+ALTER TABLE ENLACES
+ADD CONSTRAINT FK1 FOREIGN KEY (IdColor) REFERENCES COLOR(colorId),
+ADD CONSTRAINT FK2 FOREIGN KEY (idCorte) REFERENCES FLOR_CORTES(corteId);
