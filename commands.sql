@@ -1,6 +1,9 @@
+-- create sequence for PAIS
+CREATE SEQUENCE pais_seq START 1;
+
 -- create pais
 CREATE TABLE PAIS (
-  paisId SERIAL PRIMARY KEY,
+  paisId NUMERIC PRIMARY KEY DEFAULT nextval('pais_seq'),
   nombrePais TEXT NOT NULL,
   continente TEXT NOT NULL
 );
@@ -19,13 +22,16 @@ INSERT INTO PAIS (nombrePais, continente) VALUES ('Dinamarca', 'Eu');
 INSERT INTO PAIS (nombrePais, continente) VALUES ('Polonia', 'Eu');
 INSERT INTO PAIS (nombrePais, continente) VALUES ('España', 'Eu');
 
-select * from PAIS;
+SELECT * FROM PAIS;
+
+-- create sequence for SUBASTADORA
+CREATE SEQUENCE subastadora_seq START 1;
 
 -- create subastadora
 CREATE TABLE SUBASTADORA (
-  subastadoraId SERIAL PRIMARY KEY,
+  subastadoraId NUMERIC PRIMARY KEY DEFAULT nextval('subastadora_seq'),
   nombreSubastadora TEXT NOT NULL,
-  idPais INTEGER NOT NULL
+  idPais NUMERIC NOT NULL
 );
 
 -- add foreign key constraint
@@ -44,14 +50,17 @@ INSERT INTO SUBASTADORA (nombreSubastadora, idPais) VALUES
 ('Plantion', 2),
 ('Dutch Flower Group', 2);
 
-select * from SUBASTADORA;
+SELECT * FROM SUBASTADORA;
+
+-- create sequence for PRODUCTORAS
+CREATE SEQUENCE productoras_seq START 1;
 
 -- create productoras
 CREATE TABLE PRODUCTORAS (
-  productoraId SERIAL PRIMARY KEY,
+  productoraId NUMERIC PRIMARY KEY DEFAULT nextval('productoras_seq'),
   nombreProductora VARCHAR NOT NULL,
   paginaWeb VARCHAR NOT NULL,
-  idPais INTEGER NOT NULL
+  idPais NUMERIC NOT NULL
 );
 
 -- add foreign key constraint
@@ -60,7 +69,7 @@ ADD CONSTRAINT fk_idPais_productoras
 FOREIGN KEY (idPais)
 REFERENCES PAIS(paisId);
 
--- Obtener el paisId de Holanda ( se repite por que es para las productoras)
+-- Obtener el paisId de Holanda (se repite porque es para las productoras)
 SELECT paisId FROM PAIS WHERE nombrePais = 'Holanda';
 -- Supongamos que el paisId de Holanda es 2
 
@@ -70,15 +79,18 @@ INSERT INTO PRODUCTORAS (nombreProductora, paginaWeb, idPais) VALUES
 ('Van den bos', 'www.vandenbos.com', 2),
 ('Hilverda florist', 'www.hilverdaflorist.com', 2);
 
-select * from PRODUCTORAS;
+SELECT * FROM PRODUCTORAS;
+
+-- create sequence for FLORISTERIAS
+CREATE SEQUENCE floristerias_seq START 1;
 
 -- create floristerias
 CREATE TABLE FLORISTERIAS (
-  idFloristeria SERIAL PRIMARY KEY,
+  idFloristeria NUMERIC PRIMARY KEY DEFAULT nextval('floristerias_seq'),
   nombre VARCHAR NOT NULL,
   email VARCHAR NOT NULL,
   paginaWeb VARCHAR NOT NULL,
-  idPais INTEGER NOT NULL
+  idPais NUMERIC NOT NULL
 );
 
 -- add foreign key constraint
@@ -86,7 +98,6 @@ ALTER TABLE FLORISTERIAS
 ADD CONSTRAINT fk_idPais_floristerias
 FOREIGN KEY (idPais)
 REFERENCES PAIS(paisId);
-
 
 -- Obtener el paisId de cada país
 SELECT paisId FROM PAIS WHERE nombrePais = 'Alemania';
@@ -109,5 +120,3 @@ INSERT INTO FLORISTERIAS (nombre, email, paginaWeb, idPais) VALUES
 ('Poczta kwiatowa', 'biuro@kwiatowaprzesylka.pl', 'www.kwiatowaprzesylka.pl', 6),
 ('Herbs Barcelona', 'info@herbs.es', 'www.herbs.es', 7),
 ('Toscana Flores', 'contacto@toscanaflores.com', 'toscanaflores.com', 1);
-
-select * from FLORISTERIAS;
