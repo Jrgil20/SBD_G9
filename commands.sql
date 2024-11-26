@@ -123,3 +123,16 @@ INSERT INTO FLORISTERIAS (nombre, email, paginaWeb, idPais) VALUES
 
 
 select * from FLORISTERIAS;
+
+-- create sequence for CLIENTE_NATURAL
+CREATE SEQUENCE cliente_natural_seq START 1;
+
+-- create CLIENTE_NATURAL
+CREATE TABLE CLIENTE_NATURAL (
+  idCliNatural NUMERIC PRIMARY KEY DEFAULT nextval('cliente_natural_seq'),
+  documentoIdentidad NUMERIC NOT NULL,
+  primernombre VARCHAR NOT NULL,
+  primerApellido VARCHAR NOT NULL,
+  segundoApellido VARCHAR NOT NULL,
+  segundonombre VARCHAR
+);
