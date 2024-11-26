@@ -182,3 +182,14 @@ CREATE TABLE FLOR_CORTES (
   colores VARCHAR NOT NULL,
   temperatura NUMERIC NOT NULL
 );
+
+-- Insertar datos de prueba en FLOR_CORTES
+INSERT INTO FLOR_CORTES ("nombre Común", Descripcion, genero_especie, etimologia, colores, temperatura) VALUES 
+('Rosa', 'Flor ornamental popular', 'Rosa gallica', 'De la palabra latina "rosa"', 'Rojo, Blanco, Amarillo, Rosa', 18),
+('Tulipán', 'Flor bulbosa de primavera', 'Tulipa gesneriana', 'Del turco "tülbend" que significa turbante', 'Rojo, Amarillo, Púrpura, Blanco', 15),
+('Orquídea', 'Flor exótica y diversa', 'Orchidaceae', 'Del griego "orchis" que significa testículo', 'Púrpura, Blanco, Rosa, Amarillo', 20),
+('Girasol', 'Flor alta que sigue al sol', 'Helianthus annuus', 'Del griego "helios" que significa sol y "anthos" que significa flor', 'Amarillo', 25),
+('Lirio', 'Flor elegante y fragante', 'Lilium', 'Del griego "leirion"', 'Blanco, Rosa, Amarillo, Naranja', 22);
+
+-- Verificar que los datos han sido insertados correctamente
+SELECT * FROM FLOR_CORTES;
