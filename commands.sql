@@ -193,3 +193,17 @@ INSERT INTO FLOR_CORTES ("nombre Común", Descripcion, genero_especie, etimologi
 
 -- Verificar que los datos han sido insertados correctamente
 SELECT * FROM FLOR_CORTES;
+
+-- create sequence for SIGNIFICADO
+CREATE SEQUENCE significado_seq START 1;
+
+-- create SIGNIFICADO
+CREATE TABLE SIGNIFICADO (
+  IdSignifi NUMERIC PRIMARY KEY DEFAULT nextval('significado_seq'),
+  Tipo VARCHAR NOT NULL,
+  Descripcion VARCHAR NOT NULL
+);
+
+-- Agregar restricción CHECK a la columna Tipo en la tabla SIGNIFICADO
+ALTER TABLE SIGNIFICADO
+ADD CONSTRAINT chk_tipo CHECK (Tipo IN ('Oc', 'Se'));
