@@ -235,3 +235,30 @@ INSERT INTO SIGNIFICADO (Tipo, Descripcion) VALUES
 
 -- Verificar que los datos han sido insertados correctamente
 SELECT * FROM SIGNIFICADO;
+
+-- create sequence for COLOR
+CREATE SEQUENCE color_seq START 1;
+
+-- create COLOR
+CREATE TABLE COLOR (
+  IdColor NUMERIC PRIMARY KEY DEFAULT nextval('color_seq'),
+  Nombre VARCHAR NOT NULL,
+  Descripcion VARCHAR NOT NULL
+);
+
+-- Insertar datos de prueba en COLOR
+INSERT INTO COLOR (Nombre, Descripcion) VALUES 
+('Blanco', 'Las flores blancas son magníficas, únicas, y no tradicionales. Son perfectas para una nueva relación o para decir a tu pareja lo perfecta que es para ti. También son las flores para expresar la pureza de tu amor. Buenas ideas son rosas u orquídeas blancas.'),
+('Rojo', ' El rojo es el color tradicional del amor y del romance. Una docena de rosas rojas es el clásico regalo romántico.'),
+('Blanco y Rojo', 'Las flores rojas y blancas son una combinación llamativa y que encarnan todos los sentimientos y emociones de un verdadero vínculo.'),
+('Rosado', 'Es el color femenino por excelencia. Las rosas rosadas son perfectas como regalo romántico, y representan la ingenuidad, bondad, ternura, buen sentimiento y ausencia de todo mal.'),
+('Amarillo', 'Si quieres hacer las cosas más lentas es el color a enviar, el amarillo es el color de la amistad. Irradia siempre en todas partes y sobre toda las cosas, es el color de la luz.'),
+('Amarillo y Rojo', 'El amarillo simboliza su amistad actual y el rojo indica que deseas avanzar hacia una nueva relación.'),
+('Naranja', 'El naranja es un color fuerte, cálido que muestra la fascinación o intriga.'),
+('Melocotón', 'El Melocotón es un tono de naranja y rosa que representan a la vez el romanticismo de las rosas y el calor y la gratitud del anaranjado. Se trata de un color perfecto para mostrar amor y reconocimiento.'),
+('Verde', 'El verde es un color rico y fresco, perfecto para la pareja armoniosa. Es el color de la esperanza. Y puede expresar: naturaleza, juventud, deseo, descanso, equilibrio.'),
+('Azul', 'El Azul es el color de la paz y la estabilidad. Es fresco y relajante. Es el color del cielo y del mar. Es un color reservado y que parece que se aleja. Puede expresar confianza, reserva, armonía, afecto, amistad, fidelidad y amor.'),
+('Violeta', 'Es el color que indica ausencia de tensión. A menudo se le asocia con la nobleza, es un color perfecto para un amor de mucho tiempo.');
+
+-- Verificar que los datos han sido insertados correctamente
+SELECT * FROM COLOR;
