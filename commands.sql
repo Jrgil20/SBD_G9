@@ -136,3 +136,35 @@ CREATE TABLE CLIENTE_NATURAL (
   segundoApellido VARCHAR NOT NULL,
   segundonombre VARCHAR
 );
+
+-- Insertar datos de prueba en CLIENTE_NATURAL
+INSERT INTO CLIENTE_NATURAL (documentoIdentidad, primernombre, primerApellido, segundoApellido, segundonombre) VALUES 
+(12345678, 'Juan', 'Pérez', 'García', 'Carlos'),
+(87654321, 'María', 'López', 'Martínez', 'Isabel'),
+(11223344, 'Carlos', 'Hernández', 'Sánchez', 'Ricardo'),
+(44332211, 'Ana', 'Gómez', 'Fernández', NULL),
+(55667788, 'Luis', 'Díaz', 'Torres', 'Eduardo');
+
+-- Verificar que los datos han sido insertados correctamente
+SELECT * FROM CLIENTE_NATURAL;
+
+-- create sequence for CLIENTE_JURIDICO
+CREATE SEQUENCE cliente_juridico_seq START 1;
+
+-- create CLIENTE_JURIDICO
+CREATE TABLE CLIENTE_JURIDICO (
+  idCliJuridico NUMERIC PRIMARY KEY DEFAULT nextval('cliente_juridico_seq'),
+  RIF NUMERIC NOT NULL UNIQUE,
+  nombre VARCHAR NOT NULL
+);
+
+-- Insertar datos de prueba en CLIENTE_JURIDICO
+INSERT INTO CLIENTE_JURIDICO (RIF, nombre) VALUES 
+(123456789, 'Empresa A'),
+(987654321, 'Empresa B'),
+(112233445, 'Empresa C'),
+(554433221, 'Empresa D'),
+(667788990, 'Empresa E');
+
+-- Verificar que los datos han sido insertados correctamente
+SELECT * FROM CLIENTE_JURIDICO;
