@@ -3,7 +3,7 @@ CREATE SEQUENCE pais_seq START 1;
 
 -- create pais
 CREATE TABLE PAIS (
-  paisId NUMERIC PRIMARY KEY DEFAULT nextval('pais_seq'),
+  paisId NUMERIC(2) PRIMARY KEY DEFAULT nextval('pais_seq'),
   nombrePais TEXT NOT NULL,
   continente TEXT NOT NULL
 );
@@ -120,3 +120,6 @@ INSERT INTO FLORISTERIAS (nombre, email, paginaWeb, idPais) VALUES
 ('Poczta kwiatowa', 'biuro@kwiatowaprzesylka.pl', 'www.kwiatowaprzesylka.pl', 6),
 ('Herbs Barcelona', 'info@herbs.es', 'www.herbs.es', 7),
 ('Toscana Flores', 'contacto@toscanaflores.com', 'toscanaflores.com', 1);
+
+
+select * from FLORISTERIAS;
