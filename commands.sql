@@ -168,3 +168,17 @@ INSERT INTO CLIENTE_JURIDICO (RIF, nombre) VALUES
 
 -- Verificar que los datos han sido insertados correctamente
 SELECT * FROM CLIENTE_JURIDICO;
+
+-- create sequence for FLOR_CORTES
+CREATE SEQUENCE flor_cortes_seq START 1;
+
+-- create FLOR_CORTES
+CREATE TABLE FLOR_CORTES (
+  Id_Corte NUMERIC PRIMARY KEY DEFAULT nextval('flor_cortes_seq'),
+  "nombre Común" VARCHAR NOT NULL,
+  Descripcion VARCHAR NOT NULL,
+  genero_especie VARCHAR NOT NULL,
+  etimologia VARCHAR NOT NULL,
+  colores VARCHAR NOT NULL,
+  temperatura NUMERIC NOT NULL
+);
