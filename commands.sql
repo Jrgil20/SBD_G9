@@ -293,7 +293,7 @@ CREATE TABLE CATALOGOPRODUCTOR (
   idCorte NUMERIC NOT NULL,
   vbn NUMERIC NOT NULL,
   nombrepropio VARCHAR NOT NULL,
-  descripcion VARCHAR NOT NULL,
+  descripcion VARCHAR,
   PRIMARY KEY (idProductora, idCorte, vbn)
 );
 
@@ -302,3 +302,10 @@ ALTER TABLE CATALOGOPRODUCTOR
 ADD CONSTRAINT FK1 FOREIGN KEY (idCorte) REFERENCES FLOR_CORTES(corteId),
 ADD CONSTRAINT FK2 FOREIGN KEY (idProductora) REFERENCES PRODUCTORAS(productoraId),
 ADD CONSTRAINT unique_vbn UNIQUE (vbn);
+
+-- Insertar datos de prueba en CATALOGOPRODUCTOR
+INSERT INTO CATALOGOPRODUCTOR (idProductora, idCorte, vbn, nombrepropio, descripcion) VALUES 
+(1, 1, 1, 'Rosas', NULL);
+
+-- Verificar los datos insertados
+SELECT * FROM CATALOGOPRODUCTOR;
