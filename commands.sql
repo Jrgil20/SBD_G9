@@ -278,3 +278,12 @@ CREATE TABLE ENLACES (
 ALTER TABLE ENLACES
 ADD CONSTRAINT FK1 FOREIGN KEY (IdColor) REFERENCES COLOR(colorId),
 ADD CONSTRAINT FK2 FOREIGN KEY (idCorte) REFERENCES FLOR_CORTES(corteId);
+
+-- Insertar datos de prueba en ENLACES
+INSERT INTO ENLACES (Descripcion, IdColor, idCorte) VALUES 
+('rosas rojas es el clásico regalo romántico', 2, 2),
+('La rosa blanca es un símbolo de pureza, inocencia y amor puro', 2, 1);
+
+-- Verificar que los datos han sido insertados correctamente
+SELECT * FROM ENLACES;
+
