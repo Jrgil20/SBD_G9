@@ -309,3 +309,34 @@ INSERT INTO CATALOGOPRODUCTOR (idProductora, idCorte, vbn, nombrepropio, descrip
 
 -- Verificar los datos insertados
 SELECT * FROM CATALOGOPRODUCTOR;
+
+-- Crear la tabla
+CREATE TABLE CONTRATO (
+  idSubastadora NUMERIC NOT NULL,
+  idProductora NUMERIC NOT NULL,
+  nContrato NUMERIC NOT NULL,
+  fechaemision DATE NOT NULL,
+  porcentajeProduccion NUMERIC(3,2) NOT NULL,
+  tipoProductor VARCHAR NOT NULL,
+  idrenovS NUMERIC,
+  idrenovP NUMERIC,
+  ren_nContrato NUMERIC,
+  cancelado DATE,
+  PRIMARY KEY (idSubastadora, idProductora, nContrato)
+);
+
+-- Agregar claves foráneas y check
+ALTER TABLE CONTRATO
+ADD CONSTRAINT fk_idSubastadora_contrato FOREIGN KEY (idSubastadora) REFERENCES SUBASTADORA (subastadoraId),
+ADD CONSTRAINT fk_idProductora_contrato FOREIGN KEY (idProductora) REFERENCES PRODUCTORAS (productoraId),
+ADD CONSTRAINT fk_renovacion_contrato FOREIGN KEY (idrenovS, idrenovP, ren_nContrato) REFERENCES CONTRATO(idSubastadora, idProductora, nContrato),
+ADD CONSTRAINT check_tipoProductor CHECK (tipoProductor IN ('Ca', 'Cb', 'Cc', 'Cg', 'Ka'));
+
+-- Insertar datos de prueba en la tabla CONTRATO
+INSERT INTO CONTRATO (idSubastadora, idProductora, nContrato, fechaemision, porcentajeProduccion, tipoProductor, idrenovS, idrenovP, ren_nContrato, cancelado) VALUES
+(1, 1, 1001, '2023-01-01', 0.15, 'Ca', NULL, NULL, NULL, NULL),
+(2, 2, 1002, '2023-02-01', 0.20, 'Cb', NULL, NULL, NULL, NULL),
+(3, 3, 1003, '2023-03-01', 0.25, 'Cc', NULL, NULL, NULL, NULL);
+
+-- Verificar los datos insertados
+SELECT * FROM CONTRATO;
