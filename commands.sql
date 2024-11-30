@@ -1,9 +1,9 @@
 -- create sequence for PAIS
-CREATE SEQUENCE pais_seq START 1;
+CREATE SEQUENCE pais_seq START WITH 1 INCREMENT BY 1 MAXVALUE 193;
 
 -- create pais
 CREATE TABLE PAIS (
-  paisId NUMERIC(2) PRIMARY KEY DEFAULT nextval('pais_seq'),
+  paisId NUMERIC(3) PRIMARY KEY DEFAULT nextval('pais_seq'),
   nombrePais TEXT NOT NULL,
   continente TEXT NOT NULL
 );
@@ -25,7 +25,7 @@ INSERT INTO PAIS (nombrePais, continente) VALUES ('España', 'Eu');
 SELECT * FROM PAIS;
 
 -- create sequence for SUBASTADORA
-CREATE SEQUENCE subastadora_seq START 1;
+CREATE SEQUENCE subastadora_seq START WITH 1 INCREMENT BY 1;
 
 -- create subastadora
 CREATE TABLE SUBASTADORA (
@@ -53,7 +53,7 @@ INSERT INTO SUBASTADORA (nombreSubastadora, idPais) VALUES
 SELECT * FROM SUBASTADORA;
 
 -- create sequence for PRODUCTORAS
-CREATE SEQUENCE productoras_seq START 1;
+CREATE SEQUENCE productoras_seq START WITH 1 INCREMENT BY 1;
 
 -- create productoras
 CREATE TABLE PRODUCTORAS (
@@ -82,7 +82,7 @@ INSERT INTO PRODUCTORAS (nombreProductora, paginaWeb, idPais) VALUES
 SELECT * FROM PRODUCTORAS;
 
 -- create sequence for FLORISTERIAS
-CREATE SEQUENCE floristerias_seq START 1;
+CREATE SEQUENCE floristerias_seq START WITH 1 INCREMENT BY 1;
 
 -- create floristerias
 CREATE TABLE FLORISTERIAS (
@@ -125,7 +125,7 @@ INSERT INTO FLORISTERIAS (nombre, email, paginaWeb, idPais) VALUES
 select * from FLORISTERIAS;
 
 -- create sequence for CLIENTE_NATURAL
-CREATE SEQUENCE cliente_natural_seq START 1;
+CREATE SEQUENCE cliente_natural_seq START WITH 1 INCREMENT BY 1;
 
 -- create CLIENTE_NATURAL
 CREATE TABLE CLIENTE_NATURAL (
@@ -149,7 +149,7 @@ INSERT INTO CLIENTE_NATURAL (documentoIdentidad, primernombre, primerApellido, s
 SELECT * FROM CLIENTE_NATURAL;
 
 -- create sequence for CLIENTE_JURIDICO
-CREATE SEQUENCE cliente_juridico_seq START 1;
+CREATE SEQUENCE cliente_juridico_seq START WITH 1 INCREMENT BY 1;
 
 -- create CLIENTE_JURIDICO
 CREATE TABLE CLIENTE_JURIDICO (
@@ -170,7 +170,7 @@ INSERT INTO CLIENTE_JURIDICO (RIF, nombre) VALUES
 SELECT * FROM CLIENTE_JURIDICO;
 
 -- create sequence for FLOR_CORTES
-CREATE SEQUENCE flor_cortes_seq START 1;
+CREATE SEQUENCE flor_cortes_seq START WITH 1 INCREMENT BY 1;
 
 -- create FLOR_CORTES
 CREATE TABLE FLOR_CORTES (
@@ -195,7 +195,7 @@ INSERT INTO FLOR_CORTES (nombreComun, Descripcion, genero_especie, etimologia, c
 SELECT * FROM FLOR_CORTES;
 
 -- create sequence for SIGNIFICADO
-CREATE SEQUENCE significado_seq START 1;
+CREATE SEQUENCE significado_seq START WITH 1 INCREMENT BY 1;
 
 -- create SIGNIFICADO
 CREATE TABLE SIGNIFICADO (
@@ -237,7 +237,7 @@ INSERT INTO SIGNIFICADO (Tipo, Descripcion) VALUES
 SELECT * FROM SIGNIFICADO;
 
 -- create sequence for COLOR
-CREATE SEQUENCE color_seq START 1;
+CREATE SEQUENCE color_seq START WITH 1 INCREMENT BY 1;
 
 -- create COLOR
 CREATE TABLE COLOR (
@@ -264,7 +264,7 @@ INSERT INTO COLOR (Nombre, Descripcion) VALUES
 SELECT * FROM COLOR;
 
 -- create sequence for ENLACES
-CREATE SEQUENCE enlaces_seq START 1;
+CREATE SEQUENCE enlaces_seq START WITH 1 INCREMENT BY 1;
 
 -- create ENLACES
 CREATE TABLE ENLACES (
