@@ -340,3 +340,322 @@ INSERT INTO CONTRATO (idSubastadora, idProductora, nContrato, fechaemision, porc
 
 -- Verificar los datos insertados
 SELECT * FROM CONTRATO;
+
+-- Crear la tabla
+CREATE TABLE CANTIDAD_OFRECIDA (
+  idSubastadora NUMERIC NOT NULL,
+  idProductora NUMERIC NOT NULL,
+  contratoN NUMERIC NOT NULL,
+  fechaEmisionContrato DATE NOT NULL,
+  idProductora2 NUMERIC NOT NULL,
+  idFlorCorte NUMERIC NOT NULL,
+  vnbFlor NUMERIC NOT NULL,
+  cantidad NUMERIC NOT NULL,
+  PRIMARY KEY (idSubastadora, idProductora, nContrato, idProductora2, idFlorCorte, vnbFlor)
+  
+);
+-- Agregar claves foráneas
+ALTER TABLE CANTIDAD_OFRECIDA
+ADD CONSTRAINT fk_idSubastadora_cantidad_ofrecida FOREIGN KEY (idSubastadora) REFERENCES SUBASTADORA (subastadoraId),
+ADD CONSTRAINT fk_idProductora_cantidad_ofrecida FOREIGN KEY (idProductora) REFERENCES PRODUCTORAS (productoraId),
+ADD CONSTRAINT fk_ContratoN_cantidad_ofrecida FOREIGN KEY (contratoN) REFERENCES CONTRATO (nContrato),
+ADD CONSTRAINT fk_fechaEmisionContrato_cantidad_ofrecida FOREIGN KEY (fechaEmisionContrato) REFERENCES CONTRATO (fechaemision),
+ADD CONSTRAINT fk_idProductora2_cantidad_ofrecida FOREIGN KEY (idProductora2) REFERENCES PRODUCTORAS (productoraId),
+ADD CONSTRAINT fk_idFlorCorte_cantidad_ofrecida FOREIGN KEY (idFlorCorte) REFERENCES FLOR_CORTES (corteId),
+ADD CONSTRAINT fk_vnbFlor_cantidad_ofrecida FOREIGN KEY (vnbFlor) REFERENCES CATALOGOPRODUCTOR (vbn);
+
+-- Insertar datos de prueba en la tabla CANTIDAD_OFRECIDA
+--INSERT INTO CANTIDAD_OFRECIDA (idSubastadora, idProductora, contratoN, fechaEmisionContrato, idProductora2, vnbFlor, cantidad) VALUES
+--(1, 1, 1001, '2023-01-01', 1, 1, 100),
+--(2, 2, 1002, '2023-02-01', 2, 1, 200),
+--(3, 3, 1003, '2023-03-01', 3, 1, 300);
+
+-- Verificar los datos insertados
+--SELECT * FROM CANTIDAD_OFRECIDA;
+
+-- Crear la tabla
+CREATE TABLE PAGOS(
+  idSubastadora NUMERIC NOT NULL,
+  idProductora NUMERIC NOT NULL,
+  contratoN NUMERIC NOT NULL,
+  idPago NUMERIC NOT NULL,
+  fechaPago DATE NOT NULL,
+  montoComision NUMERIC NOT NULL,
+  tipo VARCHAR NOT NULL,
+  PRIMARY KEY (idSubastadora, idProductora, contratoN, idPago)
+);
+
+-- Agregar claves foráneas y check
+ALTER TABLE PAGOS
+ADD CONSTRAINT fk_idSubastadora_pagos FOREIGN KEY (idSubastadora) REFERENCES SUBASTADORA (subastadoraId),
+ADD CONSTRAINT fk_idProductora_pagos FOREIGN KEY (idProductora) REFERENCES PRODUCTORAS (productoraId),
+ADD CONSTRAINT fk_contratoN_pagos FOREIGN KEY (contratoN) REFERENCES CONTRATO (nContrato),
+ADD CONSTRAINT check_tipoProductor CHECK (tipoProductor IN ('membresia', 'pago','multa'));
+
+-- Insertar datos de prueba en la tabla PAGOS
+
+
+-- Verificar los datos insertados
+
+
+-- Crear la tabla
+CREATE TABLE CONTACTOS(
+  idFloristeria NUMERIC NOT NULL,
+  idContacto NUMERIC NOT NULL,
+  documentoIdentidad NUMERIC NOT NULL,
+  primerNombre VARCHAR NOT NULL,
+  primerApellido VARCHAR NOT NULL,
+  segundoApellido VARCHAR Not Null,
+  segundoNombre VARCHAR,
+  PRIMARY KEY (idFloristeria, idContacto)
+);
+
+-- Agregar claves foráneas
+ALTER TABLE CONTACTOS
+ADD CONSTRAINT fk_idFloristeria_contactos FOREIGN KEY (idFloristeria) REFERENCES FLORISTERIAS (floristeriaId),
+
+-- Insertar datos de prueba en la tabla CONTACTOS
+
+
+-- Verificar los datos insertados
+
+
+-- Crear la tabla
+CREATE TABLE AFILIACION(
+  idFloristeria NUMERIC NOT NULL,
+  idSubastadora NUMERIC NOT NULL,
+  PRIMARY KEY (idFloristeria, idSubastadora)
+);
+
+-- Agregar claves foráneas
+ALTER TABLE AFILIACION
+ADD CONSTRAINT fk_idFloristeria_afiliacion FOREIGN KEY (idFloristeria) REFERENCES FLORISTERIAS (floristeriaId),
+ADD CONSTRAINT fk_idSubastadora_afiliacion FOREIGN KEY (idSubastadora) REFERENCES SUBASTADORA (subastadoraId);
+
+-- Insertar datos de prueba en la tabla AFILIACION
+
+
+-- Verificar los datos insertados
+
+
+-- Crear la tabla
+CREATE TABLE FACTURA(
+  idFloristeria NUMERIC NOT NULL,
+  idSubastadora NUMERIC NOT NULL,
+  idFactura NUMERIC NOT NULL,
+  fechaEmision DATE NOT NULL,
+  montoTotal NUMERIC NOT NULL,
+  numeroEnvio NUMERIC,
+  PRIMARY KEY (idFloristeria, idSubastadora, idFactura)
+);
+
+-- Agregar claves foráneas
+ALTER TABLE FACTURA
+ADD CONSTRAINT fk_idFloristeria_factura FOREIGN KEY (idFloristeria) REFERENCES FLORISTERIAS (floristeriaId),
+ADD CONSTRAINT fk_idSubastadora_factura FOREIGN KEY (idSubastadora) REFERENCES SUBASTADORA (subastadoraId);
+
+-- Insertar datos de prueba en la tabla FACTURA
+
+
+-- Verificar los datos insertados
+
+
+-- Crear la tabla
+CREATE TABLE LOTE(
+  idSubastadora NUMERIC NOT NULL,
+  idProductora NUMERIC NOT NULL,
+  nContrato NUMERIC NOT NULL,
+  idProductora2 NUMERIC NOT NULL,
+  idCorteFlor NUMERIC NOT NULL,
+  vnbFlor NUMERIC NOT NULL,
+  idCorteFlor NUMERIC NOT NULL,
+  idFactura NUMERIC NOT NULL,
+  bi NUMERIC NOT NULL,
+  cantidad NUMERIC NOT NULL,
+  precioInicial NUMERIC NOT NULL,
+  precioFinal NUMERIC NOT NULL,
+  PRIMARY KEY (idSubastadora, idProductora, nContrato, idProductora2, idCorteFlor, vnbFlor, idCorteFlor, idFactura)
+)
+
+-- Agregar claves foráneas
+ALTER TABLE LOTE
+ADD CONSTRAINT fk_idSubastadora_lote FOREIGN KEY (idSubastadora) REFERENCES SUBASTADORA (subastadoraId),
+ADD CONSTRAINT fk_idProductora_lote FOREIGN KEY (idProductora) REFERENCES PRODUCTORAS (productoraId),
+ADD CONSTRAINT fk_nContrato_lote FOREIGN KEY (nContrato) REFERENCES CONTRATO (nContrato),
+ADD CONSTRAINT fk_idProductora2_lote FOREIGN KEY (idProductora2) REFERENCES PRODUCTORAS (productoraId),
+ADD CONSTRAINT fk_idCorteFlor_lote FOREIGN KEY (idCorteFlor) REFERENCES FLOR_CORTES (corteId),
+ADD CONSTRAINT fk_vnbFlor_lote FOREIGN KEY (vnbFlor) REFERENCES CATALOGOPRODUCTOR (vbn),
+ADD CONSTRAINT fk_idCorteFlor_lote FOREIGN KEY (idCorteFlor) REFERENCES FLOR_CORTES (corteId),
+ADD CONSTRAINT fk_idFactura_lote FOREIGN KEY (idFactura) REFERENCES FACTURA (idFactura);
+
+
+-- Insertar datos de prueba en la tabla LOTE
+
+
+-- Verificar los datos insertados
+
+
+-- Crear la tabla
+CREATE TABLE CATALOGO_FLORISTERIA(
+  idFloristeria NUMERIC NOT NULL,
+  idCorteFlor NUMERIC NOT NULL,
+  idColor NUMERIC NOT NULL,
+  codigo NUMERIC NOT NULL,
+  nombrePropio VARCHAR NOT NULL,
+  descripcion VARCHAR,
+  PRIMARY KEY (idFloristeria, idCorteFlor, idCodigo,codigo)
+  
+);
+
+-- Agregar claves foráneas
+ALTER TABLE CATALOGO_FLORISTERIA
+ADD CONSTRAINT fk_idFloristeria_catalogofloristeria FOREIGN KEY (idFloristeria) REFERENCES FLORISTERIAS (floristeriaId),
+ADD CONSTRAINT fk_idCorteFlor_catalogofloristeria FOREIGN KEY (idCorteFlor) REFERENCES FLOR_CORTES (corteId);
+ADD CONSTRAINT fk_idCodigo_catalogofloristeria FOREIGN KEY (idCodigo) REFERENCES COLOR (colorId);
+
+-- Insertar datos de prueba en la tabla CATALOGO_FLORISTERIA
+
+
+-- Verificar los datos insertados
+
+
+-- Crear la tabla
+CREATE HISTORICO_PRECIO_FLOR(
+  idFloristeria NUMERIC NOT NULL,
+  idCorteFlor NUMERIC NOT NULL,
+  idColor NUMERIC NOT NULL,
+  codigoCatalogo NUMERIC NOT NULL, 
+  fechaInicio DATE NOT NULL,
+  fechaFin DATE,
+  precio NUMERIC NOT NULL,
+  tamanoTallo NUMERIC NOT NULL,
+  PRIMARY KEY (idFloristeria, idCorteFlor, idColor, fecha)
+);
+
+-- Agregar claves foráneas
+ALTER TABLE HISTORICO_PRECIO_FLOR
+ADD CONSTRAINT fk_idFloristeria_historicoPrecioFlor FOREIGN KEY (idFloristeria) REFERENCES FLORISTERIAS (floristeriaId),
+ADD CONSTRAINT fk_idCorteFlor_historicoPrecioFlor FOREIGN KEY (idCorteFlor) REFERENCES FLOR_CORTES (corteId),
+ADD CONSTRAINT fk_idColor_historicoPrecioFlor FOREIGN KEY (idColor) REFERENCES COLOR (colorId);
+ADD Constraint fk_codigoCatalogo_historicoPrecioFlor FOREIGN KEY (codigoCatalogo) REFERENCES CATALOGO_FLORISTERIA (codigo);
+
+-- Insertar datos de prueba en la tabla HISTORICO_PRECIO_FLOR
+
+
+-- Verificar los datos insertados
+
+
+-- Crear la tabla
+CREATE TABLE DETALLE_BOUQUET(
+  idFloristeria NUMERIC NOT NULL,
+  idCorteFlor NUMERIC NOT NULL,
+  idColor NUMERIC NOT NULL,
+  codigo NUMERIC NOT NULL,
+  idBouquet NUMERIC NOT NULL,
+  cantidad NUMERIC NOT NULL,
+  talloTamano NUMERIC,
+  descripcion VARCHAR,
+  PRIMARY KEY (idFloristeria, idCorteFlor, idColor, codigo, idBouquet)
+);
+
+-- Agregar claves foráneas
+ALTER TABLE DETALLE_BOUQUET
+ADD CONSTRAINT fk_idFloristeria_detalleBouquet FOREIGN KEY (idFloristeria) REFERENCES FLORISTERIAS (floristeriaId),
+ADD CONSTRAINT fk_idCorteFlor_detalleBouquet FOREIGN KEY (idCorteFlor) REFERENCES FLOR_CORTES (corteId),
+ADD CONSTRAINT fk_idColor_detalleBouquet FOREIGN KEY (idColor) REFERENCES COLOR (colorId);
+ADD CONSTRAINT fk_codigo_detalleBouquet FOREIGN KEY (codigo) REFERENCES CATALOGO_FLORISTERIA (codigo);
+
+
+-- Insertar datos de prueba en la tabla DETALLE_BOUQUET
+
+
+
+-- Verificar los datos insertados
+
+
+-- Crear la tabla 
+CREATE FACTURA_FINAL(
+  idFloristeria NUMERIC NOT NULL,
+  idFactura NUMERIC NOT NULL,
+  fechaEmision DATE NOT NULL,
+  montoTotal NUMERIC NOT NULL,
+  idClienteNatural NUMERIC,
+  idClienteJuridico NUMERIC,
+  PRIMARY KEY (idFloristeria, idSubastadora, idFactura)
+);
+
+
+-- Agregar claves foráneas
+ALTER TABLE FACTURA_FINAL
+ADD CONSTRAINT fk_idFloristeria_facturaFinal FOREIGN KEY (idFloristeria) REFERENCES FLORISTERIAS (floristeriaId),
+ADD CONSTRAINT fk_idCLienteNAatural_facturaFinal FOREIGN KEY (idClienteNatural) REFERENCES CLIENTE_NATURAL (cliNaturalId),
+ADD CONSTRAINT fk_idClienteJuridico_facturaFinal FOREIGN KEY (idClienteJuridico) REFERENCES CLIENTE_JURIDICO (cliJuridicoId);
+
+
+
+-- Insertar datos de prueba en la tabla FACTURA_FINAL
+
+
+-- Verificar los datos insertados
+
+
+-- Crear la tabla
+CREATE TABLE DETALLE_FACTURA(
+  idFloristeria NUMERIC NOT NULL,
+  idFactura NUMERIC NOT NULL,
+  idDetalle NUMERIC NOT NULL,
+  idCorteFlor NUMERIC NOT NULL,
+  idColor NUMERIC NOT NULL,
+  codigoCatalogo NUMERIC NOT NULL,
+  idBouquet NUMERIC,
+  cantidad NUMERIC NOT NULL,
+  valoracionPrecio NUMERIC,
+  valorancionCalidad NUMERIC,
+  valoracionPromedio NUMERIC,
+  detalles VARCHAR,
+  PRIMARY KEY (idFloristeria, idFactura,idDetalle)
+);
+
+-- Agregar claves foráneas
+ALTER TABLE DETALLE_FACTURA
+ADD CONSTRAINT fk_idFloristeria_detalleFactura FOREIGN KEY (idFloristeria) REFERENCES FLORISTERIAS (floristeriaId),
+ADD CONSTRAINT fk_idFactura_detalleFactura FOREIGN KEY (idFactura) REFERENCES FACTURA_FINAL (idFactura),
+ADD CONSTRAINT fk_idCorteFlor_detalleFactura FOREIGN KEY (idCorteFlor) REFERENCES FLOR_CORTES (corteId),
+ADD CONSTRAINT fk_idColor_detalleFactura FOREIGN KEY (idColor) REFERENCES COLOR (colorId);
+ADD CONSTRAINT fk_codigoCatalogo_detalleFactura FOREIGN KEY (codigoCatalogo) REFERENCES CATALOGO_FLORISTERIA (codigo);
+ADD CONSTRAINT fk_idBouquet_detalleFactura FOREIGN KEY (idBouquet) REFERENCES DETALLE_BOUQUET (idBouquet);
+
+-- Insertar datos de prueba en la tabla DETALLE_FACTURA
+
+
+-- Verificar los datos insertados
+
+
+
+-- Crear la tabla
+CREATE TABLE TELEFONOS(
+  codPais NUMERIC NOT NULL,
+  codArea NUMERIC NOT NULL,
+  numero NUMERIC NOT NULL,
+  idSubastadora NUMERIC,
+  idProdcutora NUMERIC,
+  idFloristeria NUMERIC,
+  PRIMARY KEY (codPais, codArea, numero)
+);
+
+-- Agregar claves foráneas
+ALTER TABLE TELEFONOS
+ADD CONSTRAINT fk_idSubastadora_telefonos FOREIGN KEY (idSubastadora) REFERENCES SUBASTADORA (subastadoraId),
+ADD CONSTRAINT fk_idProductora_telefonos FOREIGN KEY (idProductora) REFERENCES PRODUCTORAS (productoraId),
+ADD CONSTRAINT fk_idFloristeria_telefonos FOREIGN KEY (idFloristeria) REFERENCES FLORISTERIAS (floristeriaId);
+
+-- Insertar datos de prueba en la tabla TELEFONOS
+
+
+-- Verificar los datos insertados
+
+
+
+
+
+
