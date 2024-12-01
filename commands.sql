@@ -351,18 +351,16 @@ CREATE TABLE CANTIDAD_OFRECIDA (
   idFlorCorte NUMERIC NOT NULL,
   vnbFlor NUMERIC NOT NULL,
   cantidad NUMERIC NOT NULL,
-  PRIMARY KEY (idSubastadora, idProductora, nContrato, idProductora2, idFlorCorte, vnbFlor)
-  
+  PRIMARY KEY (idSubastadora, idProductora, contratoN, idProductora2, idFlorCorte, vnbFlor)
 );
--- Agregar claves foráneas
+
+-- Agregar claves foráneas compuestas
 ALTER TABLE CANTIDAD_OFRECIDA
-ADD CONSTRAINT fk_idSubastadora_cantidad_ofrecida FOREIGN KEY (idSubastadora) REFERENCES SUBASTADORA (subastadoraId),
-ADD CONSTRAINT fk_idProductora_cantidad_ofrecida FOREIGN KEY (idProductora) REFERENCES PRODUCTORAS (productoraId),
-ADD CONSTRAINT fk_ContratoN_cantidad_ofrecida FOREIGN KEY (contratoN) REFERENCES CONTRATO (nContrato),
-ADD CONSTRAINT fk_fechaEmisionContrato_cantidad_ofrecida FOREIGN KEY (fechaEmisionContrato) REFERENCES CONTRATO (fechaemision),
-ADD CONSTRAINT fk_idProductora2_cantidad_ofrecida FOREIGN KEY (idProductora2) REFERENCES PRODUCTORAS (productoraId),
-ADD CONSTRAINT fk_idFlorCorte_cantidad_ofrecida FOREIGN KEY (idFlorCorte) REFERENCES FLOR_CORTES (corteId),
-ADD CONSTRAINT fk_vnbFlor_cantidad_ofrecida FOREIGN KEY (vnbFlor) REFERENCES CATALOGOPRODUCTOR (vbn);
+ADD CONSTRAINT fk_Contrato_CantidadOfrecida FOREIGN KEY (idSubastadora, idProductora, contratoN, fechaEmisionContrato) 
+REFERENCES CONTRATO (subastadoraId, productoraId, nContrato, fechaemision),
+ADD CONSTRAINT fk_composite_2 FOREIGN KEY (idProductora2, idFlorCorte, vnbFlor) 
+REFERENCES CATALOGOPRODUCTOR (productoraId, corteId, vbn);
+
 
 -- Insertar datos de prueba en la tabla CANTIDAD_OFRECIDA
 --INSERT INTO CANTIDAD_OFRECIDA (idSubastadora, idProductora, contratoN, fechaEmisionContrato, idProductora2, vnbFlor, cantidad) VALUES
