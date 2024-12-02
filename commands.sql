@@ -449,24 +449,31 @@ SELECT * FROM AFILIACION;
 
 -- Crear la tabla
 CREATE TABLE FACTURA(
-  idFloristeria NUMERIC NOT NULL,
-  idSubastadora NUMERIC NOT NULL,
-  idFactura NUMERIC NOT NULL,
+  facturaId NUMERIC NOT NULL,
+  idAfiliacionFloristeria NUMERIC NOT NULL,
+  idAfiliacionSubastadora NUMERIC NOT NULL,
   fechaEmision DATE NOT NULL,
   montoTotal NUMERIC NOT NULL,
   numeroEnvio NUMERIC,
-  PRIMARY KEY (idFloristeria, idSubastadora, idFactura)
+  PRIMARY KEY (facturaId)
 );
 
 -- Agregar claves foráneas
 ALTER TABLE FACTURA
-ADD CONSTRAINT fk_idFloristeria_factura FOREIGN KEY (idFloristeria) REFERENCES FLORISTERIAS (floristeriaId),
-ADD CONSTRAINT fk_idSubastadora_factura FOREIGN KEY (idSubastadora) REFERENCES SUBASTADORA (subastadoraId);
+ADD CONSTRAINT fk_afiliacion_factura FOREIGN KEY (idAfiliacionFloristeria,idAfiliacionSubastadora) REFERENCES AFILIACION (idFloristeria, idSubastadora);
 
 -- Insertar datos de prueba en la tabla FACTURA
 
 
 -- Verificar los datos insertados
+-- Insertar datos de prueba en la tabla FACTURA
+INSERT INTO FACTURA (facturaId, idAfiliacionFloristeria, idAfiliacionSubastadora, fechaEmision, montoTotal, numeroEnvio) VALUES
+(1, 1, 1, '2023-04-01', 500.00, 12345),
+(2, 2, 2, '2023-05-01', 750.00, 12346),
+(3, 3, 3, '2023-06-01', 1000.00, 12347);
+
+-- Verificar los datos insertados
+SELECT * FROM FACTURA;
 
 
 -- Crear la tabla
