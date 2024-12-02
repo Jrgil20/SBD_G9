@@ -512,26 +512,32 @@ SELECT * FROM LOTE;
 -- Crear la tabla
 CREATE TABLE CATALOGO_FLORISTERIA(
   idFloristeria NUMERIC NOT NULL,
+  codigo NUMERIC NOT NULL,
   idCorteFlor NUMERIC NOT NULL,
   idColor NUMERIC NOT NULL,
-  codigo NUMERIC NOT NULL,
   nombrePropio VARCHAR NOT NULL,
   descripcion VARCHAR,
-  PRIMARY KEY (idFloristeria, idCorteFlor, idCodigo,codigo)
-  
+  PRIMARY KEY (idFloristeria,codigo)
 );
 
 -- Agregar claves foráneas
 ALTER TABLE CATALOGO_FLORISTERIA
 ADD CONSTRAINT fk_idFloristeria_catalogofloristeria FOREIGN KEY (idFloristeria) REFERENCES FLORISTERIAS (floristeriaId),
-ADD CONSTRAINT fk_idCorteFlor_catalogofloristeria FOREIGN KEY (idCorteFlor) REFERENCES FLOR_CORTES (corteId);
-ADD CONSTRAINT fk_idCodigo_catalogofloristeria FOREIGN KEY (idCodigo) REFERENCES COLOR (colorId);
+ADD CONSTRAINT fk_idCorteFlor_catalogofloristeria FOREIGN KEY (idCorteFlor) REFERENCES FLOR_CORTES (corteId),
+ADD CONSTRAINT fk_idCodigo_catalogofloristeria FOREIGN KEY (idColor) REFERENCES COLOR (colorId);
 
 -- Insertar datos de prueba en la tabla CATALOGO_FLORISTERIA
 
 
 -- Verificar los datos insertados
+INSERT INTO CATALOGO_FLORISTERIA (idFloristeria, codigo, idCorteFlor, idColor, nombrePropio, descripcion) VALUES
+(1, 1, 1, 2, 'Rosa Roja', 'Rosa roja clásica para ocasiones románticas'),
+(2, 2, 2, 3, 'Tulipán Amarillo', 'Tulipán amarillo brillante para alegrar el día'),
+(3, 3, 3, 4, 'Orquídea Púrpura', 'Orquídea exótica y elegante en color púrpura'),
+(4, 4, 4, 5, 'Girasol', 'Girasol alto y brillante que sigue al sol'),
+(5, 5, 5, 6, 'Lirio Blanco', 'Lirio blanco elegante y fragante para cualquier ocasión');
 
+SELECT * FROM CATALOGO_FLORISTERIA;
 
 -- Crear la tabla
 CREATE HISTORICO_PRECIO_FLOR(
