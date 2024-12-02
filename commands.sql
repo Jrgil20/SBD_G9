@@ -412,7 +412,7 @@ CREATE TABLE CONTACTOS(
 
 -- Agregar claves foráneas
 ALTER TABLE CONTACTOS
-ADD CONSTRAINT fk_idFloristeria_contactos FOREIGN KEY (idFloristeria) REFERENCES FLORISTERIAS (floristeriaId),
+ADD CONSTRAINT fk_idFloristeria_contactos FOREIGN KEY (idFloristeria) REFERENCES FLORISTERIAS (floristeriaId);
 
 -- Insertar datos de prueba en la tabla CONTACTOS
 
