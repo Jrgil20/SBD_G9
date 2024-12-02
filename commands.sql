@@ -417,11 +417,10 @@ ADD CONSTRAINT fk_idFloristeria_contactos FOREIGN KEY (idFloristeria) REFERENCES
 -- Insertar datos de prueba en la tabla CONTACTOS
 
 INSERT INTO CONTACTOS (idFloristeria, contactoId, documentoIdentidad, primerNombre, primerApellido, segundoApellido, segundoNombre) VALUES 
+(1, 5, 667788990, 'Charlie', 'Black', 'Taylor', 'James'),
+(2, 4, 554433221, 'Bob', 'White', 'Jones', 'David'),
 (3, 1, 123456789, 'John', 'Doe', 'Smith', 'Michael'),
-(4, 2, 987654321, 'Jane', 'Doe', 'Johnson', 'Emily'),
-(6, 3, 112233445, 'Alice', 'Brown', 'Williams', 'Sophia'),
-(7, 4, 554433221, 'Bob', 'White', 'Jones', 'David'),
-(1, 5, 667788990, 'Charlie', 'Black', 'Taylor', 'James');
+(4, 2, 987654321, 'Jane', 'Doe', 'Johnson', 'Emily');
 
 -- Verificar los datos insertados
 SELECT * FROM CONTACTOS;
