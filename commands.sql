@@ -613,7 +613,7 @@ ADD CONSTRAINT fk_idClienteJuridico_facturaFinal FOREIGN KEY (idClienteJuridico)
 
 -- Agregar restricción CHECK para asegurar que solo uno de los campos idClienteNatural o idClienteJuridico tenga un valor y el otro sea NULL
 ALTER TABLE FACTURA_FINAL
-ADD CONSTRAINT chk_cliente CHECK (
+ADD CONSTRAINT chk_FacturaFinal_ArcoExclusivo CHECK (
   (idClienteNatural IS NOT NULL AND idClienteJuridico IS NULL) OR 
   (idClienteNatural IS NULL AND idClienteJuridico IS NOT NULL)
 );
@@ -632,35 +632,45 @@ SELECT * FROM FACTURA_FINAL;
 
 -- Crear la tabla
 CREATE TABLE DETALLE_FACTURA(
-  idFloristeria NUMERIC NOT NULL,
-  idFactura NUMERIC NOT NULL,
-  idDetalle NUMERIC NOT NULL,
-  idCorteFlor NUMERIC NOT NULL,
-  idColor NUMERIC NOT NULL,
-  codigoCatalogo NUMERIC NOT NULL,
-  idBouquet NUMERIC,
+  idFActuraFloristeria NUMERIC NOT NULL,
+  idNumFactura NUMERIC NOT NULL,
+  detalleId NUMERIC NOT NULL,
+  catalogoFloristeria NUMERIC,
+  catalogoCodigo NUMERIC,
+  bouquetFloristeria NUMERIC,
+  bouquetcodigo NUMERIC,
+  bouquetId NUMERIC,
   cantidad NUMERIC NOT NULL,
   valoracionPrecio NUMERIC,
   valorancionCalidad NUMERIC,
   valoracionPromedio NUMERIC,
   detalles VARCHAR,
-  PRIMARY KEY (idFloristeria, idFactura,idDetalle)
+  PRIMARY KEY (idFActuraFloristeria, idNumFactura, detalleId)
 );
 
 -- Agregar claves foráneas
 ALTER TABLE DETALLE_FACTURA
-ADD CONSTRAINT fk_idFloristeria_detalleFactura FOREIGN KEY (idFloristeria) REFERENCES FLORISTERIAS (floristeriaId),
-ADD CONSTRAINT fk_idFactura_detalleFactura FOREIGN KEY (idFactura) REFERENCES FACTURA_FINAL (idFactura),
-ADD CONSTRAINT fk_idCorteFlor_detalleFactura FOREIGN KEY (idCorteFlor) REFERENCES FLOR_CORTES (corteId),
-ADD CONSTRAINT fk_idColor_detalleFactura FOREIGN KEY (idColor) REFERENCES COLOR (colorId);
-ADD CONSTRAINT fk_codigoCatalogo_detalleFactura FOREIGN KEY (codigoCatalogo) REFERENCES CATALOGO_FLORISTERIA (codigo);
-ADD CONSTRAINT fk_idBouquet_detalleFactura FOREIGN KEY (idBouquet) REFERENCES DETALLE_BOUQUET (idBouquet);
+ADD CONSTRAINT fk_idFactura_detalleFactura FOREIGN KEY (idFActuraFloristeria,idNumFactura) REFERENCES FACTURA_FINAL (idFloristeria, numFactura),
+ADD CONSTRAINT fk_codigoCatalogo_detalleFactura FOREIGN KEY (catalogoFloristeria, catalogoCodigo) REFERENCES CATALOGO_FLORISTERIA (idFloristeria, codigo),
+ADD CONSTRAINT fk_idBouquet_detalleFactura FOREIGN KEY (bouquetFloristeria, bouquetcodigo, bouquetId) REFERENCES DETALLE_BOUQUET (idCatalogoFloristeria, idCatalogocodigo, bouquetId);
+
+-- Agregar restricción CHECK para asegurar que solo uno de los campos catalogoFloristeria/catalogoCodigo o bouquetFloristeria/bouquetcodigo/bouquetId tenga un valor y los otros sean NULL
+ALTER TABLE DETALLE_FACTURA
+ADD CONSTRAINT chk_detalle_ArcoExclusivo CHECK (
+  (catalogoFloristeria IS NOT NULL AND catalogoCodigo IS NOT NULL AND bouquetFloristeria IS NULL AND bouquetcodigo IS NULL AND bouquetId IS NULL) OR 
+  (catalogoFloristeria IS NULL AND catalogoCodigo IS NULL AND bouquetFloristeria IS NOT NULL AND bouquetcodigo IS NOT NULL AND bouquetId IS NOT NULL)
+);
 
 -- Insertar datos de prueba en la tabla DETALLE_FACTURA
-
+INSERT INTO DETALLE_FACTURA (idFActuraFloristeria, idNumFactura, detalleId, catalogoFloristeria, catalogoCodigo, bouquetFloristeria, bouquetcodigo, bouquetId, cantidad, valoracionPrecio, valorancionCalidad, valoracionPromedio, detalles) VALUES
+(1, 1, 1, 1, 1, NULL, NULL, NULL, 10, 9.5, 9.0, 9.25, 'Rosa Roja de alta calidad'),
+(2, 2, 2, NULL, NULL, 2, 2, 2, 15, 8.5, 8.0, 8.25, 'Bouquet de tulipanes amarillos'),
+(3, 3, 3, 3, 3, NULL, NULL, NULL, 20, 9.0, 9.5, 9.25, 'Orquídea Púrpura exótica'),
+(4, 4, 4, NULL, NULL, 4, 4, 4, 25, 8.0, 8.5, 8.25, 'Bouquet de girasoles'),
+(5, 5, 5, 5, 5, NULL, NULL, NULL, 30, 9.5, 9.0, 9.25, 'Lirio Blanco elegante');
 
 -- Verificar los datos insertados
-
+SELECT * FROM DETALLE_FACTURA;
 
 
 -- Crear la tabla
@@ -669,7 +679,7 @@ CREATE TABLE TELEFONOS(
   codArea NUMERIC NOT NULL,
   numero NUMERIC NOT NULL,
   idSubastadora NUMERIC,
-  idProdcutora NUMERIC,
+  idProductora NUMERIC,
   idFloristeria NUMERIC,
   PRIMARY KEY (codPais, codArea, numero)
 );
@@ -679,6 +689,14 @@ ALTER TABLE TELEFONOS
 ADD CONSTRAINT fk_idSubastadora_telefonos FOREIGN KEY (idSubastadora) REFERENCES SUBASTADORA (subastadoraId),
 ADD CONSTRAINT fk_idProductora_telefonos FOREIGN KEY (idProductora) REFERENCES PRODUCTORAS (productoraId),
 ADD CONSTRAINT fk_idFloristeria_telefonos FOREIGN KEY (idFloristeria) REFERENCES FLORISTERIAS (floristeriaId);
+
+-- Agregar restricción CHECK para asegurar que solo uno de los campos idSubastadora, idProductora o idFloristeria tenga un valor y los otros sean NULL
+ALTER TABLE TELEFONOS
+ADD CONSTRAINT chk_telefono_ArcoExclusivo CHECK (
+  (idSubastadora IS NOT NULL AND idProductora IS NULL AND idFloristeria IS NULL) OR 
+  (idSubastadora IS NULL AND idProductora IS NOT NULL AND idFloristeria IS NULL) OR 
+  (idSubastadora IS NULL AND idProductora IS NULL AND idFloristeria IS NOT NULL)
+);
 
 -- Insertar datos de prueba en la tabla TELEFONOS
 
