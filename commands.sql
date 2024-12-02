@@ -478,37 +478,38 @@ SELECT * FROM FACTURA;
 
 -- Crear la tabla
 CREATE TABLE LOTE(
-  idSubastadora NUMERIC NOT NULL,
-  idProductora NUMERIC NOT NULL,
-  nContrato NUMERIC NOT NULL,
-  idProductora2 NUMERIC NOT NULL,
-  idCorteFlor NUMERIC NOT NULL,
-  vnbFlor NUMERIC NOT NULL,
-  idCorteFlor NUMERIC NOT NULL,
-  idFactura NUMERIC NOT NULL,
+  idCantidadContratoSubastadora NUMERIC NOT NULL,
+  idCantidadContratoProductora NUMERIC NOT NULL,
+  idCantidad_NContrato NUMERIC NOT NULL,
+  idCantidadCatalogoProductora NUMERIC NOT NULL,
+  idCantidadCorte NUMERIC NOT NULL,
+  idCantidadvnb NUMERIC NOT NULL,
   bi NUMERIC NOT NULL,
   cantidad NUMERIC NOT NULL,
   precioInicial NUMERIC NOT NULL,
   precioFinal NUMERIC NOT NULL,
-  PRIMARY KEY (idSubastadora, idProductora, nContrato, idProductora2, idCorteFlor, vnbFlor, idCorteFlor, idFactura)
-)
+  idFactura NUMERIC NOT NULL,
+  PRIMARY KEY (idCantidadContratoSubastadora, idCantidadContratoProductora, idCantidad_NContrato, idCantidadCatalogoProductora, idCantidadCorte, idCantidadvnb)
+);
 
 -- Agregar claves foráneas
 ALTER TABLE LOTE
-ADD CONSTRAINT fk_idSubastadora_lote FOREIGN KEY (idSubastadora) REFERENCES SUBASTADORA (subastadoraId),
-ADD CONSTRAINT fk_idProductora_lote FOREIGN KEY (idProductora) REFERENCES PRODUCTORAS (productoraId),
-ADD CONSTRAINT fk_nContrato_lote FOREIGN KEY (nContrato) REFERENCES CONTRATO (nContrato),
-ADD CONSTRAINT fk_idProductora2_lote FOREIGN KEY (idProductora2) REFERENCES PRODUCTORAS (productoraId),
-ADD CONSTRAINT fk_idCorteFlor_lote FOREIGN KEY (idCorteFlor) REFERENCES FLOR_CORTES (corteId),
-ADD CONSTRAINT fk_vnbFlor_lote FOREIGN KEY (vnbFlor) REFERENCES CATALOGOPRODUCTOR (vbn),
-ADD CONSTRAINT fk_idCorteFlor_lote FOREIGN KEY (idCorteFlor) REFERENCES FLOR_CORTES (corteId),
-ADD CONSTRAINT fk_idFactura_lote FOREIGN KEY (idFactura) REFERENCES FACTURA (idFactura);
+ADD CONSTRAINT fk_CantidadOfrecida_Lote FOREIGN KEY (idCantidadContratoSubastadora, idCantidadContratoProductora, idCantidad_NContrato, idCantidadCatalogoProductora, idCantidadCorte, idCantidadvnb) 
+REFERENCES CANTIDAD_OFRECIDA (idContratoSubastadora, idContratoProductora, idNContrato, idCatalogoProductora, idCatalogoCorte, idVnb),
+ADD CONSTRAINT fk_idFactura_lote FOREIGN KEY (idFactura) REFERENCES FACTURA (facturaId);
 
 
 -- Insertar datos de prueba en la tabla LOTE
 
 
 -- Verificar los datos insertados
+INSERT INTO LOTE (idCantidadContratoSubastadora, idCantidadContratoProductora, idCantidad_NContrato, idCantidadCatalogoProductora, idCantidadCorte, idCantidadvnb, bi, cantidad, precioInicial, precioFinal, idFactura) VALUES
+(1, 1, 1001, 1, 1, 1, 1, 50, 10.00, 15.00, 1),
+(2, 2, 1002, 1, 1, 1, 2, 100, 20.00, 25.00, 2),
+(3, 3, 1003, 1, 1, 1, 3, 150, 30.00, 35.00, 3);
+
+-- Verificar los datos insertados
+SELECT * FROM LOTE;
 
 
 -- Crear la tabla
