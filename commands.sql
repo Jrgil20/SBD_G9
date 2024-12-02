@@ -540,57 +540,57 @@ INSERT INTO CATALOGO_FLORISTERIA (idFloristeria, codigo, idCorteFlor, idColor, n
 SELECT * FROM CATALOGO_FLORISTERIA;
 
 -- Crear la tabla
-CREATE HISTORICO_PRECIO_FLOR(
-  idFloristeria NUMERIC NOT NULL,
-  idCorteFlor NUMERIC NOT NULL,
-  idColor NUMERIC NOT NULL,
-  codigoCatalogo NUMERIC NOT NULL, 
+CREATE TABLE HISTORICO_PRECIO_FLOR(
+  idCatalogoFloristeria NUMERIC NOT NULL,
+  idCatalogocodigo NUMERIC NOT NULL, 
   fechaInicio DATE NOT NULL,
   fechaFin DATE,
   precio NUMERIC NOT NULL,
-  tamanoTallo NUMERIC NOT NULL,
-  PRIMARY KEY (idFloristeria, idCorteFlor, idColor, fecha)
+  tamanoTallo NUMERIC ,
+  PRIMARY KEY (idCatalogoFloristeria, idCatalogocodigo, fechaInicio)
 );
 
 -- Agregar claves foráneas
 ALTER TABLE HISTORICO_PRECIO_FLOR
-ADD CONSTRAINT fk_idFloristeria_historicoPrecioFlor FOREIGN KEY (idFloristeria) REFERENCES FLORISTERIAS (floristeriaId),
-ADD CONSTRAINT fk_idCorteFlor_historicoPrecioFlor FOREIGN KEY (idCorteFlor) REFERENCES FLOR_CORTES (corteId),
-ADD CONSTRAINT fk_idColor_historicoPrecioFlor FOREIGN KEY (idColor) REFERENCES COLOR (colorId);
-ADD Constraint fk_codigoCatalogo_historicoPrecioFlor FOREIGN KEY (codigoCatalogo) REFERENCES CATALOGO_FLORISTERIA (codigo);
+ADD Constraint fk_Catalogo_historicoPrecioFlor FOREIGN KEY (idCatalogoFloristeria, idCatalogocodigo) REFERENCES CATALOGO_FLORISTERIA (idFloristeria, codigo);
 
 -- Insertar datos de prueba en la tabla HISTORICO_PRECIO_FLOR
-
+INSERT INTO HISTORICO_PRECIO_FLOR (idCatalogoFloristeria, idCatalogocodigo, fechaInicio, fechaFin, precio, tamanoTallo) VALUES
+(1, 1, '2023-01-01', NULL, 10.00, 50),
+(2, 2, '2023-01-01', NULL, 15.00, 60),
+(3, 3, '2023-01-01', NULL, 20.00, 70),
+(4, 4, '2023-01-01', NULL, 25.00, 80),
+(5, 5, '2023-01-01', NULL, 30.00, 90);
 
 -- Verificar los datos insertados
-
+SELECT * FROM HISTORICO_PRECIO_FLOR;
 
 -- Crear la tabla
 CREATE TABLE DETALLE_BOUQUET(
-  idFloristeria NUMERIC NOT NULL,
-  idCorteFlor NUMERIC NOT NULL,
-  idColor NUMERIC NOT NULL,
-  codigo NUMERIC NOT NULL,
-  idBouquet NUMERIC NOT NULL,
+  idCatalogoFloristeria NUMERIC NOT NULL,
+  idCatalogocodigo NUMERIC NOT NULL,
+  bouquetId NUMERIC NOT NULL,
   cantidad NUMERIC NOT NULL,
   talloTamano NUMERIC,
   descripcion VARCHAR,
-  PRIMARY KEY (idFloristeria, idCorteFlor, idColor, codigo, idBouquet)
+  PRIMARY KEY (idCatalogoFloristeria, idCatalogocodigo, bouquetId)
 );
 
 -- Agregar claves foráneas
 ALTER TABLE DETALLE_BOUQUET
-ADD CONSTRAINT fk_idFloristeria_detalleBouquet FOREIGN KEY (idFloristeria) REFERENCES FLORISTERIAS (floristeriaId),
-ADD CONSTRAINT fk_idCorteFlor_detalleBouquet FOREIGN KEY (idCorteFlor) REFERENCES FLOR_CORTES (corteId),
-ADD CONSTRAINT fk_idColor_detalleBouquet FOREIGN KEY (idColor) REFERENCES COLOR (colorId);
-ADD CONSTRAINT fk_codigo_detalleBouquet FOREIGN KEY (codigo) REFERENCES CATALOGO_FLORISTERIA (codigo);
+ADD Constraint fk_Catalogo_DetalleBouquet FOREIGN KEY (idCatalogoFloristeria, idCatalogocodigo) REFERENCES CATALOGO_FLORISTERIA (idFloristeria, codigo);
 
 
 -- Insertar datos de prueba en la tabla DETALLE_BOUQUET
-
-
+INSERT INTO DETALLE_BOUQUET (idCatalogoFloristeria, idCatalogocodigo, bouquetId, cantidad, talloTamano, descripcion) VALUES
+(1, 1, 1, 10, 50, 'Bouquet de rosas rojas'),
+(2, 2, 2, 15, 60, 'Bouquet de tulipanes amarillos'),
+(3, 3, 3, 20, 70, 'Bouquet de orquídeas púrpuras'),
+(4, 4, 4, 25, 80, 'Bouquet de girasoles'),
+(5, 5, 5, 30, 90, 'Bouquet de lirios blancos');
 
 -- Verificar los datos insertados
+SELECT * FROM DETALLE_BOUQUET;
 
 
 -- Crear la tabla 
