@@ -438,9 +438,13 @@ ADD CONSTRAINT fk_idFloristeria_afiliacion FOREIGN KEY (idFloristeria) REFERENCE
 ADD CONSTRAINT fk_idSubastadora_afiliacion FOREIGN KEY (idSubastadora) REFERENCES SUBASTADORA (subastadoraId);
 
 -- Insertar datos de prueba en la tabla AFILIACION
-
+INSERT INTO AFILIACION (idFloristeria, idSubastadora) VALUES 
+(1, 1),
+(2, 2),
+(3, 3);
 
 -- Verificar los datos insertados
+SELECT * FROM AFILIACION;
 
 
 -- Crear la tabla
