@@ -241,7 +241,7 @@ CREATE SEQUENCE color_seq START WITH 1 INCREMENT BY 1;
 
 -- create COLOR
 CREATE TABLE COLOR (
-  ColorId NUMERIC PRIMARY KEY DEFAULT nextval('color_seq'),
+  colorId NUMERIC PRIMARY KEY DEFAULT nextval('color_seq'),
   Nombre VARCHAR NOT NULL,
   Descripcion VARCHAR NOT NULL
 );
@@ -343,68 +343,71 @@ SELECT * FROM CONTRATO;
 
 -- Crear la tabla
 CREATE TABLE CANTIDAD_OFRECIDA (
-  idSubastadora NUMERIC NOT NULL,
-  idProductora NUMERIC NOT NULL,
-  contratoN NUMERIC NOT NULL,
-  idProductora2 NUMERIC NOT NULL,
-  idFlorCorte NUMERIC NOT NULL,
-  vnbFlor NUMERIC NOT NULL,
+  idContratoSubastadora NUMERIC NOT NULL,
+  idContratoProductora NUMERIC NOT NULL,
+  idNContrato NUMERIC NOT NULL,
+  idCatalogoProductora NUMERIC NOT NULL,
+  idCatalogoCorte NUMERIC NOT NULL,
+  idVnb NUMERIC NOT NULL,
   cantidad NUMERIC NOT NULL,
-  PRIMARY KEY (idSubastadora, idProductora, contratoN, idProductora2, idFlorCorte, vnbFlor)
+  PRIMARY KEY (idContratoSubastadora, idContratoProductora, idNContrato, idCatalogoProductora, idCatalogoCorte, idVnb)
 );
 
 -- Agregar claves foráneas compuestas
 ALTER TABLE CANTIDAD_OFRECIDA
-ADD CONSTRAINT fk_Contrato_CantidadOfrecida FOREIGN KEY (idSubastadora, idProductora, contratoN) 
+ADD CONSTRAINT fk_Contrato_CantidadOfrecida FOREIGN KEY (idContratoSubastadora, idContratoProductora, idNContrato) 
 REFERENCES CONTRATO (idSubastadora, idProductora, nContrato),
-ADD CONSTRAINT fk_CatalogoProductor_CantidadOfrecida FOREIGN KEY (idProductora2, idFlorCorte, vnbFlor) 
+ADD CONSTRAINT fk_CatalogoProductor_CantidadOfrecida FOREIGN KEY (idCatalogoProductora, idCatalogoCorte, idVnb) 
 REFERENCES CATALOGOPRODUCTOR (idProductora, idCorte, vbn);
 
 
 -- Insertar datos de prueba en la tabla CANTIDAD_OFRECIDA
-INSERT INTO CANTIDAD_OFRECIDA (idSubastadora, idProductora, contratoN, idProductora2, vnbFlor, cantidad) VALUES
-(1, 1, 1001, 1, 1, 100),
-(2, 2, 1002, 2, 1, 200),
-(3, 3, 1003, 3, 1, 300);
+INSERT INTO CANTIDAD_OFRECIDA (idContratoSubastadora, idContratoProductora, idNContrato, idCatalogoProductora,idCatalogoCorte, idVnb, cantidad) VALUES
+(1, 1, 1001, 1, 1, 1, 100),
+(2, 2, 1002, 1, 1, 1,200),
+(3, 3, 1003, 1, 1, 1,300);
 
 -- Verificar los datos insertados
 SELECT * FROM CANTIDAD_OFRECIDA;
 
 -- Crear la tabla
 CREATE TABLE PAGOS(
-  idSubastadora NUMERIC NOT NULL,
-  idProductora NUMERIC NOT NULL,
-  contratoN NUMERIC NOT NULL,
-  idPago NUMERIC NOT NULL,
+  idContratoSubastadora NUMERIC NOT NULL,
+  idContratoProductora NUMERIC NOT NULL,
+  idNContrato NUMERIC NOT NULL,
+  pagoId NUMERIC NOT NULL,
   fechaPago DATE NOT NULL,
   montoComision NUMERIC NOT NULL,
   tipo VARCHAR NOT NULL,
-  PRIMARY KEY (idSubastadora, idProductora, contratoN, idPago)
+  PRIMARY KEY (idContratoSubastadora, idContratoProductora, idNContrato, pagoId)
 );
 
 -- Agregar claves foráneas y check
 ALTER TABLE PAGOS
-ADD CONSTRAINT fk_idSubastadora_pagos FOREIGN KEY (idSubastadora) REFERENCES SUBASTADORA (subastadoraId),
-ADD CONSTRAINT fk_idProductora_pagos FOREIGN KEY (idProductora) REFERENCES PRODUCTORAS (productoraId),
-ADD CONSTRAINT fk_contratoN_pagos FOREIGN KEY (contratoN) REFERENCES CONTRATO (nContrato),
-ADD CONSTRAINT check_tipoProductor CHECK (tipoProductor IN ('membresia', 'pago','multa'));
+ADD CONSTRAINT fk_Contrato_Pagos FOREIGN KEY (idContratoSubastadora, idContratoProductora, idNContrato) 
+REFERENCES CONTRATO (idSubastadora, idProductora, nContrato),
+ADD CONSTRAINT check_tipoProductor CHECK (tipo IN ('membresia', 'pago','multa'));
 
 -- Insertar datos de prueba en la tabla PAGOS
-
+INSERT INTO PAGOS (idContratoSubastadora, idContratoProductora, idNContrato, pagoId, fechaPago, montoComision, tipo) VALUES
+(1, 1, 1001, 1, '2023-01-15', 150.00, 'membresia'),
+(2, 2, 1002, 2, '2023-02-15', 200.00, 'pago'),
+(3, 3, 1003, 3, '2023-03-15', 250.00, 'multa');
 
 -- Verificar los datos insertados
+SELECT * FROM PAGOS;
 
 
 -- Crear la tabla
 CREATE TABLE CONTACTOS(
   idFloristeria NUMERIC NOT NULL,
-  idContacto NUMERIC NOT NULL,
+  contactoId NUMERIC NOT NULL,
   documentoIdentidad NUMERIC NOT NULL,
   primerNombre VARCHAR NOT NULL,
   primerApellido VARCHAR NOT NULL,
   segundoApellido VARCHAR Not Null,
   segundoNombre VARCHAR,
-  PRIMARY KEY (idFloristeria, idContacto)
+  PRIMARY KEY (idFloristeria, contactoId)
 );
 
 -- Agregar claves foráneas
@@ -413,9 +416,15 @@ ADD CONSTRAINT fk_idFloristeria_contactos FOREIGN KEY (idFloristeria) REFERENCES
 
 -- Insertar datos de prueba en la tabla CONTACTOS
 
+INSERT INTO CONTACTOS (idFloristeria, contactoId, documentoIdentidad, primerNombre, primerApellido, segundoApellido, segundoNombre) VALUES 
+(3, 1, 123456789, 'John', 'Doe', 'Smith', 'Michael'),
+(4, 2, 987654321, 'Jane', 'Doe', 'Johnson', 'Emily'),
+(6, 3, 112233445, 'Alice', 'Brown', 'Williams', 'Sophia'),
+(7, 4, 554433221, 'Bob', 'White', 'Jones', 'David'),
+(1, 5, 667788990, 'Charlie', 'Black', 'Taylor', 'James');
 
 -- Verificar los datos insertados
-
+SELECT * FROM CONTACTOS;
 
 -- Crear la tabla
 CREATE TABLE AFILIACION(
@@ -650,9 +659,4 @@ ADD CONSTRAINT fk_idFloristeria_telefonos FOREIGN KEY (idFloristeria) REFERENCES
 
 
 -- Verificar los datos insertados
-
-
-
-
-
 
