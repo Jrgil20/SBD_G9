@@ -594,14 +594,14 @@ SELECT * FROM DETALLE_BOUQUET;
 
 
 -- Crear la tabla 
-CREATE FACTURA_FINAL(
+CREATE TABLE FACTURA_FINAL(
   idFloristeria NUMERIC NOT NULL,
-  idFactura NUMERIC NOT NULL,
+  numFactura NUMERIC NOT NULL,
   fechaEmision DATE NOT NULL,
   montoTotal NUMERIC NOT NULL,
   idClienteNatural NUMERIC,
   idClienteJuridico NUMERIC,
-  PRIMARY KEY (idFloristeria, idSubastadora, idFactura)
+  PRIMARY KEY (idFloristeria, numFactura)
 );
 
 
@@ -611,13 +611,24 @@ ADD CONSTRAINT fk_idFloristeria_facturaFinal FOREIGN KEY (idFloristeria) REFEREN
 ADD CONSTRAINT fk_idCLienteNAatural_facturaFinal FOREIGN KEY (idClienteNatural) REFERENCES CLIENTE_NATURAL (cliNaturalId),
 ADD CONSTRAINT fk_idClienteJuridico_facturaFinal FOREIGN KEY (idClienteJuridico) REFERENCES CLIENTE_JURIDICO (cliJuridicoId);
 
+-- Agregar restricción CHECK para asegurar que solo uno de los campos idClienteNatural o idClienteJuridico tenga un valor y el otro sea NULL
+ALTER TABLE FACTURA_FINAL
+ADD CONSTRAINT chk_cliente CHECK (
+  (idClienteNatural IS NOT NULL AND idClienteJuridico IS NULL) OR 
+  (idClienteNatural IS NULL AND idClienteJuridico IS NOT NULL)
+);
 
 
 -- Insertar datos de prueba en la tabla FACTURA_FINAL
-
+INSERT INTO FACTURA_FINAL (idFloristeria, numFactura, fechaEmision, montoTotal, idClienteNatural, idClienteJuridico) VALUES
+(1, 1, '2023-07-01', 500.00, 1, NULL),
+(2, 2, '2023-08-01', 750.00, NULL, 1),
+(3, 3, '2023-09-01', 1000.00, 2, NULL),
+(4, 4, '2023-10-01', 1250.00, NULL, 2),
+(5, 5, '2023-11-01', 1500.00, 3, NULL);
 
 -- Verificar los datos insertados
-
+SELECT * FROM FACTURA_FINAL;
 
 -- Crear la tabla
 CREATE TABLE DETALLE_FACTURA(
