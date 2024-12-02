@@ -346,7 +346,6 @@ CREATE TABLE CANTIDAD_OFRECIDA (
   idSubastadora NUMERIC NOT NULL,
   idProductora NUMERIC NOT NULL,
   contratoN NUMERIC NOT NULL,
-  fechaEmisionContrato DATE NOT NULL,
   idProductora2 NUMERIC NOT NULL,
   idFlorCorte NUMERIC NOT NULL,
   vnbFlor NUMERIC NOT NULL,
@@ -356,20 +355,20 @@ CREATE TABLE CANTIDAD_OFRECIDA (
 
 -- Agregar claves foráneas compuestas
 ALTER TABLE CANTIDAD_OFRECIDA
-ADD CONSTRAINT fk_Contrato_CantidadOfrecida FOREIGN KEY (idSubastadora, idProductora, contratoN, fechaEmisionContrato) 
-REFERENCES CONTRATO (subastadoraId, productoraId, nContrato, fechaemision),
-ADD CONSTRAINT fk_composite_2 FOREIGN KEY (idProductora2, idFlorCorte, vnbFlor) 
-REFERENCES CATALOGOPRODUCTOR (productoraId, corteId, vbn);
+ADD CONSTRAINT fk_Contrato_CantidadOfrecida FOREIGN KEY (idSubastadora, idProductora, contratoN) 
+REFERENCES CONTRATO (idSubastadora, idProductora, nContrato),
+ADD CONSTRAINT fk_CatalogoProductor_CantidadOfrecida FOREIGN KEY (idProductora2, idFlorCorte, vnbFlor) 
+REFERENCES CATALOGOPRODUCTOR (idProductora, idCorte, vbn);
 
 
 -- Insertar datos de prueba en la tabla CANTIDAD_OFRECIDA
---INSERT INTO CANTIDAD_OFRECIDA (idSubastadora, idProductora, contratoN, fechaEmisionContrato, idProductora2, vnbFlor, cantidad) VALUES
---(1, 1, 1001, '2023-01-01', 1, 1, 100),
---(2, 2, 1002, '2023-02-01', 2, 1, 200),
---(3, 3, 1003, '2023-03-01', 3, 1, 300);
+INSERT INTO CANTIDAD_OFRECIDA (idSubastadora, idProductora, contratoN, idProductora2, vnbFlor, cantidad) VALUES
+(1, 1, 1001, 1, 1, 100),
+(2, 2, 1002, 2, 1, 200),
+(3, 3, 1003, 3, 1, 300);
 
 -- Verificar los datos insertados
---SELECT * FROM CANTIDAD_OFRECIDA;
+SELECT * FROM CANTIDAD_OFRECIDA;
 
 -- Crear la tabla
 CREATE TABLE PAGOS(
