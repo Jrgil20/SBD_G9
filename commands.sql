@@ -500,9 +500,6 @@ ADD CONSTRAINT fk_idFactura_lote FOREIGN KEY (idFactura) REFERENCES FACTURA (fac
 
 
 -- Insertar datos de prueba en la tabla LOTE
-
-
--- Verificar los datos insertados
 INSERT INTO LOTE (idCantidadContratoSubastadora, idCantidadContratoProductora, idCantidad_NContrato, idCantidadCatalogoProductora, idCantidadCorte, idCantidadvnb, bi, cantidad, precioInicial, precioFinal, idFactura) VALUES
 (1, 1, 1001, 1, 1, 1, 1, 50, 10.00, 15.00, 1),
 (2, 2, 1002, 1, 1, 1, 2, 100, 20.00, 25.00, 2),
