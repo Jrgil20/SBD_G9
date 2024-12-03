@@ -268,21 +268,24 @@ CREATE SEQUENCE enlaces_seq START WITH 1 INCREMENT BY 1;
 
 -- create ENLACES
 CREATE TABLE ENLACES (
-  Idenlace NUMERIC PRIMARY KEY DEFAULT nextval('enlaces_seq'),
+  IdSignificado NUMERIC NOT NULL,
+  enlaceId NUMERIC NOT NULL DEFAULT nextval('enlaces_seq'),
   Descripcion VARCHAR NOT NULL,
   idColor NUMERIC,
-  idCorte NUMERIC
+  idCorte NUMERIC,
+  PRIMARY KEY (IdSignificado, enlaceId)
 );
 
--- Agregar claves foráneas
+-- Agregar clave foránea
 ALTER TABLE ENLACES
+ADD CONSTRAINT fk_IdSignificado FOREIGN KEY (IdSignificado) REFERENCES SIGNIFICADO(SignificadoId),
 ADD CONSTRAINT FK1 FOREIGN KEY (idColor) REFERENCES COLOR(colorId),
 ADD CONSTRAINT FK2 FOREIGN KEY (idCorte) REFERENCES FLOR_CORTES(corteId);
 
 -- Insertar datos de prueba en ENLACES
-INSERT INTO ENLACES (Descripcion, IdColor, idCorte) VALUES 
-('rosas rojas es el clásico regalo romántico', 2, 2),
-('La rosa blanca es un símbolo de pureza, inocencia y amor puro', 2, 1);
+INSERT INTO ENLACES (IdSignificado,Descripcion, IdColor, idCorte) VALUES 
+(1,'rosas rojas es el clásico regalo romántico', 2, 2),
+(2,'La rosa blanca es un símbolo de pureza, inocencia y amor puro', 2, 1);
 
 -- Verificar que los datos han sido insertados correctamente
 SELECT * FROM ENLACES;
@@ -484,12 +487,13 @@ CREATE TABLE LOTE(
   idCantidadCatalogoProductora NUMERIC NOT NULL,
   idCantidadCorte NUMERIC NOT NULL,
   idCantidadvnb NUMERIC NOT NULL,
+  NumLote NUMERIC NOT NULL,
   bi NUMERIC NOT NULL,
   cantidad NUMERIC NOT NULL,
   precioInicial NUMERIC NOT NULL,
   precioFinal NUMERIC NOT NULL,
   idFactura NUMERIC NOT NULL,
-  PRIMARY KEY (idCantidadContratoSubastadora, idCantidadContratoProductora, idCantidad_NContrato, idCantidadCatalogoProductora, idCantidadCorte, idCantidadvnb)
+  PRIMARY KEY (idCantidadContratoSubastadora, idCantidadContratoProductora, idCantidad_NContrato, idCantidadCatalogoProductora, idCantidadCorte, idCantidadvnb, NumLote)
 );
 
 -- Agregar claves foráneas
@@ -500,10 +504,10 @@ ADD CONSTRAINT fk_idFactura_lote FOREIGN KEY (idFactura) REFERENCES FACTURA (fac
 
 
 -- Insertar datos de prueba en la tabla LOTE
-INSERT INTO LOTE (idCantidadContratoSubastadora, idCantidadContratoProductora, idCantidad_NContrato, idCantidadCatalogoProductora, idCantidadCorte, idCantidadvnb, bi, cantidad, precioInicial, precioFinal, idFactura) VALUES
-(1, 1, 1001, 1, 1, 1, 1, 50, 10.00, 15.00, 1),
-(2, 2, 1002, 1, 1, 1, 2, 100, 20.00, 25.00, 2),
-(3, 3, 1003, 1, 1, 1, 3, 150, 30.00, 35.00, 3);
+INSERT INTO LOTE (idCantidadContratoSubastadora, idCantidadContratoProductora, idCantidad_NContrato, idCantidadCatalogoProductora, idCantidadCorte, idCantidadvnb, NumLote, bi, cantidad, precioInicial, precioFinal, idFactura) VALUES
+(1, 1, 1001, 1, 1, 1, 1, 1, 50, 10.00, 15.00, 1),
+(2, 2, 1002, 1, 1, 1, 2, 2, 100, 20.00, 25.00, 2),
+(3, 3, 1003, 1, 1, 1, 3, 3, 150, 30.00, 35.00, 3);
 
 -- Verificar los datos insertados
 SELECT * FROM LOTE;
