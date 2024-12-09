@@ -563,7 +563,7 @@ CREATE TABLE HISTORICO_PRECIO_FLOR(
 -- Agregar claves foráneas
 ALTER TABLE HISTORICO_PRECIO_FLOR
 ADD Constraint fk_Catalogo_historicoPrecioFlor FOREIGN KEY (idCatalogoFloristeria, idCatalogocodigo) REFERENCES CATALOGO_FLORISTERIA (idFloristeria, codigo),
-ADD Constraint chk_fechas CHECK (Fecha2 IS NULL OR Fecha1 < Fecha2);
+ADD Constraint check_fechaIni_fin CHECK (Fecha2 IS NULL OR Fecha1 < Fecha2);
 
 -- Insertar datos de prueba en la tabla HISTORICO_PRECIO_FLOR
 INSERT INTO HISTORICO_PRECIO_FLOR (idCatalogoFloristeria, idCatalogocodigo, fechaInicio, fechaFin, precio, tamanoTallo) VALUES
