@@ -346,9 +346,9 @@ ADD CONSTRAINT check_porcentajeProduccion CHECK (
 
 -- Insertar datos de prueba en la tabla CONTRATO
 INSERT INTO CONTRATO (idSubastadora, idProductora, nContrato, fechaemision, porcentajeProduccion, tipoProductor, idrenovS, idrenovP, ren_nContrato, cancelado) VALUES
-(1, 1, 1001, '2023-01-01', 0.15, 'Ca', NULL, NULL, NULL, NULL),
-(2, 2, 1002, '2023-02-01', 0.20, 'Cb', NULL, NULL, NULL, NULL),
-(3, 3, 1003, '2023-03-01', 0.25, 'Cc', NULL, NULL, NULL, NULL);
+(1, 1, 1001, '2023-01-01', 0.60, 'Ca', NULL, NULL, NULL, NULL),
+(2, 2, 1002, '2023-02-01', 0.25, 'Cb', NULL, NULL, NULL, NULL),
+(3, 3, 1003, '2023-03-01', 0.15, 'Cc', NULL, NULL, NULL, NULL);
 
 -- Verificar los datos insertados
 SELECT * FROM CONTRATO;
@@ -566,7 +566,7 @@ CREATE TABLE HISTORICO_PRECIO_FLOR(
 -- Agregar claves foráneas
 ALTER TABLE HISTORICO_PRECIO_FLOR
 ADD Constraint fk_Catalogo_historicoPrecioFlor FOREIGN KEY (idCatalogoFloristeria, idCatalogocodigo) REFERENCES CATALOGO_FLORISTERIA (idFloristeria, codigo),
-ADD Constraint check_fechaIni_fin CHECK (Fecha2 IS NULL OR Fecha1 < Fecha2);
+ADD Constraint check_fechaIni_fin CHECK (fechaFin IS NULL OR fechaInicio < fechaFin);
 
 -- Insertar datos de prueba en la tabla HISTORICO_PRECIO_FLOR
 INSERT INTO HISTORICO_PRECIO_FLOR (idCatalogoFloristeria, idCatalogocodigo, fechaInicio, fechaFin, precio, tamanoTallo) VALUES
