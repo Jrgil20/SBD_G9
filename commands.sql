@@ -282,6 +282,9 @@ ADD CONSTRAINT fk_IdSignificado FOREIGN KEY (IdSignificado) REFERENCES SIGNIFICA
 ADD CONSTRAINT FK1 FOREIGN KEY (idColor) REFERENCES COLOR(colorId),
 ADD CONSTRAINT FK2 FOREIGN KEY (idCorte) REFERENCES FLOR_CORTES(corteId);
 
+ALTER TABLE ENLACES
+ADD CONSTRAINT chk_enlaces CHECK (idColor IS NOT NULL OR idCorte IS NOT NULL);
+
 -- Insertar datos de prueba en ENLACES
 INSERT INTO ENLACES (IdSignificado,Descripcion, IdColor, idCorte) VALUES 
 (1,'rosas rojas es el clásico regalo romántico', 2, 2),
