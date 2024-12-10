@@ -305,7 +305,14 @@ ADD CONSTRAINT chk_enlaces CHECK (idColor IS NOT NULL OR idCorte IS NOT NULL);
 -- Insertar datos de prueba en ENLACES
 INSERT INTO ENLACES (IdSignificado,Descripcion, IdColor, idCorte) VALUES 
 (1,'rosas rojas es el clásico regalo romántico', 2, 2),
-(2,'La rosa blanca es un símbolo de pureza, inocencia y amor puro', 2, 1);
+(2,'La rosa blanca es un símbolo de pureza, inocencia y amor puro', 2, 1),
+(3, 'Las flores de cumpleaños son una forma especial de celebrar', 4, 3),
+(4, 'Las flores de felicidad traen alegría y buenos deseos', 5, 4),
+(5, 'Las flores de aniversario simbolizan el amor duradero', 6, 5),
+(6, 'Las flores de tristeza expresan condolencias y apoyo', 7, 6),
+(7, 'Las flores de graduación celebran logros y nuevos comienzos', 8, 7),
+(8, 'Las flores de amistad fortalecen los lazos entre amigos', 9, 8),
+(9, 'Las flores de nacimiento dan la bienvenida a un nuevo bebé', 10, 9);
 
 -- Verificar que los datos han sido insertados correctamente
 SELECT * FROM ENLACES;
@@ -328,7 +335,15 @@ ADD CONSTRAINT unique_vbn UNIQUE (vbn);
 
 -- Insertar datos de prueba en CATALOGOPRODUCTOR
 INSERT INTO CATALOGOPRODUCTOR (idProductora, idCorte, vbn, nombrepropio, descripcion) VALUES 
-(1, 1, 1, 'Rosas', NULL);
+(1, 1, 1, 'Rosas', NULL),
+(2, 2, 2, 'Tulipanes', 'Tulipanes amarillos brillantes'),
+(3, 3, 3, 'Orquídeas', 'Orquídeas exóticas y elegantes'),
+(1, 4, 4, 'Girasoles', 'Girasoles altos que siguen al sol'),
+(2, 5, 5, 'Lirios', 'Lirios blancos elegantes y fragantes'),
+(3, 6, 6, 'Claveles', 'Claveles populares en ramos y arreglos'),
+(1, 7, 7, 'Margaritas', 'Margaritas sencillas y alegres'),
+(2, 8, 8, 'Hortensias', 'Hortensias ornamentales en racimos'),
+(3, 9, 9, 'Peonías', 'Peonías grandes y fragantes');
 
 -- Verificar los datos insertados
 SELECT * FROM CATALOGOPRODUCTOR;
