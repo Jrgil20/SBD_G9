@@ -118,6 +118,7 @@ function cambiarSeccion(seccion) {
     }
 }
 
+//Funcion que muestra los detalles de una productora
 function mostrarDetalles(seccion, item) {
     cambiarSeccion('detalles');
     const titulo = document.getElementById('vista-titulo');
