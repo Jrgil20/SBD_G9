@@ -173,7 +173,11 @@ INSERT INTO CLIENTE_JURIDICO (RIF, nombre) VALUES
 (987654321, 'Empresa B'),
 (112233445, 'Empresa C'),
 (554433221, 'Empresa D'),
-(667788990, 'Empresa E');
+(667788990, 'Empresa E'),
+(223344556, 'Empresa F'),
+(334455667, 'Empresa G'),
+(445566778, 'Empresa H'),
+(556677889, 'Empresa I');
 
 -- Verificar que los datos han sido insertados correctamente
 SELECT * FROM CLIENTE_JURIDICO;
