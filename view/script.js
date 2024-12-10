@@ -1,57 +1,59 @@
 // Datos de muestra
 const data = {
     floristerias: [
-        { id: 1, nombre: "Floristería Bella", ciudad: "Madrid", telefono: "123-456-789", email: "bella@flores.com", flores: ["Rosa", "Tulipán", "Girasol"] },
-        { id: 2, nombre: "Jardín Encantado", ciudad: "Barcelona", telefono: "987-654-321", email: "jardin@flores.com", flores: ["Orquídea", "Lirio", "Margarita"] },
-        { id: 3, nombre: "Flores del Valle", ciudad: "Valencia", telefono: "456-789-123", email: "valle@flores.com", flores: ["Clavel", "Dalia", "Azucena"] }
+        { id: 1, nombre: "Floristería Bella", email: "bella@flores.com", paginaWeb: "www.floristeriabella.com", pais: "España", flores: ["Rosa", "Tulipán"] },
+        { id: 2, nombre: "Jardín Encantado", email: "jardin@flores.com", paginaWeb: "www.jardinencantado.com", pais: "España", flores: ["Girasol", "Tulipán"] },
+        { id: 3, nombre: "Flores del Valle", email: "valle@flores.com", paginaWeb: "www.floresdelvalle.com", pais: "España", flores: ["Rosa", "Girasol"] }
     ],
     productores: [
-        { id: 1, nombre: "Invernaderos García", region: "Andalucía", capacidad: "5000 m²", certificaciones: "Ecológico", flores: ["Rosa", "Clavel", "Girasol"] },
-        { id: 2, nombre: "Cultivos Flores", region: "Cataluña", capacidad: "3000 m²", certificaciones: "GlobalGAP", flores: ["Tulipán", "Lirio", "Orquídea"] },
-        { id: 3, nombre: "Jardines del Norte", region: "Galicia", capacidad: "4000 m²", certificaciones: "Veriflora", flores: ["Camelia", "Hortensia", "Azalea"] }
+        { id: 1, nombre: "Invernaderos García", paginaWeb: "www.invernaderosgarcia.com", pais: "España", flores: ["Rosa", "Girasol"] },
+        { id: 2, nombre: "Cultivos Flores", paginaWeb: "www.cultivosflores.com", pais: "España", flores: ["Tulipán", "Girasol"] },
+        { id: 3, nombre: "Jardines del Norte", paginaWeb: "www.jardinesdelnorte.com", pais: "España", flores: ["Rosa", "Tulipán"] }
     ],
     subastadores: [
-        { id: 1, nombre: "Subastas Flor", ciudad: "Sevilla", horario: "Lunes a Viernes, 8:00 - 14:00", metodo: "Subasta Holandesa", flores: ["Rosa", "Clavel", "Girasol"] },
-        { id: 2, nombre: "Mercado de Flores", ciudad: "Barcelona", horario: "Martes y Jueves, 6:00 - 12:00", metodo: "Subasta Inglesa", flores: ["Orquídea", "Lirio", "Tulipán"] },
-        { id: 3, nombre: "Floralia Subastas", ciudad: "Madrid", horario: "Lunes, Miércoles y Viernes, 7:00 - 13:00", metodo: "Mixta", flores: ["Gerbera", "Crisantemo", "Lilium"] }
+        { id: 1, nombre: "Subastas Flor", pais: "España", flores: ["Rosa", "Tulipán"] },
+        { id: 2, nombre: "Mercado de Flores", pais: "España", flores: ["Girasol", "Tulipán"] },
+        { id: 3, nombre: "Floralia Subastas", pais: "España", flores: ["Rosa", "Girasol"] }
+    ],
+    flores: [
+        { id: 1, nombreComun: "Rosa", descripcion: "Flor de color rojo", genero_especie: "Rosa spp.", etimologia: "Del latín rosa", colores: ["Rojo", "Blanco", "Amarillo"], temperatura: "18" },
+        { id: 2, nombreComun: "Tulipán", descripcion: "Flor de varios colores", genero_especie: "Tulipa spp.", etimologia: "Del turco tülbend", colores: ["Rojo", "Amarillo", "Rosa"], temperatura: "15" },
+        { id: 3, nombreComun: "Girasol", descripcion: "Flor de color amarillo", genero_especie: "Helianthus annuus", etimologia: "Del griego helios y anthos", colores: ["Amarillo"], temperatura: "20" },
+        { id: 4, nombreComun: "Lirio", descripcion: "Flor de varios colores", genero_especie: "Lilium spp.", etimologia: "Del latín lilium", colores: ["Blanco", "Rosa", "Amarillo"], temperatura: "12" },
+        { id: 5, nombreComun: "Orquídea", descripcion: "Flor exótica de varios colores", genero_especie: "Orchidaceae", etimologia: "Del griego orkhis", colores: ["Blanco", "Rosa", "Morado"], temperatura: "15" }
     ],
     facturas: [
-        { id: 1, cliente: "Floristería Bella", fecha: "2023-05-15", total: 500 },
-        { id: 2, cliente: "Jardín Encantado", fecha: "2023-05-16", total: 750 },
-        { id: 3, cliente: "Flores del Valle", fecha: "2023-05-17", total: 600 }
-    ],
-    flores: {
-        "Rosa": { nombre: "Rosa", color: "Rojo", precio: 5, temporada: "Todo el año" },
-        "Tulipán": { nombre: "Tulipán", color: "Varios", precio: 3, temporada: "Primavera" },
-        "Girasol": { nombre: "Girasol", color: "Amarillo", precio: 4, temporada: "Verano" },
-        "Orquídea": { nombre: "Orquídea", color: "Varios", precio: 10, temporada: "Todo el año" },
-        "Lirio": { nombre: "Lirio", color: "Blanco", precio: 6, temporada: "Primavera-Verano" },
-        "Margarita": { nombre: "Margarita", color: "Blanco y Amarillo", precio: 2, temporada: "Primavera-Verano" },
-        "Clavel": { nombre: "Clavel", color: "Varios", precio: 3, temporada: "Todo el año" },
-        "Dalia": { nombre: "Dalia", color: "Varios", precio: 4, temporada: "Verano-Otoño" },
-        "Azucena": { nombre: "Azucena", color: "Blanco", precio: 5, temporada: "Verano" },
-        "Camelia": { nombre: "Camelia", color: "Rojo, Blanco o Rosa", precio: 7, temporada: "Invierno-Primavera" },
-        "Hortensia": { nombre: "Hortensia", color: "Azul o Rosa", precio: 8, temporada: "Primavera-Verano" },
-        "Azalea": { nombre: "Azalea", color: "Rosa o Blanco", precio: 6, temporada: "Primavera" },
-        "Gerbera": { nombre: "Gerbera", color: "Varios", precio: 3, temporada: "Primavera-Verano" },
-        "Crisantemo": { nombre: "Crisantemo", color: "Varios", precio: 4, temporada: "Otoño" },
-        "Lilium": { nombre: "Lilium", color: "Varios", precio: 7, temporada: "Verano" }
-    }
+        { id: 1, cliente: "Juan Pérez", fecha: "2023-01-15", total: 150.00 },
+        { id: 2, cliente: "María López", fecha: "2023-02-20", total: 200.00 },
+        { id: 3, cliente: "Carlos García", fecha: "2023-03-10", total: 250.00 }
+    ]
 };
 
 // Función para cambiar entre secciones
 function cambiarSeccion(seccion) {
-    document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
-    document.getElementById(seccion).classList.add('active');
+    document.querySelectorAll('section').forEach(s => s.style.display = 'none');
+    const seccionActiva = document.getElementById(seccion);
+    if (seccionActiva) {
+        seccionActiva.style.display = 'block';
+    } else {
+        console.error(`Sección no encontrada: ${seccion}`);
+        return;
+    }
+
     const tituloVista = document.getElementById('vista-titulo');
     const volverBtn = document.getElementById('volver-btn');
     
     if (seccion === 'detalles') {
-        volverBtn.style.display = 'block';
+        if (volverBtn) volverBtn.style.display = 'block';
     } else {
-        tituloVista.textContent = document.querySelector(`[data-section="${seccion}"]`).textContent.trim();
-        volverBtn.style.display = 'none';
-        cargarDatos(seccion);
+        const enlaceSeccion = document.querySelector(`[data-section="${seccion}"]`);
+        if (tituloVista && enlaceSeccion) {
+            tituloVista.textContent = enlaceSeccion.textContent.trim();
+        }
+        if (volverBtn) volverBtn.style.display = 'none';
+        if (seccion !== 'main') {
+            cargarDatos(seccion);
+        }
     }
 
     // Actualizar el enlace activo en el sidebar
@@ -60,22 +62,36 @@ function cambiarSeccion(seccion) {
     if (activeLink) {
         activeLink.classList.add('active');
     }
+
+    // Ocultar o mostrar el panel principal
+    const mainSection = document.getElementById('main');
+    if (mainSection) {
+        mainSection.style.display = seccion === 'main' ? 'block' : 'none';
+    }
 }
 
 // Función para cargar datos en las tarjetas
 function cargarDatos(seccion) {
+    if (seccion === 'main') return;
+
     const contenedor = document.querySelector(`#${seccion} .cards-container .cards`);
+    if (!contenedor) {
+        console.error(`Contenedor de cards no encontrado para la sección: ${seccion}`);
+        return;
+    }
     contenedor.innerHTML = '';
 
-    if (seccion === 'main') return; // El panel principal ya tiene contenido estático
+    if (!data[seccion]) {
+        console.error(`No se encontraron datos para la sección: ${seccion}`);
+        return;
+    }
 
     data[seccion].forEach(item => {
         const card = document.createElement('div');
         card.className = 'card';
         card.innerHTML = `
-            <h3>${item.nombre}</h3>
-            <p>${item.ciudad || item.region || item.fecha}</p>
-            ${item.flores ? `<p>Flores: ${item.flores.length}</p>` : ''}
+            <h3>${item.nombre || item.nombreComun || item.cliente}</h3>
+            <p>${item.pais || item.fecha || item.descripcion || ''}</p>
             ${item.total ? `<p>Total: €${item.total}</p>` : ''}
         `;
         card.addEventListener('click', () => mostrarDetalles(seccion, item));
@@ -91,18 +107,17 @@ function mostrarDetalles(seccion, item) {
     const catalogo = document.querySelector('#catalogo-flores .cards');
     const volverBtn = document.getElementById('volver-btn');
 
-    titulo.textContent = item.nombre;
+    titulo.textContent = item.nombre || item.nombreComun || item.cliente;
     volverBtn.style.display = 'block';
     volverBtn.onclick = () => cambiarSeccion(seccion);
     
     info.innerHTML = `
-        <p>${item.ciudad || item.region}</p>
-        ${item.telefono ? `<p>Teléfono: ${item.telefono}</p>` : ''}
+        <p>${item.pais || item.fecha || item.descripcion || ''}</p>
         ${item.email ? `<p>Email: ${item.email}</p>` : ''}
-        ${item.capacidad ? `<p>Capacidad: ${item.capacidad}</p>` : ''}
-        ${item.certificaciones ? `<p>Certificaciones: ${item.certificaciones}</p>` : ''}
-        ${item.horario ? `<p>Horario: ${item.horario}</p>` : ''}
-        ${item.metodo ? `<p>Método de subasta: ${item.metodo}</p>` : ''}
+        ${item.paginaWeb ? `<p>Página Web: <a href="http://${item.paginaWeb}" target="_blank">${item.paginaWeb}</a></p>` : ''}
+        ${item.etimologia ? `<p>Etimología: ${item.etimologia}</p>` : ''}
+        ${item.colores ? `<p>Colores: ${item.colores.join(', ')}</p>` : ''}
+        ${item.temperatura ? `<p>Temperatura: ${item.temperatura}</p>` : ''}
     `;
 
     catalogo.innerHTML = '';
@@ -122,87 +137,125 @@ function mostrarDetalles(seccion, item) {
 
 // Función para mostrar detalles de una flor
 function mostrarDetallesFlor(flor, proveedor) {
-    const detallesFlor = data.flores[flor];
+    const detallesFlor = data.flores.find(f => f.nombreComun === flor);
     const modal = document.getElementById('modal');
     const modalBody = document.getElementById('modal-body');
     modalBody.innerHTML = `
-        <h2>${detallesFlor.nombre}</h2>
+        <h2>${detallesFlor.nombreComun}</h2>
         <p>Proveedor: ${proveedor}</p>
-        <p>Color: ${detallesFlor.color}</p>
-        <p>Precio: €${detallesFlor.precio}</p>
-        <p>Temporada: ${detallesFlor.temporada}</p>
+        <p>Descripción: ${detallesFlor.descripcion}</p>
+        <p>Género y Especie: ${detallesFlor.genero_especie}</p>
+        <p>Etimología: ${detallesFlor.etimologia}</p>
+        <p>Colores: ${detallesFlor.colores.join(', ')}</p>
+        <p>Temperatura: ${detallesFlor.temperatura}</p>
     `;
     modal.style.display = 'block';
 }
 
-// Event listeners
-document.querySelectorAll('.sidebar a').forEach(link => {
-    link.addEventListener('click', (e) => {
-        e.preventDefault();
-        cambiarSeccion(e.target.getAttribute('data-section'));
-    });
-});
-
-document.querySelector('.close').addEventListener('click', () => {
-    document.getElementById('modal').style.display = 'none';
-});
-
-window.addEventListener('click', (e) => {
-    if (e.target === document.getElementById('modal')) {
-        document.getElementById('modal').style.display = 'none';
-    }
-});
-
-// Filtro para facturas
-document.getElementById('aplicarFiltro').addEventListener('click', () => {
-    const clienteFilter = document.getElementById('clienteFilter').value.toLowerCase();
-    const fechaFilter = document.getElementById('fechaFilter').value;
-
-    const facturasFiltradas = data.facturas.filter(factura => 
-        factura.cliente.toLowerCase().includes(clienteFilter) &&
-        (!fechaFilter || factura.fecha === fechaFilter)
-    );
-
-    const contenedor = document.querySelector('#facturas .cards-container .cards');
-    contenedor.innerHTML = '';
-
-    facturasFiltradas.forEach(factura => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-            <h3>${factura.cliente}</h3>
-            <p>Fecha: ${factura.fecha}</p>
-            <p>Total: €${factura.total}</p>
-        `;
-        contenedor.appendChild(card);
-    });
-});
-
-// Función para toggle del sidebar en móviles
 function toggleSidebar() {
     const sidebar = document.querySelector('.sidebar');
-    sidebar.classList.toggle('active');
+    const overlay = document.getElementById('overlay');
+    if (sidebar && overlay) {
+        sidebar.classList.toggle('active');
+        overlay.classList.toggle('active');
+        document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
+    }
 }
 
-// Event listener para el botón de toggle del sidebar
-document.getElementById('sidebar-toggle').addEventListener('click', toggleSidebar);
+// Event listeners
+document.addEventListener('DOMContentLoaded', () => {
+    // Event listeners para los enlaces del sidebar
+    document.querySelectorAll('.sidebar a').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            cambiarSeccion(e.target.getAttribute('data-section'));
+        });
+    });
 
-// Event listener para cerrar el sidebar al hacer clic en un enlace (en móviles)
-document.querySelectorAll('.sidebar a').forEach(link => {
-    link.addEventListener('click', () => {
-        if (window.innerWidth <= 768) {
-            toggleSidebar();
+    // Event listeners para las tarjetas del panel principal
+    document.querySelectorAll('.main-card').forEach(card => {
+        card.addEventListener('click', (e) => {
+            const seccion = e.currentTarget.getAttribute('data-section');
+            cambiarSeccion(seccion);
+        });
+    });
+
+    document.querySelector('.close').addEventListener('click', () => {
+        document.getElementById('modal').style.display = 'none';
+    });
+
+    window.addEventListener('click', (e) => {
+        if (e.target === document.getElementById('modal')) {
+            document.getElementById('modal').style.display = 'none';
         }
     });
-});
 
-// Cargar el panel principal al inicio
-cambiarSeccion('main');
+    // Filtro para facturas
+    const aplicarFiltroBtn = document.getElementById('aplicarFiltro');
+    if (aplicarFiltroBtn) {
+        aplicarFiltroBtn.addEventListener('click', () => {
+            const clienteFilter = document.getElementById('clienteFilter').value.toLowerCase();
+            const fechaFilter = document.getElementById('fechaFilter').value;
+
+            const facturasFiltradas = data.facturas.filter(factura => 
+                factura.cliente.toLowerCase().includes(clienteFilter) &&
+                (!fechaFilter || factura.fecha === fechaFilter)
+            );
+
+            const contenedor = document.querySelector('#facturas .cards-container .cards');
+            if (contenedor) {
+                contenedor.innerHTML = '';
+
+                facturasFiltradas.forEach(factura => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.innerHTML = `
+                        <h3>${factura.cliente}</h3>
+                        <p>Fecha: ${factura.fecha}</p>
+                        <p>Total: €${factura.total}</p>
+                    `;
+                    contenedor.appendChild(card);
+                });
+            }
+        });
+    }
+
+    // Event listener para el botón de toggle del sidebar
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', toggleSidebar);
+    }
+
+    // Event listener para el botón de cierre del sidebar
+    const sidebarClose = document.getElementById('sidebar-close');
+    if (sidebarClose) {
+        sidebarClose.addEventListener('click', toggleSidebar);
+    }
+
+    // Event listener para cerrar el sidebar al hacer clic en el overlay
+    const overlay = document.getElementById('overlay');
+    if (overlay) {
+        overlay.addEventListener('click', toggleSidebar);
+    }
+
+    // Event listener para cerrar el sidebar al hacer clic en un enlace (en móviles)
+    document.querySelectorAll('.sidebar a').forEach(link => {
+        link.addEventListener('click', () => {
+            if (window.innerWidth <= 768) {
+                toggleSidebar();
+            }
+        });
+    });
+
+    // Cargar el panel principal al inicio
+    cambiarSeccion('main');
+});
 
 // Ajustar el sidebar al cambiar el tamaño de la ventana
 window.addEventListener('resize', () => {
     const sidebar = document.querySelector('.sidebar');
-    if (window.innerWidth > 768) {
+    if (sidebar && window.innerWidth > 768) {
         sidebar.classList.remove('active');
     }
 });
+

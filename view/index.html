@@ -8,11 +8,15 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 </head>
 <body>
+    <div id="overlay"></div>
     <div class="dashboard">
         <button id="sidebar-toggle" aria-label="Abrir menú">
             <i class="fas fa-bars"></i>
         </button>
         <nav class="sidebar">
+            <button id="sidebar-close" aria-label="Cerrar menú">
+                <i class="fas fa-times"></i>
+            </button>
             <ul>
                 <li><a href="#" data-section="main"><i class="fas fa-home"></i> Panel Principal</a></li>
                 <li><a href="#" data-section="floristerias"><i class="fas fa-store"></i> Floristerías</a></li>
@@ -28,12 +32,22 @@
             </header>
             <section id="main" class="active">
                 <div class="cards-container">
-                    <div class="cards">
-                        <div class="card">
-                            <h3>Resumen</h3>
-                            <p>Floristerías: 10</p>
-                            <p>Productores: 15</p>
-                            <p>Subastadores: 5</p>
+                    <div class="cards main-cards">
+                        <div class="card main-card" data-section="floristerias">
+                            <i class="fas fa-store"></i>
+                            <h3>Floristerías</h3>
+                        </div>
+                        <div class="card main-card" data-section="productores">
+                            <i class="fas fa-seedling"></i>
+                            <h3>Productores</h3>
+                        </div>
+                        <div class="card main-card" data-section="subastadores">
+                            <i class="fas fa-gavel"></i>
+                            <h3>Subastadores</h3>
+                        </div>
+                        <div class="card main-card" data-section="facturas">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                            <h3>Facturas</h3>
                         </div>
                     </div>
                 </div>
