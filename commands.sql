@@ -107,6 +107,7 @@ SELECT paisId FROM PAIS WHERE nombrePais = 'Brasil';
 SELECT paisId FROM PAIS WHERE nombrePais = 'Polonia';
 SELECT paisId FROM PAIS WHERE nombrePais = 'España'; -- Asumiendo que Herbs Barcelona es de España
 SELECT paisId FROM PAIS WHERE nombrePais = 'Venezuela';
+SELECT paisId FROM PAIS WHERE nombrePais = 'Dinamarca';
 
 -- Supongamos que los paisId son los siguientes:
 -- Alemania: 3
@@ -114,11 +115,13 @@ SELECT paisId FROM PAIS WHERE nombrePais = 'Venezuela';
 -- Polonia: 6
 -- España: 7
 -- Venezuela: 1
+-- Dinamarca: 5
 
 -- Insertar las floristerías
 INSERT INTO FLORISTERIAS (nombre, email, paginaWeb, idPais) VALUES 
 ('FloraPrima', 'einkauf-nf@floraprima.de', 'www.floraprima.de', 3),
 ('Flowers for Brazil', 'example@gmail.com', 'www.flower4brazil.com', 4),
+('Blooming', 'info@bloomingcopenhagen.dk', 'www.bloomingcopenhagen.dk', 5),
 ('Poczta kwiatowa', 'biuro@kwiatowaprzesylka.pl', 'www.kwiatowaprzesylka.pl', 6),
 ('Herbs Barcelona', 'info@herbs.es', 'www.herbs.es', 7),
 ('Toscana Flores', 'contacto@toscanaflores.com', 'toscanaflores.com', 1);
@@ -145,7 +148,11 @@ INSERT INTO CLIENTE_NATURAL (documentoIdentidad, primernombre, primerApellido, s
 (87654321, 'María', 'López', 'Martínez', 'Isabel'),
 (11223344, 'Carlos', 'Hernández', 'Sánchez', 'Ricardo'),
 (44332211, 'Ana', 'Gómez', 'Fernández', NULL),
-(55667788, 'Luis', 'Díaz', 'Torres', 'Eduardo');
+(55667788, 'Luis', 'Díaz', 'Torres', 'Eduardo'),
+(33445566, 'Pedro', 'Ramírez', 'González', 'Antonio'),
+(99887766, 'Lucía', 'Fernández', 'Pérez', 'María'),
+(55664433, 'Miguel', 'Torres', 'López', 'Ángel'),
+(22334455, 'Sofía', 'Martínez', 'Rodríguez', 'Elena');
 
 -- Verificar que los datos han sido insertados correctamente
 SELECT * FROM CLIENTE_NATURAL;
