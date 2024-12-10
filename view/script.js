@@ -1,5 +1,5 @@
 // Datos de muestra
-const data = {
+/*const data = {
     floristerias: [
         { id: 1, nombre: "Floristería Bella", email: "bella@flores.com", paginaWeb: "www.floristeriabella.com", pais: "España", flores: ["Rosa", "Tulipán"] },
         { id: 2, nombre: "Jardín Encantado", email: "jardin@flores.com", paginaWeb: "www.jardinencantado.com", pais: "España", flores: ["Girasol", "Tulipán"] },
@@ -27,7 +27,7 @@ const data = {
         { id: 2, cliente: "María López", fecha: "2023-02-20", total: 200.00 },
         { id: 3, cliente: "Carlos García", fecha: "2023-03-10", total: 250.00 }
     ]
-};
+};*/
 
 // Función para cambiar entre secciones
 function cambiarSeccion(seccion) {
@@ -70,36 +70,7 @@ function cambiarSeccion(seccion) {
     }
 }
 
-// Función para cargar datos en las tarjetas
-function cargarDatos(seccion) {
-    if (seccion === 'main') return;
-
-    const contenedor = document.querySelector(`#${seccion} .cards-container .cards`);
-    if (!contenedor) {
-        console.error(`Contenedor de cards no encontrado para la sección: ${seccion}`);
-        return;
-    }
-    contenedor.innerHTML = '';
-
-    if (!data[seccion]) {
-        console.error(`No se encontraron datos para la sección: ${seccion}`);
-        return;
-    }
-
-    data[seccion].forEach(item => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-            <h3>${item.nombre || item.nombreComun || item.cliente}</h3>
-            <p>${item.pais || item.fecha || item.descripcion || ''}</p>
-            ${item.total ? `<p>Total: €${item.total}</p>` : ''}
-        `;
-        card.addEventListener('click', () => mostrarDetalles(seccion, item));
-        contenedor.appendChild(card);
-    });
-}
-
-// Función para mostrar detalles
+// Función para cargar datos en las tarjetas de PRODUCTORES
 function mostrarDetalles(seccion, item) {
     cambiarSeccion('detalles');
     const titulo = document.getElementById('vista-titulo');
@@ -107,10 +78,12 @@ function mostrarDetalles(seccion, item) {
     const catalogo = document.querySelector('#catalogo-flores .cards');
     const volverBtn = document.getElementById('volver-btn');
 
-    titulo.textContent = item.nombre || item.nombreComun || item.cliente;
+    // Actualizar el encabezado con el nombre de la productora
+    titulo.textContent = item.nombreproductora || item.nombre || item.nombreComun || item.cliente;
     volverBtn.style.display = 'block';
     volverBtn.onclick = () => cambiarSeccion(seccion);
     
+    // Mostrar la información de la productora seleccionada
     info.innerHTML = `
         <p>${item.pais || item.fecha || item.descripcion || ''}</p>
         ${item.email ? `<p>Email: ${item.email}</p>` : ''}
@@ -123,16 +96,59 @@ function mostrarDetalles(seccion, item) {
     catalogo.innerHTML = '';
     if (item.flores) {
         item.flores.forEach(flor => {
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.innerHTML = `
-                <img src="https://via.placeholder.com/150?text=${flor}" alt="${flor}">
-                <h3>${flor}</h3>
+            const florCard = document.createElement('div');
+            florCard.className = 'card';
+            florCard.innerHTML = `
+                <h3>${flor.nombre}</h3>
+                <p>${flor.descripcion}</p>
             `;
-            card.addEventListener('click', () => mostrarDetallesFlor(flor, item.nombre));
-            catalogo.appendChild(card);
+            catalogo.appendChild(florCard);
         });
     }
+}
+
+// Función para cargar datos en las tarjetas
+async function cargarDatos(seccion) {
+    if (seccion === 'main') return;
+
+    const contenedor = document.querySelector(`#${seccion} .cards-container .cards`);
+    if (!contenedor) {
+        console.error(`Contenedor de cards no encontrado para la sección: ${seccion}`);
+        return;
+    }
+    contenedor.innerHTML = '';
+
+    let data;
+    if (seccion === 'productores') {
+        try {
+            const response = await fetch('/api/productoras');
+            data = await response.json();
+        } catch (err) {
+            console.error('Error fetching productoras:', err);
+            return;
+        }
+    } else {
+        data = window.data[seccion];
+    }
+
+    if (!data) {
+        console.error(`No se encontraron datos para la sección: ${seccion}`);
+        return;
+    }
+
+    data.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+            <h3>${item.nombreproductora || item.nombre || item.nombreComun || item.cliente}</h3>
+            <p>${item.paginaWeb || item.pais || item.fecha || item.descripcion || ''}</p>
+            ${item.total ? `<p>Total: €${item.total}</p>` : ''}
+        `;
+        card.addEventListener('click', () => {
+            mostrarDetalles(seccion, item);
+        });
+        contenedor.appendChild(card);
+    });
 }
 
 // Función para mostrar detalles de una flor
