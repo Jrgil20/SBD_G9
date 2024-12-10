@@ -21,6 +21,8 @@ INSERT INTO PAIS (nombrePais, continente) VALUES ('Brasil', 'Am');
 INSERT INTO PAIS (nombrePais, continente) VALUES ('Dinamarca', 'Eu');
 INSERT INTO PAIS (nombrePais, continente) VALUES ('Polonia', 'Eu');
 INSERT INTO PAIS (nombrePais, continente) VALUES ('España', 'Eu');
+INSERT INTO PAIS (nombrePais, continente) VALUES ('Colombia', 'Am');
+INSERT INTO PAIS (nombrePais, continente) VALUES ('Ecuador', 'Am');
 
 SELECT * FROM PAIS;
 
