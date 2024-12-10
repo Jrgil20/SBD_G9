@@ -271,6 +271,61 @@ section.active {
     cursor: pointer;
 }
 
+#detalles-factura {
+    display: none;
+    padding: 0% 3% 3% 3%;
+}
+
+#detalles-factura.active {
+    display: block;
+}
+
+.factura-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-direction: column;
+}
+
+.factura-info div {
+    width: 45%;
+}
+
+#factura-lotes {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+#factura-lotes th, #factura-lotes td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+#factura-lotes th {
+    background-color: var(--color-primary);
+    color: white;
+}
+
+#detalles-factura-titulo {
+    text-align: center;
+}
+
+#subtitulo-factura, #subtitulo-lotes{
+    text-align: center;
+}
+
+#factura-monto-total, #factura-envio {
+    text-align: end;
+    padding-right: 10px;
+}
+
+#subtitulo-subastadora,
+#subtitulo-floristeria {
+    text-align: left;
+}
+
 @media (max-width: 1024px) {
     .card {
         width: calc(50% - 20px);

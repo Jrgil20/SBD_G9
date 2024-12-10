@@ -81,8 +81,53 @@
                 </div>
                 <div class="cards-container">
                     <div class="cards">
-                        <!-- Las tarjetas se generarán dinámicamente con JavaScript -->
+                        <!-- Tarjeta de factura de prueba -->
+                        <div class="card" onclick="mostrarDetallesFactura(facturaPrueba)">
+                            <h3>Factura #12345</h3>
+                            <p>Subastadora: Subastadora Ejemplo</p>
+                            <p>Floristería: Floristeria Ejemplo</p>
+                            <p>Fecha: 2023-10-01</p>
+                            <p>Monto: €500.00</p>
+                        </div>
                     </div>
+                </div>
+            </section>
+            <section id="detalles-factura">
+                <h2 id="detalles-factura-titulo"></h2>
+                <div id="detalles-factura-info">
+                    <div class="factura-info">
+                        <div class="factura-subastadora">
+                            <h3 id="subtitulo-subastadora">Subastadora</h3>
+                            <p id="subastadora-nombre"></p>
+                            <p id="subastadora-contacto"></p>
+                        </div>
+                        <div class="factura-floristeria">
+                            <h3 id="subtitulo-floristeria">Floristería</h3>
+                            <p id="floristeria-nombre"></p>
+                            <p id="floristeria-contacto"></p>
+                            <p id="floristeria-email"></p>
+                        </div>
+                    </div>
+                    <h3 id="subtitulo-factura">FACTURA</h3>
+                    <p id="factura-numero"></p>
+                    <p id="factura-fecha"></p>
+                    <h3 id="subtitulo-lotes">LOTES</h3>
+                    <table id="factura-lotes">
+                        <thead>
+                            <tr>
+                                <th>Producido por</th>
+                                <th>VBN</th>
+                                <th>Lote</th>
+                                <th>Cantidad</th>
+                                <th>Precio</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Los detalles de los lotes se generarán dinámicamente -->
+                        </tbody>
+                    </table>
+                    <p id="factura-envio"></p>
+                    <p id="factura-monto-total"></p>
                 </div>
             </section>
             <section id="detalles">

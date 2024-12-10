@@ -1,33 +1,77 @@
-// Datos de muestra
-/*const data = {
-    floristerias: [
-        { id: 1, nombre: "Floristería Bella", email: "bella@flores.com", paginaWeb: "www.floristeriabella.com", pais: "España", flores: ["Rosa", "Tulipán"] },
-        { id: 2, nombre: "Jardín Encantado", email: "jardin@flores.com", paginaWeb: "www.jardinencantado.com", pais: "España", flores: ["Girasol", "Tulipán"] },
-        { id: 3, nombre: "Flores del Valle", email: "valle@flores.com", paginaWeb: "www.floresdelvalle.com", pais: "España", flores: ["Rosa", "Girasol"] }
+// Datos de prueba
+const facturaPrueba = {
+    numeroFactura: '12345',
+    subastadora: {
+        nombre: 'Subastadora Ejemplo',
+        id: '1',
+        contacto: '123-456-7890'
+    },
+    floristeria: {
+        nombre: 'Floristeria Ejemplo',
+        id: '2',
+        contacto: '098-765-4321',
+        email: 'contacto@floristeria.com'
+    },
+    fecha: '2023-10-01',
+    monto: '500.00',
+    lotes: [
+        {
+            productor: 'Productor Ejemplo',
+            vbn: 'VBN123',
+            lote: 'Lote1',
+            cantidad: 100,
+            precio: '5.00'
+        },
+        {
+            productor: 'Productor Ejemplo 2',
+            vbn: 'VBN456',
+            lote: 'Lote2',
+            cantidad: 200,
+            precio: '2.50'
+        }
     ],
-    productores: [
-        { id: 1, nombre: "Invernaderos García", paginaWeb: "www.invernaderosgarcia.com", pais: "España", flores: ["Rosa", "Girasol"] },
-        { id: 2, nombre: "Cultivos Flores", paginaWeb: "www.cultivosflores.com", pais: "España", flores: ["Tulipán", "Girasol"] },
-        { id: 3, nombre: "Jardines del Norte", paginaWeb: "www.jardinesdelnorte.com", pais: "España", flores: ["Rosa", "Tulipán"] }
-    ],
-    subastadores: [
-        { id: 1, nombre: "Subastas Flor", pais: "España", flores: ["Rosa", "Tulipán"] },
-        { id: 2, nombre: "Mercado de Flores", pais: "España", flores: ["Girasol", "Tulipán"] },
-        { id: 3, nombre: "Floralia Subastas", pais: "España", flores: ["Rosa", "Girasol"] }
-    ],
-    flores: [
-        { id: 1, nombreComun: "Rosa", descripcion: "Flor de color rojo", genero_especie: "Rosa spp.", etimologia: "Del latín rosa", colores: ["Rojo", "Blanco", "Amarillo"], temperatura: "18" },
-        { id: 2, nombreComun: "Tulipán", descripcion: "Flor de varios colores", genero_especie: "Tulipa spp.", etimologia: "Del turco tülbend", colores: ["Rojo", "Amarillo", "Rosa"], temperatura: "15" },
-        { id: 3, nombreComun: "Girasol", descripcion: "Flor de color amarillo", genero_especie: "Helianthus annuus", etimologia: "Del griego helios y anthos", colores: ["Amarillo"], temperatura: "20" },
-        { id: 4, nombreComun: "Lirio", descripcion: "Flor de varios colores", genero_especie: "Lilium spp.", etimologia: "Del latín lilium", colores: ["Blanco", "Rosa", "Amarillo"], temperatura: "12" },
-        { id: 5, nombreComun: "Orquídea", descripcion: "Flor exótica de varios colores", genero_especie: "Orchidaceae", etimologia: "Del griego orkhis", colores: ["Blanco", "Rosa", "Morado"], temperatura: "15" }
-    ],
-    facturas: [
-        { id: 1, cliente: "Juan Pérez", fecha: "2023-01-15", total: 150.00 },
-        { id: 2, cliente: "María López", fecha: "2023-02-20", total: 200.00 },
-        { id: 3, cliente: "Carlos García", fecha: "2023-03-10", total: 250.00 }
-    ]
-};*/
+    envio: 'Sí'
+};
+
+// Función para mostrar detalles de la factura
+function mostrarDetallesFactura(factura) {
+    cambiarSeccion('detalles-factura');
+    document.getElementById('vista-titulo').textContent = `Factura #${factura.numeroFactura}`;
+    document.getElementById('volver-btn').style.display = 'block';
+    document.getElementById('volver-btn').onclick = () => cambiarSeccion('facturas');
+
+    document.getElementById('subastadora-nombre').textContent = `${factura.subastadora.nombre} (#${factura.subastadora.id})`;
+    document.getElementById('subastadora-contacto').textContent = `Contacto: ${factura.subastadora.contacto}`;
+    document.getElementById('floristeria-nombre').textContent = `${factura.floristeria.nombre} (#${factura.floristeria.id})`;
+    document.getElementById('floristeria-contacto').textContent = `Contacto: ${factura.floristeria.contacto}`;
+    document.getElementById('floristeria-email').textContent = `Email: ${factura.floristeria.email}`;
+    document.getElementById('factura-numero').textContent = `Número: ${factura.numeroFactura}`;
+    document.getElementById('factura-fecha').textContent = `Fecha: ${factura.fecha}`;
+    document.getElementById('factura-envio').textContent = `Envío: ${factura.envio}`;
+    document.getElementById('factura-monto-total').textContent = `Monto Total: €${factura.monto}`;
+
+    const lotesTableBody = document.getElementById('factura-lotes').querySelector('tbody');
+    lotesTableBody.innerHTML = '';
+    factura.lotes.forEach(lote => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><a href="#" onclick="mostrarModal('Información del productor: ${lote.productor}')">${lote.productor}</a></td>
+            <td><a href="#" onclick="mostrarModal('Información del VBN: ${lote.vbn}')">${lote.vbn}</a></td>
+            <td><a href="#" onclick="mostrarModal('Información del lote: ${lote.lote}')">${lote.lote}</a></td>
+            <td>${lote.cantidad}</td>
+            <td>€${lote.precio}</td>
+        `;
+        lotesTableBody.appendChild(row);
+    });
+}
+
+// Función para mostrar el modal con información de prueba
+function mostrarModal(info) {
+    const modal = document.getElementById('modal');
+    const modalBody = document.getElementById('modal-body');
+    modalBody.innerHTML = info;
+    modal.style.display = 'block';
+}
 
 // Función para cambiar entre secciones
 function cambiarSeccion(seccion) {
@@ -43,34 +87,37 @@ function cambiarSeccion(seccion) {
     const tituloVista = document.getElementById('vista-titulo');
     const volverBtn = document.getElementById('volver-btn');
     
-    if (seccion === 'detalles') {
-        if (volverBtn) volverBtn.style.display = 'block';
+    if (seccion === 'detalles' || seccion === 'detalles-factura') {
+        tituloVista.style.display = 'block';
+        volverBtn.style.display = 'block';
     } else {
-        const enlaceSeccion = document.querySelector(`[data-section="${seccion}"]`);
-        if (tituloVista && enlaceSeccion) {
-            tituloVista.textContent = enlaceSeccion.textContent.trim();
-        }
-        if (volverBtn) volverBtn.style.display = 'none';
-        if (seccion !== 'main') {
-            cargarDatos(seccion);
-        }
+        tituloVista.style.display = 'block';
+        volverBtn.style.display = 'none';
     }
 
-    // Actualizar el enlace activo en el sidebar
-    document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
-    const activeLink = document.querySelector(`.sidebar a[data-section="${seccion}"]`);
-    if (activeLink) {
-        activeLink.classList.add('active');
-    }
-
-    // Ocultar o mostrar el panel principal
-    const mainSection = document.getElementById('main');
-    if (mainSection) {
-        mainSection.style.display = seccion === 'main' ? 'block' : 'none';
+    // Actualizar el título del menú
+    switch (seccion) {
+        case 'main':
+            tituloVista.textContent = 'Panel Principal';
+            break;
+        case 'floristerias':
+            tituloVista.textContent = 'Floristerías';
+            break;
+        case 'productores':
+            tituloVista.textContent = 'Productores';
+            cargarDatos('productores'); // Cargar datos de productores
+            break;
+        case 'subastadores':
+            tituloVista.textContent = 'Subastadores';
+            break;
+        case 'facturas':
+            tituloVista.textContent = 'Facturas';
+            break;
+        default:
+            tituloVista.textContent = '';
     }
 }
 
-// Función para cargar datos en las tarjetas de PRODUCTORES
 function mostrarDetalles(seccion, item) {
     cambiarSeccion('detalles');
     const titulo = document.getElementById('vista-titulo');
@@ -150,6 +197,7 @@ async function cargarDatos(seccion) {
         contenedor.appendChild(card);
     });
 }
+
 
 // Función para mostrar detalles de una flor
 function mostrarDetallesFlor(flor, proveedor) {
