@@ -202,7 +202,11 @@ INSERT INTO FLOR_CORTES (nombreComun, Descripcion, genero_especie, etimologia, c
 ('Tulipán', 'Flor bulbosa de primavera', 'Tulipa gesneriana', 'Del turco "tülbend" que significa turbante', 'Rojo, Amarillo, Púrpura, Blanco', 15),
 ('Orquídea', 'Flor exótica y diversa', 'Orchidaceae', 'Del griego "orchis" que significa testículo', 'Púrpura, Blanco, Rosa, Amarillo', 20),
 ('Girasol', 'Flor alta que sigue al sol', 'Helianthus annuus', 'Del griego "helios" que significa sol y "anthos" que significa flor', 'Amarillo', 25),
-('Lirio', 'Flor elegante y fragante', 'Lilium', 'Del griego "leirion"', 'Blanco, Rosa, Amarillo, Naranja', 22);
+('Lirio', 'Flor elegante y fragante', 'Lilium', 'Del griego "leirion"', 'Blanco, Rosa, Amarillo, Naranja', 22),
+('Clavel', 'Flor popular en ramos y arreglos', 'Dianthus caryophyllus', 'Del griego "dios" que significa dios y "anthos" que significa flor', 'Rojo, Blanco, Rosa, Amarillo', 18),
+('Margarita', 'Flor sencilla y alegre', 'Bellis perennis', 'Del latín "bellus" que significa hermoso', 'Blanco, Amarillo', 15),
+('Hortensia', 'Flor ornamental en racimos', 'Hydrangea macrophylla', 'Del griego "hydor" que significa agua y "angos" que significa jarra', 'Rosa, Azul, Blanco', 20),
+('Peonía', 'Flor grande y fragante', 'Paeonia lactiflora', 'Del griego "paionia" que significa curación', 'Rosa, Blanco, Rojo', 22);
 
 -- Verificar que los datos han sido insertados correctamente
 SELECT * FROM FLOR_CORTES;
