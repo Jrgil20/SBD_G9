@@ -21,6 +21,8 @@ INSERT INTO PAIS (nombrePais, continente) VALUES ('Brasil', 'Am');
 INSERT INTO PAIS (nombrePais, continente) VALUES ('Dinamarca', 'Eu');
 INSERT INTO PAIS (nombrePais, continente) VALUES ('Polonia', 'Eu');
 INSERT INTO PAIS (nombrePais, continente) VALUES ('España', 'Eu');
+INSERT INTO PAIS (nombrePais, continente) VALUES ('Colombia', 'Am');
+INSERT INTO PAIS (nombrePais, continente) VALUES ('Ecuador', 'Am');
 
 SELECT * FROM PAIS;
 
@@ -105,6 +107,7 @@ SELECT paisId FROM PAIS WHERE nombrePais = 'Brasil';
 SELECT paisId FROM PAIS WHERE nombrePais = 'Polonia';
 SELECT paisId FROM PAIS WHERE nombrePais = 'España'; -- Asumiendo que Herbs Barcelona es de España
 SELECT paisId FROM PAIS WHERE nombrePais = 'Venezuela';
+SELECT paisId FROM PAIS WHERE nombrePais = 'Dinamarca';
 
 -- Supongamos que los paisId son los siguientes:
 -- Alemania: 3
@@ -112,11 +115,13 @@ SELECT paisId FROM PAIS WHERE nombrePais = 'Venezuela';
 -- Polonia: 6
 -- España: 7
 -- Venezuela: 1
+-- Dinamarca: 5
 
 -- Insertar las floristerías
 INSERT INTO FLORISTERIAS (nombre, email, paginaWeb, idPais) VALUES 
 ('FloraPrima', 'einkauf-nf@floraprima.de', 'www.floraprima.de', 3),
 ('Flowers for Brazil', 'example@gmail.com', 'www.flower4brazil.com', 4),
+('Blooming', 'info@bloomingcopenhagen.dk', 'www.bloomingcopenhagen.dk', 5),
 ('Poczta kwiatowa', 'biuro@kwiatowaprzesylka.pl', 'www.kwiatowaprzesylka.pl', 6),
 ('Herbs Barcelona', 'info@herbs.es', 'www.herbs.es', 7),
 ('Toscana Flores', 'contacto@toscanaflores.com', 'toscanaflores.com', 1);
@@ -143,7 +148,11 @@ INSERT INTO CLIENTE_NATURAL (documentoIdentidad, primernombre, primerApellido, s
 (87654321, 'María', 'López', 'Martínez', 'Isabel'),
 (11223344, 'Carlos', 'Hernández', 'Sánchez', 'Ricardo'),
 (44332211, 'Ana', 'Gómez', 'Fernández', NULL),
-(55667788, 'Luis', 'Díaz', 'Torres', 'Eduardo');
+(55667788, 'Luis', 'Díaz', 'Torres', 'Eduardo'),
+(33445566, 'Pedro', 'Ramírez', 'González', 'Antonio'),
+(99887766, 'Lucía', 'Fernández', 'Pérez', 'María'),
+(55664433, 'Miguel', 'Torres', 'López', 'Ángel'),
+(22334455, 'Sofía', 'Martínez', 'Rodríguez', 'Elena');
 
 -- Verificar que los datos han sido insertados correctamente
 SELECT * FROM CLIENTE_NATURAL;
@@ -164,7 +173,11 @@ INSERT INTO CLIENTE_JURIDICO (RIF, nombre) VALUES
 (987654321, 'Empresa B'),
 (112233445, 'Empresa C'),
 (554433221, 'Empresa D'),
-(667788990, 'Empresa E');
+(667788990, 'Empresa E'),
+(223344556, 'Empresa F'),
+(334455667, 'Empresa G'),
+(445566778, 'Empresa H'),
+(556677889, 'Empresa I');
 
 -- Verificar que los datos han sido insertados correctamente
 SELECT * FROM CLIENTE_JURIDICO;
@@ -189,7 +202,11 @@ INSERT INTO FLOR_CORTES (nombreComun, Descripcion, genero_especie, etimologia, c
 ('Tulipán', 'Flor bulbosa de primavera', 'Tulipa gesneriana', 'Del turco "tülbend" que significa turbante', 'Rojo, Amarillo, Púrpura, Blanco', 15),
 ('Orquídea', 'Flor exótica y diversa', 'Orchidaceae', 'Del griego "orchis" que significa testículo', 'Púrpura, Blanco, Rosa, Amarillo', 20),
 ('Girasol', 'Flor alta que sigue al sol', 'Helianthus annuus', 'Del griego "helios" que significa sol y "anthos" que significa flor', 'Amarillo', 25),
-('Lirio', 'Flor elegante y fragante', 'Lilium', 'Del griego "leirion"', 'Blanco, Rosa, Amarillo, Naranja', 22);
+('Lirio', 'Flor elegante y fragante', 'Lilium', 'Del griego "leirion"', 'Blanco, Rosa, Amarillo, Naranja', 22),
+('Clavel', 'Flor popular en ramos y arreglos', 'Dianthus caryophyllus', 'Del griego "dios" que significa dios y "anthos" que significa flor', 'Rojo, Blanco, Rosa, Amarillo', 18),
+('Margarita', 'Flor sencilla y alegre', 'Bellis perennis', 'Del latín "bellus" que significa hermoso', 'Blanco, Amarillo', 15),
+('Hortensia', 'Flor ornamental en racimos', 'Hydrangea macrophylla', 'Del griego "hydor" que significa agua y "angos" que significa jarra', 'Rosa, Azul, Blanco', 20),
+('Peonía', 'Flor grande y fragante', 'Paeonia lactiflora', 'Del griego "paionia" que significa curación', 'Rosa, Blanco, Rojo', 22);
 
 -- Verificar que los datos han sido insertados correctamente
 SELECT * FROM FLOR_CORTES;
@@ -282,10 +299,20 @@ ADD CONSTRAINT fk_IdSignificado FOREIGN KEY (IdSignificado) REFERENCES SIGNIFICA
 ADD CONSTRAINT FK1 FOREIGN KEY (idColor) REFERENCES COLOR(colorId),
 ADD CONSTRAINT FK2 FOREIGN KEY (idCorte) REFERENCES FLOR_CORTES(corteId);
 
+ALTER TABLE ENLACES
+ADD CONSTRAINT chk_enlaces CHECK (idColor IS NOT NULL OR idCorte IS NOT NULL);
+
 -- Insertar datos de prueba en ENLACES
 INSERT INTO ENLACES (IdSignificado,Descripcion, IdColor, idCorte) VALUES 
 (1,'rosas rojas es el clásico regalo romántico', 2, 2),
-(2,'La rosa blanca es un símbolo de pureza, inocencia y amor puro', 2, 1);
+(2,'La rosa blanca es un símbolo de pureza, inocencia y amor puro', 2, 1),
+(3, 'Las flores de cumpleaños son una forma especial de celebrar', 4, 3),
+(4, 'Las flores de felicidad traen alegría y buenos deseos', 5, 4),
+(5, 'Las flores de aniversario simbolizan el amor duradero', 6, 5),
+(6, 'Las flores de tristeza expresan condolencias y apoyo', 7, 6),
+(7, 'Las flores de graduación celebran logros y nuevos comienzos', 8, 7),
+(8, 'Las flores de amistad fortalecen los lazos entre amigos', 9, 8),
+(9, 'Las flores de nacimiento dan la bienvenida a un nuevo bebé', 10, 9);
 
 -- Verificar que los datos han sido insertados correctamente
 SELECT * FROM ENLACES;
@@ -308,7 +335,15 @@ ADD CONSTRAINT unique_vbn UNIQUE (vbn);
 
 -- Insertar datos de prueba en CATALOGOPRODUCTOR
 INSERT INTO CATALOGOPRODUCTOR (idProductora, idCorte, vbn, nombrepropio, descripcion) VALUES 
-(1, 1, 1, 'Rosas', NULL);
+(1, 1, 1, 'Rosas', NULL),
+(2, 2, 2, 'Tulipanes', 'Tulipanes amarillos brillantes'),
+(3, 3, 3, 'Orquídeas', 'Orquídeas exóticas y elegantes'),
+(1, 4, 4, 'Girasoles', 'Girasoles altos que siguen al sol'),
+(2, 5, 5, 'Lirios', 'Lirios blancos elegantes y fragantes'),
+(3, 6, 6, 'Claveles', 'Claveles populares en ramos y arreglos'),
+(1, 7, 7, 'Margaritas', 'Margaritas sencillas y alegres'),
+(2, 8, 8, 'Hortensias', 'Hortensias ornamentales en racimos'),
+(3, 9, 9, 'Peonías', 'Peonías grandes y fragantes');
 
 -- Verificar los datos insertados
 SELECT * FROM CATALOGOPRODUCTOR;
@@ -333,13 +368,19 @@ ALTER TABLE CONTRATO
 ADD CONSTRAINT fk_idSubastadora_contrato FOREIGN KEY (idSubastadora) REFERENCES SUBASTADORA (subastadoraId),
 ADD CONSTRAINT fk_idProductora_contrato FOREIGN KEY (idProductora) REFERENCES PRODUCTORAS (productoraId),
 ADD CONSTRAINT fk_renovacion_contrato FOREIGN KEY (idrenovS, idrenovP, ren_nContrato) REFERENCES CONTRATO(idSubastadora, idProductora, nContrato),
-ADD CONSTRAINT check_tipoProductor CHECK (tipoProductor IN ('Ca', 'Cb', 'Cc', 'Cg', 'Ka'));
+ADD CONSTRAINT check_tipoProductor CHECK (tipoProductor IN ('Ca', 'Cb', 'Cc', 'Cg', 'Ka')),
+ADD CONSTRAINT check_porcentajeProduccion CHECK (
+  (tipoProductor = 'Ca' AND porcentajeProduccion > 0.50) OR
+  (tipoProductor = 'Cb' AND porcentajeProduccion > 0.20 AND porcentajeProduccion < 0.50) OR
+  (tipoProductor = 'Cc' AND porcentajeProduccion < 0.20) OR
+  (tipoProductor = 'Ka' AND porcentajeProduccion = 1.00)
+);
 
 -- Insertar datos de prueba en la tabla CONTRATO
 INSERT INTO CONTRATO (idSubastadora, idProductora, nContrato, fechaemision, porcentajeProduccion, tipoProductor, idrenovS, idrenovP, ren_nContrato, cancelado) VALUES
-(1, 1, 1001, '2023-01-01', 0.15, 'Ca', NULL, NULL, NULL, NULL),
-(2, 2, 1002, '2023-02-01', 0.20, 'Cb', NULL, NULL, NULL, NULL),
-(3, 3, 1003, '2023-03-01', 0.25, 'Cc', NULL, NULL, NULL, NULL);
+(1, 1, 1001, '2023-01-01', 0.60, 'Ca', NULL, NULL, NULL, NULL),
+(2, 2, 1002, '2023-02-01', 0.25, 'Cb', NULL, NULL, NULL, NULL),
+(3, 3, 1003, '2023-03-01', 0.15, 'Cc', NULL, NULL, NULL, NULL);
 
 -- Verificar los datos insertados
 SELECT * FROM CONTRATO;
@@ -556,7 +597,8 @@ CREATE TABLE HISTORICO_PRECIO_FLOR(
 
 -- Agregar claves foráneas
 ALTER TABLE HISTORICO_PRECIO_FLOR
-ADD Constraint fk_Catalogo_historicoPrecioFlor FOREIGN KEY (idCatalogoFloristeria, idCatalogocodigo) REFERENCES CATALOGO_FLORISTERIA (idFloristeria, codigo);
+ADD Constraint fk_Catalogo_historicoPrecioFlor FOREIGN KEY (idCatalogoFloristeria, idCatalogocodigo) REFERENCES CATALOGO_FLORISTERIA (idFloristeria, codigo),
+ADD Constraint check_fechaIni_fin CHECK (fechaFin IS NULL OR fechaInicio < fechaFin);
 
 -- Insertar datos de prueba en la tabla HISTORICO_PRECIO_FLOR
 INSERT INTO HISTORICO_PRECIO_FLOR (idCatalogoFloristeria, idCatalogocodigo, fechaInicio, fechaFin, precio, tamanoTallo) VALUES
