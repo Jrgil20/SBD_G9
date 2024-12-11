@@ -801,3 +801,58 @@ ADD CONSTRAINT chk_telefono_ArcoExclusivo CHECK (
 
 -- Verificar los datos insertados
 
+
+CREATE OR REPLACE FUNCTION obtener_informacion_factura(factura_id NUMERIC)
+RETURNS TABLE (
+    id_afiliacion_floristeria NUMERIC,
+    id_afiliacion_subastadora NUMERIC,
+    floristeria_info JSONB,
+    subastadora_info JSONB,
+    telefonos JSONB
+) AS $$
+DECLARE
+    id_afiliacion_floristeria NUMERIC;
+    id_afiliacion_subastadora NUMERIC;
+    floristeria_info JSONB;
+    subastadora_info JSONB;
+    telefonos JSONB;
+BEGIN
+    -- Obtener la información de la factura
+    SELECT 
+        FACTURA.idAfiliacionFloristeria,
+        FACTURA.idAfiliacionSubastadora
+    INTO 
+        id_afiliacion_floristeria,
+        id_afiliacion_subastadora
+    FROM FACTURA
+    WHERE FACTURA.facturaId = factura_id;
+
+    -- Obtener la información de la floristeria
+    SELECT row_to_json(FLORISTERIAS) 
+    INTO floristeria_info
+    FROM FLORISTERIAS
+    WHERE FLORISTERIAS.floristeriaId = id_afiliacion_floristeria;
+
+    -- Obtener la información de la subastadora
+    SELECT row_to_json(SUBASTADORA) 
+    INTO subastadora_info
+    FROM SUBASTADORA
+    WHERE SUBASTADORA.subastadoraId = id_afiliacion_subastadora;
+
+    -- Obtener los teléfonos relacionados con la floristeria y la subastadora
+    SELECT json_agg(t) 
+    INTO telefonos
+    FROM TELEFONOS t
+    WHERE t.idFloristeria = id_afiliacion_floristeria OR t.idSubastadora = id_afiliacion_subastadora;
+
+    RETURN QUERY
+    SELECT 
+        id_afiliacion_floristeria,
+        id_afiliacion_subastadora,
+        floristeria_info,
+        subastadora_info,
+        telefonos;
+END;
+$$ LANGUAGE plpgsql;
+
+-- SELECT * FROM obtener_informacion_factura(1);
