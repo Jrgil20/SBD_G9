@@ -376,6 +376,58 @@ ADD CONSTRAINT check_porcentajeProduccion CHECK (
   (tipoProductor = 'Ka' AND porcentajeProduccion = 1.00)
 );
 
+
+CREATE OR REPLACE FUNCTION check_nacionalidad_productor_contrato() RETURNS TRIGGER AS $$
+DECLARE
+  paisIdHolanda NUMERIC;
+  productoraPaisId NUMERIC;
+BEGIN
+  SELECT paisId INTO paisIdHolanda FROM PAIS WHERE nombrePais = 'Holanda';
+  
+  IF NEW.tipoProductor = 'Ka' THEN
+    SELECT idPais INTO productoraPaisId FROM PRODUCTORAS WHERE productoraId = NEW.idProductora;
+    IF productoraPaisId = paisIdHolanda THEN
+      RAISE EXCEPTION 'La productora no puede ser de Holanda para el tipo de productor Ka';
+    END IF;
+  ELSE
+    SELECT idPais INTO productoraPaisId FROM PRODUCTORAS WHERE productoraId = NEW.idProductora;
+    IF productoraPaisId <> paisIdHolanda THEN
+      RAISE EXCEPTION 'La productora debe ser de Holanda para otros tipos de productor';
+    END IF;
+  END IF;
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER check_nacionalidad_productor_contrato
+BEFORE INSERT OR UPDATE ON CONTRATO
+FOR EACH ROW
+EXECUTE FUNCTION check_nacionalidad_productor_contrato();
+
+
+CREATE OR REPLACE FUNCTION check_ContratoActivo() RETURNS TRIGGER AS $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 
+    FROM CONTRATO 
+    WHERE idSubastadora = NEW.idSubastadora 
+      AND idProductora = NEW.idProductora 
+      AND (cancelado IS NULL OR fechaemision > CURRENT_DATE - INTERVAL '1 year')
+  ) THEN
+    RAISE EXCEPTION 'Ya existe un contrato activo con la misma subastadora y productora';
+  END IF;
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER check_ContratoActivo
+BEFORE INSERT OR UPDATE ON CONTRATO
+FOR EACH ROW
+EXECUTE FUNCTION check_ContratoActivo();
+
+
 -- Insertar datos de prueba en la tabla CONTRATO
 INSERT INTO CONTRATO (idSubastadora, idProductora, nContrato, fechaemision, porcentajeProduccion, tipoProductor, idrenovS, idrenovP, ren_nContrato, cancelado) VALUES
 (1, 1, 1001, '2023-01-01', 0.60, 'Ca', NULL, NULL, NULL, NULL),
@@ -749,3 +801,58 @@ ADD CONSTRAINT chk_telefono_ArcoExclusivo CHECK (
 
 -- Verificar los datos insertados
 
+
+CREATE OR REPLACE FUNCTION obtener_informacion_factura(factura_id NUMERIC)
+RETURNS TABLE (
+    id_afiliacion_floristeria NUMERIC,
+    id_afiliacion_subastadora NUMERIC,
+    floristeria_info JSONB,
+    subastadora_info JSONB,
+    telefonos JSONB
+) AS $$
+DECLARE
+    id_afiliacion_floristeria NUMERIC;
+    id_afiliacion_subastadora NUMERIC;
+    floristeria_info JSONB;
+    subastadora_info JSONB;
+    telefonos JSONB;
+BEGIN
+    -- Obtener la información de la factura
+    SELECT 
+        FACTURA.idAfiliacionFloristeria,
+        FACTURA.idAfiliacionSubastadora
+    INTO 
+        id_afiliacion_floristeria,
+        id_afiliacion_subastadora
+    FROM FACTURA
+    WHERE FACTURA.facturaId = factura_id;
+
+    -- Obtener la información de la floristeria
+    SELECT row_to_json(FLORISTERIAS) 
+    INTO floristeria_info
+    FROM FLORISTERIAS
+    WHERE FLORISTERIAS.floristeriaId = id_afiliacion_floristeria;
+
+    -- Obtener la información de la subastadora
+    SELECT row_to_json(SUBASTADORA) 
+    INTO subastadora_info
+    FROM SUBASTADORA
+    WHERE SUBASTADORA.subastadoraId = id_afiliacion_subastadora;
+
+    -- Obtener los teléfonos relacionados con la floristeria y la subastadora
+    SELECT json_agg(t) 
+    INTO telefonos
+    FROM TELEFONOS t
+    WHERE t.idFloristeria = id_afiliacion_floristeria OR t.idSubastadora = id_afiliacion_subastadora;
+
+    RETURN QUERY
+    SELECT 
+        id_afiliacion_floristeria,
+        id_afiliacion_subastadora,
+        floristeria_info,
+        subastadora_info,
+        telefonos;
+END;
+$$ LANGUAGE plpgsql;
+
+-- SELECT * FROM obtener_informacion_factura(1);
