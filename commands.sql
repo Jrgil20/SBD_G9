@@ -406,6 +406,28 @@ FOR EACH ROW
 EXECUTE FUNCTION check_nacionalidad_productor_contrato();
 
 
+CREATE OR REPLACE FUNCTION check_ContratoActivo() RETURNS TRIGGER AS $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 
+    FROM CONTRATO 
+    WHERE idSubastadora = NEW.idSubastadora 
+      AND idProductora = NEW.idProductora 
+      AND (cancelado IS NULL OR fechaemision > CURRENT_DATE - INTERVAL '1 year')
+  ) THEN
+    RAISE EXCEPTION 'Ya existe un contrato activo con la misma subastadora y productora';
+  END IF;
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER check_ContratoActivo
+BEFORE INSERT OR UPDATE ON CONTRATO
+FOR EACH ROW
+EXECUTE FUNCTION check_ContratoActivo();
+
+
 -- Insertar datos de prueba en la tabla CONTRATO
 INSERT INTO CONTRATO (idSubastadora, idProductora, nContrato, fechaemision, porcentajeProduccion, tipoProductor, idrenovS, idrenovP, ren_nContrato, cancelado) VALUES
 (1, 1, 1001, '2023-01-01', 0.60, 'Ca', NULL, NULL, NULL, NULL),
