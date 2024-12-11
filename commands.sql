@@ -376,6 +376,36 @@ ADD CONSTRAINT check_porcentajeProduccion CHECK (
   (tipoProductor = 'Ka' AND porcentajeProduccion = 1.00)
 );
 
+
+CREATE OR REPLACE FUNCTION check_nacionalidad_productor_contrato() RETURNS TRIGGER AS $$
+DECLARE
+  paisIdHolanda NUMERIC;
+  productoraPaisId NUMERIC;
+BEGIN
+  SELECT paisId INTO paisIdHolanda FROM PAIS WHERE nombrePais = 'Holanda';
+  
+  IF NEW.tipoProductor = 'Ka' THEN
+    SELECT idPais INTO productoraPaisId FROM PRODUCTORAS WHERE productoraId = NEW.idProductora;
+    IF productoraPaisId = paisIdHolanda THEN
+      RAISE EXCEPTION 'La productora no puede ser de Holanda para el tipo de productor Ka';
+    END IF;
+  ELSE
+    SELECT idPais INTO productoraPaisId FROM PRODUCTORAS WHERE productoraId = NEW.idProductora;
+    IF productoraPaisId <> paisIdHolanda THEN
+      RAISE EXCEPTION 'La productora debe ser de Holanda para otros tipos de productor';
+    END IF;
+  END IF;
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER check_nacionalidad_productor_contrato
+BEFORE INSERT OR UPDATE ON CONTRATO
+FOR EACH ROW
+EXECUTE FUNCTION check_nacionalidad_productor_contrato();
+
+
 -- Insertar datos de prueba en la tabla CONTRATO
 INSERT INTO CONTRATO (idSubastadora, idProductora, nContrato, fechaemision, porcentajeProduccion, tipoProductor, idrenovS, idrenovP, ren_nContrato, cancelado) VALUES
 (1, 1, 1001, '2023-01-01', 0.60, 'Ca', NULL, NULL, NULL, NULL),
