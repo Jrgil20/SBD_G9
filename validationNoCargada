@@ -1,0 +1,3 @@
+ALTER TABLE CANTIDAD_OFRECIDA
+ADD CONSTRAINT chk_idCatalogoProductora_equals_idContratoProductora
+CHECK (idCatalogoProductora = idContratoProductora);
