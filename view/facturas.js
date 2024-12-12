@@ -1,5 +1,3 @@
-
-
 // Datos de prueba para facturas
 const facturasPrueba = [
     {
@@ -16,25 +14,54 @@ const facturasPrueba = [
             email: 'contacto@floristeria.com'
         },
         fecha: '2023-10-01',
-        monto: '500.00',
+        subtotal: '450.00',
+        recargoEnvio: '50.00',
+        total: '500.00',
         lotes: [
             {
-                productor: 'Productor Ejemplo',
-                vbn: 'VBN123',
-                lote: 'Lote1',
-                cantidad: 100,
-                precio: '5.00'
+                id: '1',
+                descripcion: 'Rosas Rojas',
+                precioFinal: '250.00'
             },
             {
-                productor: 'Productor Ejemplo 2',
-                vbn: 'VBN456',
-                lote: 'Lote2',
-                cantidad: 200,
-                precio: '2.50'
+                id: '2',
+                descripcion: 'Tulipanes Amarillos',
+                precioFinal: '200.00'
             }
         ],
-        envio: 'Sí'
+        envio: true
     },
+    {
+        id: '67890',
+        subasta: {
+            nombre: 'Subasta Otoñal',
+            id: '2',
+            contacto: '321-654-0987'
+        },
+        floristeria: {
+            nombre: 'Floristeria Ejemplo 2',
+            id: '3',
+            contacto: '987-654-3210',
+            email: 'contacto2@floristeria.com'
+        },
+        fecha: '2023-11-01',
+        subtotal: '300.00',
+        recargoEnvio: '0.00',
+        total: '300.00',
+        lotes: [
+            {
+                id: 'Lote3',
+                descripcion: 'Lirios Blancos',
+                precioFinal: '150.00'
+            },
+            {
+                id: 'Lote4',
+                descripcion: 'Orquídeas Rosas',
+                precioFinal: '150.00'
+            }
+        ],
+        envio: false
+    }
     // Puedes añadir más facturas de prueba aquí
 ];
 
@@ -69,29 +96,40 @@ function mostrarDetallesFactura(factura) {
     document.getElementById('volver-btn').style.display = 'block';
     document.getElementById('volver-btn').onclick = () => cambiarSeccion('facturas');
 
-    document.getElementById('subastadora-nombre').textContent = `${factura.subasta.nombre} (#${factura.subasta.id})`;
-    document.getElementById('subastadora-contacto').textContent = `Contacto: ${factura.subasta.contacto}`;
-    document.getElementById('floristeria-nombre').textContent = `${factura.floristeria.nombre} (#${factura.floristeria.id})`;
-    document.getElementById('floristeria-contacto').textContent = `Contacto: ${factura.floristeria.contacto}`;
+    document.getElementById('subastadora-nombre').textContent = `${factura.subasta.nombre} [#${factura.subasta.id}]`;
+    document.getElementById('subastadora-contacto').textContent = `Tel: ${factura.subasta.contacto}`;
+    document.getElementById('factura-fecha').textContent = `${factura.fecha}`;
+    document.getElementById('factura-numero').textContent = `${factura.id}`;
+
+    document.getElementById('floristeria-nombre').textContent = `${factura.floristeria.nombre} [#${factura.floristeria.id}]`;
+    document.getElementById('floristeria-contacto').textContent = `Tel: ${factura.floristeria.contacto}`;
     document.getElementById('floristeria-email').textContent = `Email: ${factura.floristeria.email}`;
-    document.getElementById('factura-numero').textContent = `Número: ${factura.id}`;
-    document.getElementById('factura-fecha').textContent = `Fecha: ${factura.fecha}`;
-    document.getElementById('factura-envio').textContent = `Envío: ${factura.envio}`;
-    document.getElementById('factura-monto-total').textContent = `Monto Total: €${factura.monto}`;
 
     const lotesTableBody = document.getElementById('factura-lotes').querySelector('tbody');
-    lotesTableBody.innerHTML = '';
+    lotesTableBody.innerHTML = ''; // Limpiar contenido previo
     factura.lotes.forEach(lote => {
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td><a href="#" onclick="mostrarModal('Información del productor: ${lote.productor}')">${lote.productor}</a></td>
-            <td><a href="#" onclick="mostrarModal('Información del VBN: ${lote.vbn}')">${lote.vbn}</a></td>
-            <td><a href="#" onclick="mostrarModal('Información del lote: ${lote.lote}')">${lote.lote}</a></td>
-            <td>${lote.cantidad}</td>
-            <td>€${lote.precio}</td>
+            <td><a href="#" class="lote-link" data-lote-id="${lote.id}">${lote.id}</a></td>
+            <td>${lote.descripcion}</td>
+            <td>€${lote.precioFinal}</td>
         `;
         lotesTableBody.appendChild(row);
     });
+
+    document.querySelectorAll('.lote-link').forEach(link => {
+        link.addEventListener('click', (event) => {
+            event.preventDefault();
+            const loteId = event.target.getAttribute('data-lote-id');
+            const lote = factura.lotes.find(l => l.id === loteId);
+            mostrarModalLote(lote);
+        });
+    });
+
+    document.getElementById('factura-envio').textContent = factura.envio ? 'Con envío' : 'Sin envío';
+    document.getElementById('factura-subtotal').textContent = `Subtotal: €${factura.subtotal}`;
+    document.getElementById('factura-recargo-envio').textContent = factura.envio ? `Recargo de envío: €${factura.recargoEnvio}` : '';
+    document.getElementById('factura-total').textContent = `Total: €${factura.total}`;
 }
 
 // Función para aplicar filtro a las facturas

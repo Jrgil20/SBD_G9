@@ -273,22 +273,93 @@ section.active {
 
 #detalles-factura {
     display: none;
-    padding: 0% 3% 3% 3%;
-}
-
-#detalles-factura.active {
-    display: block;
+    padding: 3%;
 }
 
 .factura-info {
     display: flex;
     justify-content: space-between;
     margin-bottom: 20px;
-    flex-direction: column;
 }
 
-.factura-info div {
+.factura-subastadora, .factura-fecha-numero {
     width: 45%;
+}
+
+.factura-fecha-numero {
+    border-collapse: collapse;
+    width: fit-content;
+    height: fit-content;
+}
+
+.factura-fecha-numero th, .factura-fecha-numero td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.factura-fecha-numero th {
+    background-color: var(--color-primary);
+    color: white;
+}
+
+.factura-fecha-numero td {
+    background-color: white;
+    color: rgb(0, 0, 0);
+}
+
+.factura-floristeria {
+    margin-bottom: 20px;
+}
+
+.factura-floristeria h3{
+    background-color: var(--color-primary);
+    color: white;
+    padding: 10px;
+    width: fit-content;
+    margin-bottom: 0px;
+}
+
+.factura-floristeria-info {
+    padding: 8px;
+}
+
+.factura-resumen {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.factura-comentarios {
+    width: 45%;
+    height: fit-content;
+    border-collapse: collapse;
+}
+
+.factura-comentarios th, .factura-comentarios td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.factura-comentarios th {
+    background-color: var(--color-text);
+    color: white;
+}
+
+.factura-comentarios td {
+    background-color: white;
+    color: rgb(0, 0, 0);
+}
+
+.factura-totales {
+    width: 45%;
+    text-align: right;
+}
+
+.factura-totales h3 {
+    margin-top: 10px;
+    font-weight: bold;
 }
 
 #factura-lotes {
@@ -308,22 +379,9 @@ section.active {
     color: white;
 }
 
-#detalles-factura-titulo {
-    text-align: center;
-}
-
-#subtitulo-factura, #subtitulo-lotes{
-    text-align: center;
-}
-
-#factura-monto-total, #factura-envio {
-    text-align: end;
-    padding-right: 10px;
-}
-
-#subtitulo-subastadora,
-#subtitulo-floristeria {
-    text-align: left;
+#factura-lotes td {
+    background-color: white;
+    color: rgb(0, 0, 0);
 }
 
 @media (max-width: 1024px) {

@@ -93,41 +93,58 @@
                 </div>
             </section>
             <section id="detalles-factura">
-                <h2 id="detalles-factura-titulo"></h2>
                 <div id="detalles-factura-info">
                     <div class="factura-info">
                         <div class="factura-subastadora">
-                            <h3 id="subtitulo-subastadora">Subastadora</h3>
-                            <p id="subastadora-nombre"></p>
+                            <h3 id="subastadora-nombre"></h3>
                             <p id="subastadora-contacto"></p>
                         </div>
-                        <div class="factura-floristeria">
-                            <h3 id="subtitulo-floristeria">Floristería</h3>
+                        <table class="factura-fecha-numero">
+                            <tr>
+                                <th>Num Factura</th>
+                                <th>Fecha</th>
+                            </tr>
+                            <tr>
+                                <td id="factura-numero"></td>
+                                <td id="factura-fecha"></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="factura-floristeria">
+                        <h3>Facturar A:</h3>
+                        <div class="factura-floristeria-info">
                             <p id="floristeria-nombre"></p>
                             <p id="floristeria-contacto"></p>
                             <p id="floristeria-email"></p>
                         </div>
                     </div>
-                    <h3 id="subtitulo-factura">FACTURA</h3>
-                    <p id="factura-numero"></p>
-                    <p id="factura-fecha"></p>
-                    <h3 id="subtitulo-lotes">LOTES</h3>
                     <table id="factura-lotes">
                         <thead>
                             <tr>
-                                <th>Producido por</th>
-                                <th>VBN</th>
-                                <th>Lote</th>
-                                <th>Cantidad</th>
-                                <th>Precio</th>
+                                <th>Número de Lote</th>
+                                <th>Descripción</th>
+                                <th>Precio Final</th>
                             </tr>
                         </thead>
                         <tbody>
                             <!-- Los detalles de los lotes se generarán dinámicamente -->
                         </tbody>
                     </table>
-                    <p id="factura-envio"></p>
-                    <p id="factura-monto-total"></p>
+                    <div class="factura-resumen">
+                        <table class="factura-comentarios">
+                            <tr>
+                                <th>Comentarios</th>
+                            </tr>
+                            <tr>
+                                <td id="factura-envio"></td>
+                            </tr>
+                        </table>
+                        <div class="factura-totales">
+                            <p id="factura-subtotal"></p>
+                            <p id="factura-recargo-envio"></p>
+                            <h3 id="factura-total"></h3>
+                        </div>
+                    </div>
                 </div>
             </section>
             <section id="detalles">

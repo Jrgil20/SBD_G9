@@ -59,6 +59,17 @@ function mostrarModal(info) {
     modal.style.display = 'block';
 }
 
+// Función para mostrar el modal con la información del lote
+function mostrarModalLote(lote) {
+    const info = `
+        <h2>Información del Lote</h2>
+        <p><strong>ID:</strong> ${lote.id}</p>
+        <p><strong>Descripción:</strong> ${lote.descripcion}</p>
+        <p><strong>Precio Final:</strong> €${lote.precioFinal}</p>
+    `;
+    mostrarModal(info);
+}
+
 // Función para toggle del sidebar
 function toggleSidebar() {
     const sidebar = document.querySelector('.sidebar');
@@ -71,4 +82,5 @@ function toggleSidebar() {
 }
 window.cambiarSeccion = cambiarSeccion;
 window.mostrarModal = mostrarModal;
+window.mostrarModalLote = mostrarModalLote;
 window.toggleSidebar = toggleSidebar;
