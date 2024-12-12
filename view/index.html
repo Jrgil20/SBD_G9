@@ -21,7 +21,7 @@
                 <li><a href="#" data-section="main"><i class="fas fa-home"></i> Panel Principal</a></li>
                 <li><a href="#" data-section="floristerias"><i class="fas fa-store"></i> Floristerías</a></li>
                 <li><a href="#" data-section="productores"><i class="fas fa-seedling"></i> Productores</a></li>
-                <li><a href="#" data-section="subastadores"><i class="fas fa-gavel"></i> Subastadores</a></li>
+                <li><a href="#" data-section="subastas"><i class="fas fa-gavel"></i> Subastas</a></li>
                 <li><a href="#" data-section="facturas"><i class="fas fa-file-invoice-dollar"></i> Facturas</a></li>
             </ul>
         </nav>
@@ -41,9 +41,9 @@
                             <i class="fas fa-seedling"></i>
                             <h3>Productores</h3>
                         </div>
-                        <div class="card main-card" data-section="subastadores">
+                        <div class="card main-card" data-section="subastas">
                             <i class="fas fa-gavel"></i>
-                            <h3>Subastadores</h3>
+                            <h3>Subastas</h3>
                         </div>
                         <div class="card main-card" data-section="facturas">
                             <i class="fas fa-file-invoice-dollar"></i>
@@ -66,7 +66,7 @@
                     </div>
                 </div>
             </section>
-            <section id="subastadores">
+            <section id="subastas">
                 <div class="cards-container">
                     <div class="cards">
                         <!-- Las tarjetas se generarán dinámicamente con JavaScript -->
@@ -145,6 +145,11 @@
             <div id="modal-body"></div>
         </div>
     </div>
-    <script src="script.js"></script>
+    <script type="module" src="./productoras.js"></script>
+    <script type="module" src="./floristerias.js"></script>
+    <script type="module" src="./subastas.js"></script>
+    <script type="module" src="./facturas.js"></script>
+    <script type="module" src="./utils.js"></script>
+    <script type="module" src="./script.js"></script>
 </body>
 </html>
