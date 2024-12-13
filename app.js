@@ -1,5 +1,5 @@
 const express = require('express');
-const { pool, getProductoras } = require('./db');
+const { pool, getProductoras, getFloristerias } = require('./db');
 const path = require('path');
 
 const app = express();
@@ -32,7 +32,19 @@ app.get('/api/productoras', async (req, res) => {
     const productoras = await getProductoras();
     res.json(productoras);
   } catch (err) {
-    res.status(500).send('Error querying the database');
+    console.error('Error querying the database:', err);
+    res.status(500).json({ error: 'Error querying the database' });
+  }
+});
+
+// Nueva ruta para obtener datos de las floristerias
+app.get('/api/floristerias', async (req, res) => {
+  try {
+    const floristerias = await getFloristerias();
+    res.json(floristerias);
+  } catch (err) {
+    console.error('Error querying the database:', err);
+    res.status(500).json({ error: 'Error querying the database' });
   }
 });
 

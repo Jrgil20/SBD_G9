@@ -20,7 +20,7 @@ pool.connect((err) => {
 
 const getProductoras = async () => {
   try {
-    const result = await pool.query('SELECT nombreproductora, paginaWeb, idPais FROM productoras');
+    const result = await pool.query('SELECT productoraid, nombreproductora, paginaWeb, idPais FROM productoras');
     return result.rows;
   } catch (err) {
     console.error('Error querying the database', err);
@@ -28,4 +28,19 @@ const getProductoras = async () => {
   }
 };
 
-module.exports = { pool, getProductoras };
+const getFloristerias = async () => {
+  try {
+    const result = await pool.query(`
+      SELECT f.floristeriaid, f.nombre, f.email, f.paginaweb, p.nombrepais AS pais
+      FROM floristerias f
+      JOIN pais p ON f.idpais = p.paisid
+    `);
+    return result.rows;
+  } catch (err) {
+    console.error('Error querying the database:', err);
+    throw err;
+  }
+};
+
+module.exports = { pool, getProductoras, getFloristerias };
+

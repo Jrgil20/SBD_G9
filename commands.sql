@@ -408,16 +408,17 @@ EXECUTE FUNCTION check_nacionalidad_productor_contrato();
 
 CREATE OR REPLACE FUNCTION check_ContratoActivo() RETURNS TRIGGER AS $$
 BEGIN
-  IF EXISTS (
-    SELECT 1 
-    FROM CONTRATO 
-    WHERE idSubastadora = NEW.idSubastadora 
-      AND idProductora = NEW.idProductora 
-      AND (cancelado IS NULL OR fechaemision > CURRENT_DATE - INTERVAL '1 year')
-  ) THEN
-    RAISE EXCEPTION 'Ya existe un contrato activo con la misma subastadora y productora';
+  IF NEW.tipoProductor <> 'Cg' THEN
+    IF EXISTS (
+      SELECT 1 
+      FROM CONTRATO 
+      WHERE idSubastadora = NEW.idSubastadora 
+        AND idProductora = NEW.idProductora 
+        AND (cancelado IS NULL OR fechaemision > CURRENT_DATE - INTERVAL '1 year')
+    ) THEN
+      RAISE EXCEPTION 'Ya existe un contrato activo con la misma subastadora y productora';
+    END IF;
   END IF;
-  
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -426,6 +427,28 @@ CREATE TRIGGER check_ContratoActivo
 BEFORE INSERT OR UPDATE ON CONTRATO
 FOR EACH ROW
 EXECUTE FUNCTION check_ContratoActivo();
+
+
+CREATE OR REPLACE FUNCTION check_ProductorCg() RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.tipoProductor = 'Cg' THEN
+    IF EXISTS (
+      SELECT 1 
+      FROM CONTRATO 
+      WHERE idProductora = NEW.idProductora 
+        AND (tipoProductor <> 'Cg')
+    ) THEN
+      RAISE EXCEPTION 'Ya existe un contrato activo con la misma subastadora y productora';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER check_ProductorCg
+BEFORE INSERT OR UPDATE ON CONTRATO
+FOR EACH ROW
+EXECUTE FUNCTION check_ProductorCg();
 
 
 -- Insertar datos de prueba en la tabla CONTRATO
@@ -456,12 +479,15 @@ REFERENCES CONTRATO (idSubastadora, idProductora, nContrato),
 ADD CONSTRAINT fk_CatalogoProductor_CantidadOfrecida FOREIGN KEY (idCatalogoProductora, idCatalogoCorte, idVnb) 
 REFERENCES CATALOGOPRODUCTOR (idProductora, idCorte, vbn);
 
+ALTER TABLE CANTIDAD_OFRECIDA
+ADD CONSTRAINT chk_idCatalogoProductora_equals_idContratoProductora
+CHECK (idCatalogoProductora = idContratoProductora);
 
 -- Insertar datos de prueba en la tabla CANTIDAD_OFRECIDA
 INSERT INTO CANTIDAD_OFRECIDA (idContratoSubastadora, idContratoProductora, idNContrato, idCatalogoProductora,idCatalogoCorte, idVnb, cantidad) VALUES
 (1, 1, 1001, 1, 1, 1, 100),
-(2, 2, 1002, 1, 1, 1,200),
-(3, 3, 1003, 1, 1, 1,300);
+(2, 2, 1002, 2, 2, 2,200),
+(3, 3, 1003, 3, 3, 3 ,300);
 
 -- Verificar los datos insertados
 SELECT * FROM CANTIDAD_OFRECIDA;
@@ -599,8 +625,8 @@ ADD CONSTRAINT fk_idFactura_lote FOREIGN KEY (idFactura) REFERENCES FACTURA (fac
 -- Insertar datos de prueba en la tabla LOTE
 INSERT INTO LOTE (idCantidadContratoSubastadora, idCantidadContratoProductora, idCantidad_NContrato, idCantidadCatalogoProductora, idCantidadCorte, idCantidadvnb, NumLote, bi, cantidad, precioInicial, precioFinal, idFactura) VALUES
 (1, 1, 1001, 1, 1, 1, 1, 1, 50, 10.00, 15.00, 1),
-(2, 2, 1002, 1, 1, 1, 2, 2, 100, 20.00, 25.00, 2),
-(3, 3, 1003, 1, 1, 1, 3, 3, 150, 30.00, 35.00, 3);
+(2, 2, 1002, 2, 2, 2, 2, 2, 100, 20.00, 25.00, 2),
+(3, 3, 1003, 3, 3, 3, 3, 3, 150, 30.00, 35.00, 3);
 
 -- Verificar los datos insertados
 SELECT * FROM LOTE;

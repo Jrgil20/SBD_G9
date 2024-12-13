@@ -21,7 +21,7 @@
                 <li><a href="#" data-section="main"><i class="fas fa-home"></i> Panel Principal</a></li>
                 <li><a href="#" data-section="floristerias"><i class="fas fa-store"></i> Floristerías</a></li>
                 <li><a href="#" data-section="productores"><i class="fas fa-seedling"></i> Productores</a></li>
-                <li><a href="#" data-section="subastadores"><i class="fas fa-gavel"></i> Subastadores</a></li>
+                <li><a href="#" data-section="subastas"><i class="fas fa-gavel"></i> Subastas</a></li>
                 <li><a href="#" data-section="facturas"><i class="fas fa-file-invoice-dollar"></i> Facturas</a></li>
             </ul>
         </nav>
@@ -41,9 +41,9 @@
                             <i class="fas fa-seedling"></i>
                             <h3>Productores</h3>
                         </div>
-                        <div class="card main-card" data-section="subastadores">
+                        <div class="card main-card" data-section="subastas">
                             <i class="fas fa-gavel"></i>
-                            <h3>Subastadores</h3>
+                            <h3>Subastas</h3>
                         </div>
                         <div class="card main-card" data-section="facturas">
                             <i class="fas fa-file-invoice-dollar"></i>
@@ -53,28 +53,64 @@
                 </div>
             </section>
             <section id="floristerias">
+                <h2>Floristerías</h2>
+                <div class="filters">
+                    <input type="text" id="filtro-nombre-floristerias" placeholder="Filtrar por nombre">
+                    <select id="filtro-pais-floristerias">
+                        <option value="">Todos los países</option>
+                        <!-- Opciones de países se generarán dinámicamente -->
+                    </select>
+                    <input type="date" id="filtro-fecha-floristerias">
+                    <button id="aplicar-filtro-floristerias">Aplicar Filtro</button>
+                    <span id="fecha-hoy-floristerias"></span>
+                </div>
                 <div class="cards-container">
-                    <div class="cards">
-                        <!-- Las tarjetas se generarán dinámicamente con JavaScript -->
-                    </div>
+                    <div class="cards"></div>
                 </div>
             </section>
             <section id="productores">
+                <h2>Productoras</h2>
+                <div class="filters">
+                    <input type="text" id="filtro-nombre-productoras" placeholder="Filtrar por nombre">
+                    <select id="filtro-pais-productoras">
+                        <option value="">Todos los países</option>
+                        <!-- Opciones de países se generarán dinámicamente -->
+                    </select>
+                    <button id="aplicar-filtro-productoras">Aplicar Filtro</button>
+                    <span id="fecha-hoy-productoras"></span>
+                </div>
                 <div class="cards-container">
-                    <div class="cards">
-                        <!-- Las tarjetas se generarán dinámicamente con JavaScript -->
-                    </div>
+                    <div class="cards"></div>
                 </div>
             </section>
-            <section id="subastadores">
+            <section id="subastas">
+                <h2>Subastas</h2>
+                <div class="filters">
+                    <select id="filtro-productor-subastas">
+                        <option value="">Todos los productores</option>
+                        <!-- Opciones de productores se generarán dinámicamente -->
+                    </select>
+                    <select id="filtro-floristeria-subastas">
+                        <option value="">Todas las floristerías</option>
+                        <!-- Opciones de floristerías se generarán dinámicamente -->
+                    </select>
+                    <select id="filtro-subastadora-subastas">
+                        <option value="">Todas las subastadoras</option>
+                        <!-- Opciones de subastadoras se generarán dinámicamente -->
+                    </select>
+                    <input type="date" id="filtro-fecha-subastas">
+                    <select id="ordenar-monto-subastas">
+                        <option value="asc">Monto: Menor a Mayor</option>
+                        <option value="desc">Monto: Mayor a Menor</option>
+                    </select>
+                    <button id="aplicar-filtro-subastas">Aplicar Filtro</button>
+                </div>
                 <div class="cards-container">
-                    <div class="cards">
-                        <!-- Las tarjetas se generarán dinámicamente con JavaScript -->
-                    </div>
+                    <div class="cards"></div>
                 </div>
             </section>
             <section id="facturas">
-                <div class="filter">
+                <div class="filters">
                     <input type="text" id="clienteFilter" placeholder="Filtrar por cliente">
                     <input type="date" id="fechaFilter">
                     <button id="aplicarFiltro">Aplicar Filtro</button>
@@ -93,41 +129,58 @@
                 </div>
             </section>
             <section id="detalles-factura">
-                <h2 id="detalles-factura-titulo"></h2>
                 <div id="detalles-factura-info">
                     <div class="factura-info">
                         <div class="factura-subastadora">
-                            <h3 id="subtitulo-subastadora">Subastadora</h3>
-                            <p id="subastadora-nombre"></p>
+                            <h3 id="subastadora-nombre"></h3>
                             <p id="subastadora-contacto"></p>
                         </div>
-                        <div class="factura-floristeria">
-                            <h3 id="subtitulo-floristeria">Floristería</h3>
+                        <table class="factura-fecha-numero">
+                            <tr>
+                                <th>Num Factura</th>
+                                <th>Fecha</th>
+                            </tr>
+                            <tr>
+                                <td id="factura-numero"></td>
+                                <td id="factura-fecha"></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="factura-floristeria">
+                        <h3>Facturar A:</h3>
+                        <div class="factura-floristeria-info">
                             <p id="floristeria-nombre"></p>
                             <p id="floristeria-contacto"></p>
                             <p id="floristeria-email"></p>
                         </div>
                     </div>
-                    <h3 id="subtitulo-factura">FACTURA</h3>
-                    <p id="factura-numero"></p>
-                    <p id="factura-fecha"></p>
-                    <h3 id="subtitulo-lotes">LOTES</h3>
                     <table id="factura-lotes">
                         <thead>
                             <tr>
-                                <th>Producido por</th>
-                                <th>VBN</th>
-                                <th>Lote</th>
-                                <th>Cantidad</th>
-                                <th>Precio</th>
+                                <th>Número de Lote</th>
+                                <th>Descripción</th>
+                                <th>Precio Final</th>
                             </tr>
                         </thead>
                         <tbody>
                             <!-- Los detalles de los lotes se generarán dinámicamente -->
                         </tbody>
                     </table>
-                    <p id="factura-envio"></p>
-                    <p id="factura-monto-total"></p>
+                    <div class="factura-resumen">
+                        <table class="factura-comentarios">
+                            <tr>
+                                <th>Comentarios</th>
+                            </tr>
+                            <tr>
+                                <td id="factura-envio"></td>
+                            </tr>
+                        </table>
+                        <div class="factura-totales">
+                            <p id="factura-subtotal"></p>
+                            <p id="factura-recargo-envio"></p>
+                            <h3 id="factura-total"></h3>
+                        </div>
+                    </div>
                 </div>
             </section>
             <section id="detalles">
@@ -145,6 +198,11 @@
             <div id="modal-body"></div>
         </div>
     </div>
-    <script src="script.js"></script>
+    <script type="module" src="./productoras.js"></script>
+    <script type="module" src="./floristerias.js"></script>
+    <script type="module" src="./subastas.js"></script>
+    <script type="module" src="./facturas.js"></script>
+    <script type="module" src="./utils.js"></script>
+    <script type="module" src="./script.js"></script>
 </body>
 </html>
