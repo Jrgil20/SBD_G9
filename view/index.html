@@ -53,28 +53,61 @@
                 </div>
             </section>
             <section id="floristerias">
+                <div class="filters">
+                    <input type="text" id="filtro-nombre-floristerias" placeholder="Filtrar por nombre">
+                    <select id="filtro-pais-floristerias">
+                        <option value="">Todos los países</option>
+                        <!-- Opciones de países se generarán dinámicamente -->
+                    </select>
+                    <input type="date" id="filtro-fecha-floristerias">
+                    <button id="aplicar-filtro-floristerias">Aplicar Filtro</button>
+                    <span id="fecha-hoy-floristerias"></span>
+                </div>
                 <div class="cards-container">
-                    <div class="cards">
-                        <!-- Las tarjetas se generarán dinámicamente con JavaScript -->
-                    </div>
+                    <div class="cards"></div>
                 </div>
             </section>
             <section id="productores">
+                <div class="filters">
+                    <input type="text" id="filtro-nombre-productoras" placeholder="Filtrar por nombre">
+                    <select id="filtro-pais-productoras">
+                        <option value="">Todos los países</option>
+                        <!-- Opciones de países se generarán dinámicamente -->
+                    </select>
+                    <button id="aplicar-filtro-productoras">Aplicar Filtro</button>
+                    <span id="fecha-hoy-productoras"></span>
+                </div>
                 <div class="cards-container">
-                    <div class="cards">
-                        <!-- Las tarjetas se generarán dinámicamente con JavaScript -->
-                    </div>
+                    <div class="cards"></div>
                 </div>
             </section>
             <section id="subastas">
+                <div class="filters">
+                    <select id="filtro-productor-subastas">
+                        <option value="">Todos los productores</option>
+                        <!-- Opciones de productores se generarán dinámicamente -->
+                    </select>
+                    <select id="filtro-floristeria-subastas">
+                        <option value="">Todas las floristerías</option>
+                        <!-- Opciones de floristerías se generarán dinámicamente -->
+                    </select>
+                    <select id="filtro-subastadora-subastas">
+                        <option value="">Todas las subastadoras</option>
+                        <!-- Opciones de subastadoras se generarán dinámicamente -->
+                    </select>
+                    <input type="date" id="filtro-fecha-subastas">
+                    <select id="ordenar-monto-subastas">
+                        <option value="asc">Monto: Menor a Mayor</option>
+                        <option value="desc">Monto: Mayor a Menor</option>
+                    </select>
+                    <button id="aplicar-filtro-subastas">Aplicar Filtro</button>
+                </div>
                 <div class="cards-container">
-                    <div class="cards">
-                        <!-- Las tarjetas se generarán dinámicamente con JavaScript -->
-                    </div>
+                    <div class="cards"></div>
                 </div>
             </section>
             <section id="facturas">
-                <div class="filter">
+                <div class="filters">
                     <input type="text" id="clienteFilter" placeholder="Filtrar por cliente">
                     <input type="date" id="fechaFilter">
                     <button id="aplicarFiltro">Aplicar Filtro</button>
