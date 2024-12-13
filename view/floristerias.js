@@ -134,6 +134,15 @@ function mostrarDetallesFloristeria(floristeria) {
     });
 
     catalogo.appendChild(catalogoFloresContainer);
+
+    // Crear botón flotante
+    const botonFlotante = document.createElement('div');
+    botonFlotante.className = 'boton-flotante';
+    botonFlotante.innerHTML = `
+        <img src="./images/Florist-pana.png" alt="Florist">
+    `;
+    botonFlotante.addEventListener('click', () => mostrarModalPersonalizado());
+    document.body.appendChild(botonFlotante);
 }
 
 // Función para filtrar flores
@@ -180,6 +189,17 @@ function mostrarModalFlor(flor) {
     modal.style.display = 'block';
 }
 
+// Función para mostrar el modal personalizado
+function mostrarModalPersonalizado() {
+    const modal = document.getElementById('modal');
+    const modalBody = document.getElementById('modal-body');
+    modalBody.innerHTML = `
+        <h2>Modal Personalizado</h2>
+        <p>Contenido del modal personalizado.</p>
+    `;
+    modal.style.display = 'block';
+}
+
 // Función para cerrar el modal
 function cerrarModal() {
     const modal = document.getElementById('modal');
@@ -189,6 +209,7 @@ function cerrarModal() {
 window.cargarDatosFloristerias = cargarDatosFloristerias;
 window.mostrarDetallesFloristeria = mostrarDetallesFloristeria;
 window.mostrarModalFlor = mostrarModalFlor;
+window.mostrarModalPersonalizado = mostrarModalPersonalizado;
 window.cerrarModal = cerrarModal;
 
 // Cargar datos iniciales

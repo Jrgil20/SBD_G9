@@ -493,6 +493,26 @@ section.active {
     width: 100%;
 }
 
+.boton-flotante {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 100px;
+    height: 100px;
+    background-color: #fff;
+    border-radius: 50%;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.boton-flotante img {
+    width: 100px;
+    height: 100px;
+}
+
 
 @media (max-width: 1024px) {
     .card {
