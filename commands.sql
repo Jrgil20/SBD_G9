@@ -169,15 +169,15 @@ CREATE TABLE CLIENTE_JURIDICO (
 
 -- Insertar datos de prueba en CLIENTE_JURIDICO
 INSERT INTO CLIENTE_JURIDICO (RIF, nombre) VALUES 
-(123456789, 'Empresa A'),
-(987654321, 'Empresa B'),
-(112233445, 'Empresa C'),
-(554433221, 'Empresa D'),
-(667788990, 'Empresa E'),
-(223344556, 'Empresa F'),
-(334455667, 'Empresa G'),
-(445566778, 'Empresa H'),
-(556677889, 'Empresa I');
+(123456789, 'Eventos Elegantes'),
+(987654321, 'Bodas y Más'),
+(112233445, 'Fiestas Fantásticas'),
+(554433221, 'Celebraciones Únicas'),
+(667788990, 'Eventos de Ensueño'),
+(223344556, 'Coordinadores de Bodas'),
+(334455667, 'Fiestas y Eventos'),
+(445566778, 'Eventos Especiales'),
+(556677889, 'Organización de Eventos');
 
 -- Verificar que los datos han sido insertados correctamente
 SELECT * FROM CLIENTE_JURIDICO;
@@ -247,7 +247,27 @@ INSERT INTO SIGNIFICADO (Tipo, Descripcion) VALUES
 ('Se', 'Perdón'),
 ('Oc', 'San Valentín'),
 ('Se', 'Alegría'),
-('Oc', 'Funeral');
+('Oc', 'Funeral'),
+('Oc', 'Navidad'),
+('Se', 'Esperanza'),
+('Oc', 'Año Nuevo'),
+('Se', 'Compasión'),
+('Oc', 'Día de la Madre'),
+('Se', 'Gratitud'),
+('Oc', 'Día del Padre'),
+('Se', 'Inspiración'),
+('Oc', 'Día del Niño'),
+('Se', 'Confianza'),
+('Oc', 'Día de la Mujer'),
+('Se', 'Respeto'),
+('Oc', 'Día del Maestro'),
+('Se', 'Admiración'),
+('Oc', 'Día del Amigo'),
+('Se', 'Lealtad'),
+('Oc', 'Día del Trabajo'),
+('Se', 'Solidaridad'),
+('Oc', 'Día de la Independencia'),
+('Se', 'Orgullo');
 
 
 -- Verificar que los datos han sido insertados correctamente
@@ -304,8 +324,8 @@ ADD CONSTRAINT chk_enlaces CHECK (idColor IS NOT NULL OR idCorte IS NOT NULL);
 
 -- Insertar datos de prueba en ENLACES
 INSERT INTO ENLACES (IdSignificado,Descripcion, IdColor, idCorte) VALUES 
-(1,'rosas rojas es el clásico regalo romántico', 2, 2),
-(2,'La rosa blanca es un símbolo de pureza, inocencia y amor puro', 2, 1),
+(1, 'rosas rojas es el clásico regalo romántico', 2, 2),
+(2, 'La rosa blanca es un símbolo de pureza, inocencia y amor puro', 2, 1),
 (3, 'Las flores de cumpleaños son una forma especial de celebrar', 4, 3),
 (4, 'Las flores de felicidad traen alegría y buenos deseos', 5, 4),
 (5, 'Las flores de aniversario simbolizan el amor duradero', 6, 5),
@@ -406,6 +426,8 @@ FOR EACH ROW
 EXECUTE FUNCTION check_nacionalidad_productor_contrato();
 
 
+
+
 CREATE OR REPLACE FUNCTION check_ContratoActivo() RETURNS TRIGGER AS $$
 BEGIN
   IF NEW.tipoProductor <> 'Cg' THEN
@@ -414,9 +436,9 @@ BEGIN
       FROM CONTRATO 
       WHERE idSubastadora = NEW.idSubastadora 
         AND idProductora = NEW.idProductora 
-        AND (cancelado IS NULL OR fechaemision > CURRENT_DATE - INTERVAL '1 year')
+        AND (cancelado IS NULL AND (fechaemision >= NEW.fechaemision - INTERVAL '1 year'))
     ) THEN
-      RAISE EXCEPTION 'Ya existe un contrato activo con la misma subastadora y productora';
+       RAISE EXCEPTION 'Ya existe un contrato activo con la misma subastadora y productora';
     END IF;
   END IF;
   RETURN NEW;
@@ -446,16 +468,17 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER check_ProductorCg
-BEFORE INSERT OR UPDATE ON CONTRATO
+BEFORE INSERT ON CONTRATO
 FOR EACH ROW
 EXECUTE FUNCTION check_ProductorCg();
 
 
 -- Insertar datos de prueba en la tabla CONTRATO
 INSERT INTO CONTRATO (idSubastadora, idProductora, nContrato, fechaemision, porcentajeProduccion, tipoProductor, idrenovS, idrenovP, ren_nContrato, cancelado) VALUES
-(1, 1, 1001, '2023-01-01', 0.60, 'Ca', NULL, NULL, NULL, NULL),
-(2, 2, 1002, '2023-02-01', 0.25, 'Cb', NULL, NULL, NULL, NULL),
-(3, 3, 1003, '2023-03-01', 0.15, 'Cc', NULL, NULL, NULL, NULL);
+(1, 1, 1001, '2022-01-01', 0.60, 'Ca', NULL, NULL, NULL, NULL),
+(2, 2, 1002, '2022-02-01', 0.25, 'Cb', NULL, NULL, NULL, NULL),
+(3, 3, 1003, '2022-03-01', 0.15, 'Cc', NULL, NULL, NULL, NULL);
+
 
 -- Verificar los datos insertados
 SELECT * FROM CONTRATO;
