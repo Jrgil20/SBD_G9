@@ -456,7 +456,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 
-CREATE OR REPLACE FUNCTION check_ProductorCg() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION check_contrato_activo() RETURNS TRIGGER AS $$
 BEGIN
   IF verificar_contrato_activo(NEW.idProductora, NEW.fechaemision, (NEW.tipoProductor = 'Cg')) THEN
     RAISE EXCEPTION 'Ya existe un contrato activo para esta productora';
@@ -465,10 +465,36 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER check_ProductorCg
+CREATE TRIGGER check_contrato_activo
 BEFORE INSERT ON CONTRATO
 FOR EACH ROW
-EXECUTE FUNCTION check_ProductorCg();
+EXECUTE FUNCTION check_contrato_activo();
+
+
+CREATE OR REPLACE FUNCTION renovar_contrato(
+  R_Subastadora NUMERIC,
+  R_idProductora NUMERIC,
+  R_nContrato NUMERIC,
+  Nuevo_nContrato NUMERIC,
+  fechaRenovacion DATE
+) RETURNS VOID AS $$
+DECLARE
+  R_porcentajeProduccion NUMERIC(3,2);
+  R_tipoProductor VARCHAR;
+BEGIN
+  SELECT porcentajeProduccion, tipoProductor
+  INTO  R_porcentajeProduccion, R_tipoProductor
+  FROM CONTRATO
+  WHERE idSubastadora = R_Subastadora AND idProductora = R_idProductora AND nContrato = R_nContrato;
+
+  INSERT INTO CONTRATO (
+    idSubastadora, idProductora, nContrato, fechaemision, porcentajeProduccion, tipoProductor, idrenovS, idrenovP, ren_nContrato, cancelado
+  ) VALUES (
+    R_Subastadora, R_idProductora, Nuevo_nContrato, fechaRenovacion, R_porcentajeProduccion, R_tipoProductor, R_Subastadora, R_idProductora, R_nContrato, NULL
+  );
+END;
+$$ LANGUAGE plpgsql;
+
 
 -- Insertar datos de prueba en la tabla CONTRATO
 INSERT INTO CONTRATO (idSubastadora, idProductora, nContrato, fechaemision, porcentajeProduccion, tipoProductor, idrenovS, idrenovP, ren_nContrato, cancelado) VALUES
@@ -487,10 +513,10 @@ INSERT INTO CONTRATO (idSubastadora, idProductora, nContrato, fechaemision, porc
 (2, 2, 1005, '2022-05-01', 0.30, 'Cb', NULL, NULL, NULL, NULL),
 (3, 3, 1006, '2022-06-01', 0.10, 'Cc', NULL, NULL, NULL, NULL);
 
-INSERT INTO CONTRATO (idSubastadora, idProductora, nContrato, fechaemision, porcentajeProduccion, tipoProductor, idrenovS, idrenovP, ren_nContrato, cancelado) VALUES
-(1, 1, 1007, '2023-01-01', 0.55, 'Ca', NULL, NULL, NULL, NULL),
-(2, 2, 1008, '2023-05-01', 0.30, 'Cb', NULL, NULL, NULL, NULL),
-(3, 3, 1009, '2023-06-01', 0.10, 'Cc', NULL, NULL, NULL, NULL);
+SELECT renovar_contrato(1, 1, 1004, 1007, '2023-01-01');
+SELECT renovar_contrato(2, 2, 1005, 1008, '2023-05-01');
+SELECT renovar_contrato(3, 3, 1006, 1009, '2023-06-01');
+
 
 -- Verificar los datos insertados
 SELECT * FROM CONTRATO;
