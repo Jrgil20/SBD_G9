@@ -456,6 +456,20 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+CREATE OR REPLACE FUNCTION check_ProductorCg() RETURNS TRIGGER AS $$
+BEGIN
+  IF verificar_contrato_activo(NEW.idProductora, NEW.fechaemision, (NEW.tipoProductor = 'Cg')) THEN
+    RAISE EXCEPTION 'Ya existe un contrato activo para esta productora';
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER check_ProductorCg
+BEFORE INSERT ON CONTRATO
+FOR EACH ROW
+EXECUTE FUNCTION check_ProductorCg();
+
 -- Insertar datos de prueba en la tabla CONTRATO
 INSERT INTO CONTRATO (idSubastadora, idProductora, nContrato, fechaemision, porcentajeProduccion, tipoProductor, idrenovS, idrenovP, ren_nContrato, cancelado) VALUES
 (1, 1, 1001, '2021-01-01', 0.60, 'Ca', NULL, NULL, NULL, NULL),
@@ -474,7 +488,7 @@ INSERT INTO CONTRATO (idSubastadora, idProductora, nContrato, fechaemision, porc
 (3, 3, 1006, '2022-06-01', 0.10, 'Cc', NULL, NULL, NULL, NULL);
 
 INSERT INTO CONTRATO (idSubastadora, idProductora, nContrato, fechaemision, porcentajeProduccion, tipoProductor, idrenovS, idrenovP, ren_nContrato, cancelado) VALUES
-(1, 1, 1007, '2022-01-01', 0.55, 'Ca', NULL, NULL, NULL, NULL),
+(1, 1, 1007, '2023-01-01', 0.55, 'Ca', NULL, NULL, NULL, NULL),
 (2, 2, 1008, '2023-05-01', 0.30, 'Cb', NULL, NULL, NULL, NULL),
 (3, 3, 1009, '2023-06-01', 0.10, 'Cc', NULL, NULL, NULL, NULL);
 
