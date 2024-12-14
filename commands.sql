@@ -880,5 +880,3 @@ BEGIN
         telefonos;
 END;
 $$ LANGUAGE plpgsql;
-
--- SELECT * FROM obtener_informacion_factura(1);
