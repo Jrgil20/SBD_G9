@@ -98,6 +98,12 @@ function mostrarDetallesFloristeria(floristeria) {
     botonAplicarFiltro.addEventListener('click', () => filtrarFlores(floristeria.flores));
     filtrosContainer.appendChild(botonAplicarFiltro);
 
+    const botonRecomendador = document.createElement('button');
+    botonRecomendador.id = 'recomendador-btn';
+    botonRecomendador.textContent = 'Recomendador';
+    botonRecomendador.addEventListener('click', () => mostrarModalRecomendador(floristeria.nombre));
+    filtrosContainer.appendChild(botonRecomendador);
+
     catalogo.appendChild(filtrosContainer);
 
     // Datos de prueba para las flores
@@ -113,36 +119,35 @@ function mostrarDetallesFloristeria(floristeria) {
     // Ordenar flores por calificación
     flores.sort((a, b) => b.calificacion - a.calificacion);
 
-    // Crear contenedor deslizable verticalmente
-    const catalogoFloresContainer = document.createElement('div');
-    catalogoFloresContainer.className = 'catalogo-flores-container';
+    // Crear tabla para mostrar las flores
+    const tablaFlores = document.createElement('table');
+    tablaFlores.className = 'tabla-flores';
+    tablaFlores.innerHTML = `
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>VBN</th>
+                <th>Calificación</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    `;
 
-    // Mostrar flores
+    const tbody = tablaFlores.querySelector('tbody');
+
     flores.forEach(flor => {
-        const florCard = document.createElement('div');
-        florCard.className = 'card flor-card';
-        florCard.innerHTML = `
-            <img src="images/${flor.imagen}" alt="${flor.nombre}" onerror="this.onerror=null;this.src='images/default.jpg';">
-            <div class="flor-info">
-                <h3>${flor.nombre}</h3>
-                <p>VBN: ${flor.vbn}</p>
-                <p>Calificación: ${flor.calificacion}</p>
-            </div>
+        const fila = document.createElement('tr');
+        fila.innerHTML = `
+            <td>${flor.nombre}</td>
+            <td>${flor.vbn}</td>
+            <td>${flor.calificacion}</td>
         `;
-        florCard.addEventListener('click', () => mostrarModalFlor(flor));
-        catalogoFloresContainer.appendChild(florCard);
+        fila.addEventListener('click', () => mostrarModalFlor(flor));
+        tbody.appendChild(fila);
     });
 
-    catalogo.appendChild(catalogoFloresContainer);
-
-    // Crear botón flotante
-    const botonFlotante = document.createElement('div');
-    botonFlotante.className = 'boton-flotante';
-    botonFlotante.innerHTML = `
-        <img src="images/Florist-pana (2).png" alt="Florist">
-    `;
-    botonFlotante.addEventListener('click', () => mostrarModalPersonalizado(floristeria.nombre));
-    document.body.appendChild(botonFlotante);
+    catalogo.appendChild(tablaFlores);
 }
 
 // Función para filtrar flores
@@ -190,22 +195,20 @@ function mostrarModalFlor(flor) {
 }
 
 // Función para mostrar el modal personalizado
-function mostrarModalPersonalizado(nombreFloristeria) {
+function mostrarModalRecomendador(nombreFloristeria) {
     const modal = document.getElementById('modal');
     const modalBody = document.getElementById('modal-body');
     modalBody.innerHTML = `
         <h2>Recomendador</h2>
         <img src="images/Florist-pana (1).png" alt="Florist">
         <p>Hola, soy <strong>María</strong>, trabajo en <strong>${nombreFloristeria}</strong>, y estoy aquí para recomendarte mis flores para cualquier ocasión que necesites. Por favor, cuéntame cómo te sientes y para qué ocasión estás buscando regalar nuestras maravillosas flores?</p>
-        <div>
-            <label for="emocion">Emoción:</label>
+        <div class="recomendador-form">
             <select id="emocion">
                 <option value="feliz">Feliz</option>
                 <option value="triste">Triste</option>
                 <option value="enamorado">Enamorado</option>
                 <option value="agradecido">Agradecido</option>
             </select>
-            <label for="ocasion">Ocasion:</label>
             <input type="text" id="ocasion" placeholder="Describe la ocasión">
         </div>
         <button id="recomendar-btn">Recomiéndame!</button>
@@ -236,8 +239,9 @@ function cerrarModal() {
 window.cargarDatosFloristerias = cargarDatosFloristerias;
 window.mostrarDetallesFloristeria = mostrarDetallesFloristeria;
 window.mostrarModalFlor = mostrarModalFlor;
-window.mostrarModalPersonalizado = mostrarModalPersonalizado;
+window.mostrarModalPersonalizado = mostrarModalRecomendador;
 window.cerrarModal = cerrarModal;
 
 // Cargar datos iniciales
 document.addEventListener('DOMContentLoaded', cargarDatosFloristerias);
+
