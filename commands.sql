@@ -547,7 +547,7 @@ CHECK (idCatalogoProductora = idContratoProductora);
 -- Insertar datos de prueba en la tabla CANTIDAD_OFRECIDA
 INSERT INTO CANTIDAD_OFRECIDA (idContratoSubastadora, idContratoProductora, idNContrato, idCatalogoProductora,idCatalogoCorte, idVnb, cantidad) VALUES
 (1, 1, 1001, 1, 1, 1, 100),
-(2, 2, 1002, 2, 2, 2,200),
+(2, 2, 1002, 2, 2, 2, 200),
 (3, 3, 1003, 3, 3, 3 ,300);
 
 -- Verificar los datos insertados
@@ -941,3 +941,26 @@ BEGIN
         telefonos;
 END;
 $$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION ventas_periodo(NumContrato NUMERIC, InicioPeriodo DATE, FinPeriodo DATE)
+RETURNS NUMERIC AS $$
+DECLARE
+  total_ventas NUMERIC := 0;
+BEGIN
+  SELECT COALESCE(SUM(precioFinal), 0)
+  INTO total_ventas
+  FROM LOTE
+  WHERE idCantidad_NContrato = NumContrato
+  AND idFactura IN (
+    SELECT facturaId 
+    FROM FACTURA 
+    WHERE fechaEmision BETWEEN InicioPeriodo AND FinPeriodo
+  );
+  RETURN total_ventas;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Ejecutar la función para el periodo 2023-2024 para el contrato 1
+SELECT ventas_periodo(1001, '2023-01-01', '2024-01-01');
+
