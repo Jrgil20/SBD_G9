@@ -426,59 +426,57 @@ FOR EACH ROW
 EXECUTE FUNCTION check_nacionalidad_productor_contrato();
 
 
-
-
-CREATE OR REPLACE FUNCTION check_ContratoActivo() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION verificar_contrato_activo(idContratante NUMERIC, fecha DATE, CG BOOLEAN) RETURNS BOOLEAN AS $$
+DECLARE
+  contratoActivo BOOLEAN;
 BEGIN
-  IF NEW.tipoProductor <> 'Cg' THEN
+  contratoActivo := FALSE;
+  IF CG THEN
     IF EXISTS (
       SELECT 1 
       FROM CONTRATO 
-      WHERE idSubastadora = NEW.idSubastadora 
-        AND idProductora = NEW.idProductora 
-        AND (cancelado IS NULL AND (fechaemision >= NEW.fechaemision - INTERVAL '1 year'))
-    ) THEN
-       RAISE EXCEPTION 'Ya existe un contrato activo con la misma subastadora y productora';
-    END IF;
-  END IF;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER check_ContratoActivo
-BEFORE INSERT OR UPDATE ON CONTRATO
-FOR EACH ROW
-EXECUTE FUNCTION check_ContratoActivo();
-
-
-CREATE OR REPLACE FUNCTION check_ProductorCg() RETURNS TRIGGER AS $$
-BEGIN
-  IF NEW.tipoProductor = 'Cg' THEN
-    IF EXISTS (
-      SELECT 1 
-      FROM CONTRATO 
-      WHERE idProductora = NEW.idProductora 
+      WHERE idProductora = idContratante 
         AND (tipoProductor <> 'Cg')
+        AND (cancelado IS NULL AND fechaemision > fecha - INTERVAL '1 year')
     ) THEN
-      RAISE EXCEPTION 'Ya existe un contrato activo con la misma subastadora y productora';
+      contratoActivo := TRUE;
+    END IF;
+  ELSE
+    IF EXISTS (
+      SELECT 1 
+      FROM CONTRATO 
+      WHERE idProductora = idContratante 
+        AND (cancelado IS NULL AND fechaemision > fecha - INTERVAL '1 year')
+    ) THEN
+      contratoActivo := TRUE;
     END IF;
   END IF;
-  RETURN NEW;
+  RETURN contratoActivo;
 END;
 $$ LANGUAGE plpgsql;
-
-CREATE TRIGGER check_ProductorCg
-BEFORE INSERT ON CONTRATO
-FOR EACH ROW
-EXECUTE FUNCTION check_ProductorCg();
 
 
 -- Insertar datos de prueba en la tabla CONTRATO
 INSERT INTO CONTRATO (idSubastadora, idProductora, nContrato, fechaemision, porcentajeProduccion, tipoProductor, idrenovS, idrenovP, ren_nContrato, cancelado) VALUES
-(1, 1, 1001, '2022-01-01', 0.60, 'Ca', NULL, NULL, NULL, NULL),
-(2, 2, 1002, '2022-02-01', 0.25, 'Cb', NULL, NULL, NULL, NULL),
-(3, 3, 1003, '2022-03-01', 0.15, 'Cc', NULL, NULL, NULL, NULL);
+(1, 1, 1001, '2021-01-01', 0.60, 'Ca', NULL, NULL, NULL, NULL),
+(2, 2, 1002, '2021-02-01', 0.25, 'Cb', NULL, NULL, NULL, NULL),
+(3, 3, 1003, '2021-03-01', 0.15, 'Cc', NULL, NULL, NULL, NULL);
 
+-- Cancelar todos los contratos, la fecha de cancelación es 3 días después de la fecha de emisión
+UPDATE CONTRATO
+SET cancelado = fechaemision + INTERVAL '3 days'
+WHERE nContrato IN (1001, 1002, 1003);
+
+-- Insertar nuevos contratos en la tabla CONTRATO
+INSERT INTO CONTRATO (idSubastadora, idProductora, nContrato, fechaemision, porcentajeProduccion, tipoProductor, idrenovS, idrenovP, ren_nContrato, cancelado) VALUES
+(1, 1, 1004, '2022-01-01', 0.55, 'Ca', NULL, NULL, NULL, NULL),
+(2, 2, 1005, '2022-05-01', 0.30, 'Cb', NULL, NULL, NULL, NULL),
+(3, 3, 1006, '2022-06-01', 0.10, 'Cc', NULL, NULL, NULL, NULL);
+
+INSERT INTO CONTRATO (idSubastadora, idProductora, nContrato, fechaemision, porcentajeProduccion, tipoProductor, idrenovS, idrenovP, ren_nContrato, cancelado) VALUES
+(1, 1, 1007, '2022-01-01', 0.55, 'Ca', NULL, NULL, NULL, NULL),
+(2, 2, 1008, '2023-05-01', 0.30, 'Cb', NULL, NULL, NULL, NULL),
+(3, 3, 1009, '2023-06-01', 0.10, 'Cc', NULL, NULL, NULL, NULL);
 
 -- Verificar los datos insertados
 SELECT * FROM CONTRATO;
