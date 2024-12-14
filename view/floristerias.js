@@ -139,9 +139,9 @@ function mostrarDetallesFloristeria(floristeria) {
     const botonFlotante = document.createElement('div');
     botonFlotante.className = 'boton-flotante';
     botonFlotante.innerHTML = `
-        <img src="./images/Florist-pana.png" alt="Florist">
+        <img src="images/Florist-pana (2).png" alt="Florist">
     `;
-    botonFlotante.addEventListener('click', () => mostrarModalPersonalizado());
+    botonFlotante.addEventListener('click', () => mostrarModalPersonalizado(floristeria.nombre));
     document.body.appendChild(botonFlotante);
 }
 
@@ -190,14 +190,41 @@ function mostrarModalFlor(flor) {
 }
 
 // Función para mostrar el modal personalizado
-function mostrarModalPersonalizado() {
+function mostrarModalPersonalizado(nombreFloristeria) {
     const modal = document.getElementById('modal');
     const modalBody = document.getElementById('modal-body');
     modalBody.innerHTML = `
-        <h2>Modal Personalizado</h2>
-        <p>Contenido del modal personalizado.</p>
+        <h2>Recomendador</h2>
+        <img src="images/Florist-pana (1).png" alt="Florist">
+        <p>Hola, soy <strong>María</strong>, trabajo en <strong>${nombreFloristeria}</strong>, y estoy aquí para recomendarte mis flores para cualquier ocasión que necesites. Por favor, cuéntame cómo te sientes y para qué ocasión estás buscando regalar nuestras maravillosas flores?</p>
+        <div>
+            <label for="emocion">Emoción:</label>
+            <select id="emocion">
+                <option value="feliz">Feliz</option>
+                <option value="triste">Triste</option>
+                <option value="enamorado">Enamorado</option>
+                <option value="agradecido">Agradecido</option>
+            </select>
+            <label for="ocasion">Ocasion:</label>
+            <input type="text" id="ocasion" placeholder="Describe la ocasión">
+        </div>
+        <button id="recomendar-btn">Recomiéndame!</button>
     `;
     modal.style.display = 'block';
+
+    document.getElementById('recomendar-btn').addEventListener('click', () => {
+        const emocion = document.getElementById('emocion').value;
+        const ocasion = document.getElementById('ocasion').value;
+        filtrarFloresPorRecomendacion(emocion, ocasion);
+    });
+}
+
+// Función para filtrar flores basado en la recomendación
+function filtrarFloresPorRecomendacion(emocion, ocasion) {
+    // Aquí puedes implementar la lógica para filtrar las flores basado en la emoción y la ocasión
+    console.log(`Emoción: ${emocion}, Ocasion: ${ocasion}`);
+    // Por ahora, solo cerramos el modal
+    cerrarModal();
 }
 
 // Función para cerrar el modal
