@@ -553,12 +553,15 @@ INSERT INTO CANTIDAD_OFRECIDA (idContratoSubastadora, idContratoProductora, idNC
 -- Verificar los datos insertados
 SELECT * FROM CANTIDAD_OFRECIDA;
 
+-- Crear la secuencia para PAGOS
+CREATE SEQUENCE pagos_seq START WITH 1 INCREMENT BY 1;
+
 -- Crear la tabla
 CREATE TABLE PAGOS(
   idContratoSubastadora NUMERIC NOT NULL,
   idContratoProductora NUMERIC NOT NULL,
   idNContrato NUMERIC NOT NULL,
-  pagoId NUMERIC NOT NULL,
+  pagoId NUMERIC NOT NULL DEFAULT nextval('pagos_seq'),
   fechaPago DATE NOT NULL,
   montoComision NUMERIC NOT NULL,
   tipo VARCHAR NOT NULL,
@@ -571,11 +574,54 @@ ADD CONSTRAINT fk_Contrato_Pagos FOREIGN KEY (idContratoSubastadora, idContratoP
 REFERENCES CONTRATO (idSubastadora, idProductora, nContrato),
 ADD CONSTRAINT check_tipoProductor CHECK (tipo IN ('membresia', 'pago','multa'));
 
+CREATE OR REPLACE FUNCTION pago_contrato(
+  Pago_idContratoSubastadora NUMERIC,
+  Pago_idContratoProductora NUMERIC,
+  Pago_idNContrato NUMERIC,
+  Pago_fechaPago DATE
+) RETURNS VOID AS $$
+BEGIN
+  -- Obtener la fecha de emisión del contrato
+  IF Pago_fechaPago IS NULL THEN
+    SELECT fechaemision INTO Pago_fechaPago
+    FROM CONTRATO
+    WHERE idSubastadora = idContratoSubastadora
+      AND idProductora = idContratoProductora
+      AND nContrato = idNContrato;
+  END IF;
+  
+  -- Insertar el pago en la tabla PAGOS
+  INSERT INTO PAGOS (idContratoSubastadora, idContratoProductora, idNContrato, fechaPago, montoComision, tipo)
+  VALUES (Pago_idContratoSubastadora, Pago_idContratoProductora, Pago_idNContrato, Pago_fechaPago, 500.00, 'membresia');
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION pago_contrato_nuevo() RETURNS TRIGGER AS $$
+BEGIN
+  PERFORM pago_contrato(NEW.idSubastadora, NEW.idProductora, NEW.nContrato, NEW.fechaemision);
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER pago_contrato_nuevo
+AFTER INSERT ON CONTRATO
+FOR EACH ROW
+EXECUTE FUNCTION pago_contrato_nuevo();
+
+SELECT pago_contrato(1, 1, 1001, '2021-01-01');
+SELECT pago_contrato(2, 2, 1002, '2021-02-01');
+SELECT pago_contrato(3, 3, 1003, '2021-03-01');
+SELECT pago_contrato(1, 1, 1004, '2022-01-01');
+SELECT pago_contrato(2, 2, 1005, '2022-05-01');
+SELECT pago_contrato(3, 3, 1006, '2022-06-01');
+SELECT pago_contrato(1, 1, 1007, '2023-01-01');
+SELECT pago_contrato(2, 2, 1008, '2023-05-01');
+SELECT pago_contrato(3, 3, 1009, '2023-06-01');
+
 -- Insertar datos de prueba en la tabla PAGOS
-INSERT INTO PAGOS (idContratoSubastadora, idContratoProductora, idNContrato, pagoId, fechaPago, montoComision, tipo) VALUES
-(1, 1, 1001, 1, '2023-01-15', 150.00, 'membresia'),
-(2, 2, 1002, 2, '2023-02-15', 200.00, 'pago'),
-(3, 3, 1003, 3, '2023-03-15', 250.00, 'multa');
+INSERT INTO PAGOS (idContratoSubastadora, idContratoProductora, idNContrato, fechaPago, montoComision, tipo) VALUES
+(2, 2, 1002, '2023-02-15', 200.00, 'pago'),
+(3, 3, 1003, '2023-03-15', 250.00, 'multa');
 
 -- Verificar los datos insertados
 SELECT * FROM PAGOS;
