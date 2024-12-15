@@ -530,8 +530,9 @@ ADD CONSTRAINT chk_telefono_ArcoExclusivo CHECK (
 --  ===========================================================================================================  --
 -------------------------------------------------------------------------------------------------------------------
 
+------------------------------------------------   Contratos  -----------------------------------------------------
 
-
+-- Crear la función para verificar la nacionalidad del productor en el contrato
 CREATE OR REPLACE FUNCTION check_nacionalidad_productor_contrato() RETURNS TRIGGER AS $$
 DECLARE
   paisIdHolanda NUMERIC;
@@ -555,12 +556,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Crear el trigger para verificar la nacionalidad del productor en el contrato antes de insertar o actualizar
 CREATE TRIGGER check_nacionalidad_productor_contrato
 BEFORE INSERT OR UPDATE ON CONTRATO
 FOR EACH ROW
 EXECUTE FUNCTION check_nacionalidad_productor_contrato();
 
 
+-- Crear la función para verificar la cantidad de contratos activos de una productora
 CREATE OR REPLACE FUNCTION verificar_contrato_activo(idContratante NUMERIC, fecha DATE, CG BOOLEAN) RETURNS BOOLEAN AS $$
 DECLARE
   contratoActivo BOOLEAN;
@@ -591,6 +594,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+-- Crear la función para verificar si existe un contrato activo para una productora
 CREATE OR REPLACE FUNCTION check_contrato_activo() RETURNS TRIGGER AS $$
 BEGIN
   IF verificar_contrato_activo(NEW.idProductora, NEW.fechaemision, (NEW.tipoProductor = 'Cg')) THEN
@@ -600,12 +604,64 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Crear el trigger para verificar si existe un contrato activo para una productora antes de insertar
 CREATE TRIGGER check_contrato_activo
 BEFORE INSERT ON CONTRATO
 FOR EACH ROW
 EXECUTE FUNCTION check_contrato_activo();
 
+-- Funcion que verifica el porcentaje de produccion de contratos cg
+CREATE OR REPLACE FUNCTION check_porcentaje_cg( Contratante NUMERIC, NuevoPorcentaje NUMERIC, fecha DATE) RETURNS BOOLEAN AS $$
+DECLARE
+  PorcentajeActual NUMERIC := 0.00;
+BEGIN
+  SELECT COALESCE(SUM(porcentajeProduccion), 0)
+  INTO PorcentajeActual
+  FROM CONTRATO
+  WHERE idProductora = Contratante
+    AND tipoProductor = 'Cg'
+    AND (cancelado IS NULL AND fechaemision > fecha - INTERVAL '1 year');
+  RETURN (PorcentajeActual + NuevoPorcentaje) <= 1.00;
+END;
+$$ LANGUAGE plpgsql;
 
+
+-- Crear la función para crear un nuevo contrato
+CREATE OR REPLACE FUNCTION crear_nuevo_contrato(
+  p_idSubastadora NUMERIC,
+  p_idProductora NUMERIC,
+  p_nContrato NUMERIC,
+  p_fechaemision DATE,
+  p_porcentajeProduccion NUMERIC(3,2),
+  p_tipoProductor VARCHAR,
+  p_idrenovS NUMERIC,
+  p_idrenovP NUMERIC,
+  p_ren_nContrato NUMERIC,
+  p_cancelado DATE
+) RETURNS VOID AS $$
+BEGIN
+  -- Verificar si existe un contrato activo para la productora
+  IF verificar_contrato_activo(p_idProductora, p_fechaemision, (p_tipoProductor = 'Cg')) THEN
+    RAISE NOTICE 'Ya existe un contrato activo para esta productora';
+  ELSE
+    -- Verificar si el porcentaje de producción es válido para el tipo de productor Cg
+    IF p_tipoProductor = 'Cg' AND NOT check_porcentaje_cg(p_idProductora, p_porcentajeProduccion, p_fechaemision) THEN
+      RAISE NOTICE 'El porcentaje de producción excede el 100 para el tipo de productor Cg';
+    ELSE
+      -- Insertar el nuevo contrato en la tabla CONTRATO
+      INSERT INTO CONTRATO (
+        idSubastadora, idProductora, nContrato, fechaemision, porcentajeProduccion, tipoProductor, idrenovS, idrenovP, ren_nContrato, cancelado
+      ) VALUES (
+        p_idSubastadora, p_idProductora, p_nContrato, p_fechaemision, p_porcentajeProduccion, p_tipoProductor, p_idrenovS, p_idrenovP, p_ren_nContrato, p_cancelado
+      );
+       RAISE NOTICE 'Contrato creado exitosamente para la productora % con el contrato número %', p_idProductora, p_nContrato;
+    END IF;
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- funcion para renovar los contratos
 CREATE OR REPLACE FUNCTION renovar_contrato(
   R_Subastadora NUMERIC,
   R_idProductora NUMERIC,
@@ -631,6 +687,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+-- Crear la función para pagar un contrato ( insert en pago )
 CREATE OR REPLACE FUNCTION pago_contrato(
   Pago_idContratoSubastadora NUMERIC,
   Pago_idContratoProductora NUMERIC,
@@ -653,6 +710,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Trigger para pagar un contrato después de insertar un contrato
 CREATE OR REPLACE FUNCTION pago_contrato_nuevo() RETURNS TRIGGER AS $$
 BEGIN
   PERFORM pago_contrato(NEW.idSubastadora, NEW.idProductora, NEW.nContrato, NEW.fechaemision);
@@ -666,7 +724,11 @@ FOR EACH ROW
 EXECUTE FUNCTION pago_contrato_nuevo();
 
 
-
+-------------------------------------------------------------------------------------------------------------------
+--  ===========================================================================================================  --
+--  ======================================= Programas y Reportes  =============================================  --
+--  ===========================================================================================================  --
+-------------------------------------------------------------------------------------------------------------------
 
 CREATE OR REPLACE FUNCTION obtener_informacion_factura(factura_id NUMERIC)
 RETURNS TABLE (
@@ -722,6 +784,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+-- Crear la función para obtener el total de ventas en un periodo
 CREATE OR REPLACE FUNCTION ventas_periodo(NumContrato NUMERIC, InicioPeriodo DATE, FinPeriodo DATE)
 RETURNS NUMERIC AS $$
 DECLARE
@@ -960,10 +1023,9 @@ SELECT * FROM CATALOGOPRODUCTOR;
 
 
 -- Insertar datos de prueba en la tabla CONTRATO
-INSERT INTO CONTRATO (idSubastadora, idProductora, nContrato, fechaemision, porcentajeProduccion, tipoProductor, idrenovS, idrenovP, ren_nContrato, cancelado) VALUES
-(1, 1, 1001, '2021-01-01', 0.60, 'Ca', NULL, NULL, NULL, NULL),
-(2, 2, 1002, '2021-02-01', 0.25, 'Cb', NULL, NULL, NULL, NULL),
-(3, 3, 1003, '2021-03-01', 0.15, 'Cc', NULL, NULL, NULL, NULL);
+SELECT crear_nuevo_contrato(1, 1, 1001, '2021-01-01', 0.60, 'Ca', NULL, NULL, NULL, NULL);
+SELECT crear_nuevo_contrato(2, 2, 1002, '2021-02-01', 0.25, 'Cb', NULL, NULL, NULL, NULL);
+SELECT crear_nuevo_contrato(3, 3, 1003, '2021-03-01', 0.15, 'Cc', NULL, NULL, NULL, NULL);
 
 -- Cancelar todos los contratos, la fecha de cancelación es 3 días después de la fecha de emisión
 UPDATE CONTRATO
@@ -971,10 +1033,9 @@ SET cancelado = fechaemision + INTERVAL '3 days'
 WHERE nContrato IN (1001, 1002, 1003);
 
 -- Insertar nuevos contratos en la tabla CONTRATO
-INSERT INTO CONTRATO (idSubastadora, idProductora, nContrato, fechaemision, porcentajeProduccion, tipoProductor, idrenovS, idrenovP, ren_nContrato, cancelado) VALUES
-(1, 1, 1004, '2022-01-01', 0.55, 'Ca', NULL, NULL, NULL, NULL),
-(2, 2, 1005, '2022-05-01', 0.30, 'Cb', NULL, NULL, NULL, NULL),
-(3, 3, 1006, '2022-06-01', 0.10, 'Cc', NULL, NULL, NULL, NULL);
+SELECT crear_nuevo_contrato(1, 1, 1004, '2022-01-01', 0.55, 'Ca', NULL, NULL, NULL, NULL);
+SELECT crear_nuevo_contrato(2, 2, 1005, '2022-05-01', 0.30, 'Cb', NULL, NULL, NULL, NULL);
+SELECT crear_nuevo_contrato(3, 3, 1006, '2022-06-01', 0.10, 'Cc', NULL, NULL, NULL, NULL);
 
 SELECT renovar_contrato(1, 1, 1004, 1007, '2023-01-01');
 SELECT renovar_contrato(2, 2, 1005, 1008, '2023-05-01');
