@@ -751,6 +751,36 @@ BEFORE INSERT ON PAGOS
 FOR EACH ROW
 EXECUTE FUNCTION check_fecha_pago();
 
+-- Insertar datos de prueba en la tabla PAGOS con condición de que el tipo sea diferente a 'membresia'
+-- Crear la función para insertar pagos con la condición de que el tipo no sea 'membresia'
+CREATE OR REPLACE FUNCTION insertar_pago(
+  p_idContratoSubastadora NUMERIC,
+  p_idContratoProductora NUMERIC,
+  p_idNContrato NUMERIC,
+  p_fechaPago DATE,
+  p_montoComision NUMERIC,
+  p_tipo VARCHAR
+) RETURNS VOID AS $$
+BEGIN
+  IF p_tipo <> 'membresia' THEN
+    IF p_tipo = 'pago' THEN
+      -- Calcular el monto de la comisión según la función MontoComision
+      IF p_montoComision <> MontoComision(p_idNContrato, p_fechaPago) THEN
+        RAISE EXCEPTION 'El monto de la comisión no coincide con el monto calculado';
+      END IF;
+    END IF;
+      
+    --IF p_tipo = 'multa' THEN
+
+
+    INSERT INTO PAGOS (idContratoSubastadora, idContratoProductora, idNContrato, fechaPago, montoComision, tipo)
+    VALUES (p_idContratoSubastadora, p_idContratoProductora, p_idNContrato, p_fechaPago, p_montoComision, p_tipo);
+  
+  ELSE
+    RAISE NOTICE 'El pago de menbresia se hara al registrar el contrato, como parte de este';
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
 
 ------------------------------------------------  multas  ---------------------------------------------------------
 
