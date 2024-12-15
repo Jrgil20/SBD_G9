@@ -524,6 +524,7 @@ ADD CONSTRAINT chk_telefono_ArcoExclusivo CHECK (
 );
 
 
+
 -------------------------------------------------------------------------------------------------------------------
 --  ===========================================================================================================  --
 --  ======================================== Triggers y Programas =============================================  --
@@ -687,6 +688,8 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+--------------------------------------------------   pagos  -------------------------------------------------------
+
 -- Crear la función para pagar un contrato ( insert en pago )
 CREATE OR REPLACE FUNCTION pago_contrato(
   Pago_idContratoSubastadora NUMERIC,
@@ -724,11 +727,40 @@ FOR EACH ROW
 EXECUTE FUNCTION pago_contrato_nuevo();
 
 
+------------------------------------------------  multas  ---------------------------------------------------------
+
+
 -------------------------------------------------------------------------------------------------------------------
 --  ===========================================================================================================  --
 --  ======================================= Programas y Reportes  =============================================  --
 --  ===========================================================================================================  --
 -------------------------------------------------------------------------------------------------------------------
+
+
+
+-- Crear la función para obtener el total de ventas en un periodo
+CREATE OR REPLACE FUNCTION ventas_periodo(NumContrato NUMERIC, InicioPeriodo DATE, FinPeriodo DATE)
+RETURNS NUMERIC AS $$
+DECLARE
+  total_ventas NUMERIC := 0;
+BEGIN
+  SELECT COALESCE(SUM(precioFinal), 0)
+  INTO total_ventas
+  FROM LOTE
+  WHERE idCantidad_NContrato = NumContrato
+  AND idFactura IN (
+    SELECT facturaId 
+    FROM FACTURA 
+    WHERE fechaEmision BETWEEN InicioPeriodo AND FinPeriodo
+  );
+  RETURN total_ventas;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+
+--------------------------------------------- REPORTE: FACTURA ----------------------------------------------------
 
 CREATE OR REPLACE FUNCTION obtener_informacion_factura(factura_id NUMERIC)
 RETURNS TABLE (
@@ -783,25 +815,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-
--- Crear la función para obtener el total de ventas en un periodo
-CREATE OR REPLACE FUNCTION ventas_periodo(NumContrato NUMERIC, InicioPeriodo DATE, FinPeriodo DATE)
-RETURNS NUMERIC AS $$
-DECLARE
-  total_ventas NUMERIC := 0;
-BEGIN
-  SELECT COALESCE(SUM(precioFinal), 0)
-  INTO total_ventas
-  FROM LOTE
-  WHERE idCantidad_NContrato = NumContrato
-  AND idFactura IN (
-    SELECT facturaId 
-    FROM FACTURA 
-    WHERE fechaEmision BETWEEN InicioPeriodo AND FinPeriodo
-  );
-  RETURN total_ventas;
-END;
-$$ LANGUAGE plpgsql;
 
 -------------------------------------------------------------------------------------------------------------------
 --  ===========================================================================================================  --
