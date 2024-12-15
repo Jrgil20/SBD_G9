@@ -1244,4 +1244,4 @@ SELECT * FROM DETALLE_FACTURA;
 -- Ejecutar la función para el periodo 2023-2024 para el contrato 1
 SELECT ventas_periodo(1001, '2023-01-01', '2024-01-01');
 
-SELECT MontoComision(1001, '2023-03-01');
+SELECT MontoComision(1001, '2023-04-01');
