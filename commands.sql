@@ -726,7 +726,30 @@ AFTER INSERT ON CONTRATO
 FOR EACH ROW
 EXECUTE FUNCTION pago_contrato_nuevo();
 
+-- Crear la función para verificar la fecha de pago
+CREATE OR REPLACE FUNCTION check_fecha_pago() RETURNS TRIGGER AS $$
+DECLARE
+  ultima_fecha_pago DATE;
+BEGIN
+  SELECT MAX(fechaPago) INTO ultima_fecha_pago
+  FROM PAGOS
+  WHERE idContratoSubastadora = NEW.idContratoSubastadora
+    AND idContratoProductora = NEW.idContratoProductora
+    AND idNContrato = NEW.idNContrato;
 
+  IF ultima_fecha_pago IS NOT NULL AND NEW.fechaPago <= ultima_fecha_pago THEN
+    RAISE EXCEPTION 'La fecha de pago debe ser mayor a la última fecha de pago registrada';
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Crear el trigger para verificar la fecha de pago antes de insertar
+CREATE TRIGGER check_fecha_pago
+BEFORE INSERT ON PAGOS
+FOR EACH ROW
+EXECUTE FUNCTION check_fecha_pago();
 
 
 ------------------------------------------------  multas  ---------------------------------------------------------
