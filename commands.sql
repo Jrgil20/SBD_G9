@@ -727,6 +727,8 @@ FOR EACH ROW
 EXECUTE FUNCTION pago_contrato_nuevo();
 
 
+
+
 ------------------------------------------------  multas  ---------------------------------------------------------
 
 
@@ -758,6 +760,38 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+-- Crear la función para obtener el monto de la comisión
+CREATE OR REPLACE FUNCTION MontoComision(NumContrato NUMERIC, FechaComision DATE)
+RETURNS NUMERIC AS $$
+DECLARE
+  monto NUMERIC := 0;
+  tipo VARCHAR(2);
+  inicioMes DATE;
+  FinMes DATE;
+BEGIN
+  inicioMes := date_trunc('month', FechaComision);
+  FinMes := date_trunc('month', FechaComision) + INTERVAL '1 month' - INTERVAL '1 day';
+
+  SELECT tipoProductor INTO tipo
+    FROM CONTRATO
+    WHERE nContrato = NumContrato;
+
+  -- Calcular el monto de la comisión según el tipo de productor
+    IF tipo = 'Ca' THEN
+      monto := ventas_periodo(NumContrato, inicioMes, FinMes) * 0.005;
+    ELSIF tipo = 'Cb' THEN
+      monto := ventas_periodo(NumContrato, inicioMes, FinMes) * 0.01;
+    ELSIF tipo = 'Cc' THEN
+      monto := ventas_periodo(NumContrato, inicioMes, FinMes) * 0.02;
+    ELSIF tipo = 'Cg' THEN
+      monto := ventas_periodo(NumContrato, inicioMes, FinMes) * 0.05;
+    ELSIF tipo = 'Ka' THEN
+      monto := ventas_periodo(NumContrato, inicioMes, FinMes) * 0.0025;
+    END IF;
+
+  RETURN monto;
+END;
+$$ LANGUAGE plpgsql;
 
 
 --------------------------------------------- REPORTE: FACTURA ----------------------------------------------------
@@ -1186,3 +1220,5 @@ SELECT * FROM DETALLE_FACTURA;
 
 -- Ejecutar la función para el periodo 2023-2024 para el contrato 1
 SELECT ventas_periodo(1001, '2023-01-01', '2024-01-01');
+
+SELECT MontoComision(1001, '2023-03-01');
