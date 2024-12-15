@@ -1,5 +1,5 @@
 const express = require('express');
-const { pool, getProductoras, getFloristerias } = require('./db');
+const { pool, getProductoras, getFloristerias,getCatalogoProductoraById, getDetalleFlores} = require('./db');
 const path = require('path');
 
 const app = express();
@@ -30,7 +30,30 @@ app.get('/', (req, res) => {
 app.get('/api/productoras', async (req, res) => {
   try {
     const productoras = await getProductoras();
+    
     res.json(productoras);
+  } catch (err) {
+    console.error('Error querying the database:', err);
+    res.status(500).json({ error: 'Error querying the database' });
+  }
+});
+
+app.get('/api/catalogoProductor/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const catalogoProductor = await getCatalogoProductoraById(id);
+    res.json(catalogoProductor);
+  } catch (err) {
+    console.error('Error querying the database:', err);
+    res.status(500).json({ error: 'Error querying the database' });
+  }
+});
+
+app.get('/api/detalleFlores/:florId/:productorId', async (req, res) => {
+  const { florId,productorId } = req.params;
+  try {
+    const detalleFlores = await getDetalleFlores(florId,productorId);
+    res.json(detalleFlores);
   } catch (err) {
     console.error('Error querying the database:', err);
     res.status(500).json({ error: 'Error querying the database' });
@@ -47,6 +70,8 @@ app.get('/api/floristerias', async (req, res) => {
     res.status(500).json({ error: 'Error querying the database' });
   }
 });
+
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
