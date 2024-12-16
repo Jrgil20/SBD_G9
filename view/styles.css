@@ -513,6 +513,80 @@ section.active {
     height: 100px;
 }
 
+.formulario-insertar {
+    display: flex;
+    flex-direction: column;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: var(--color-background);
+    border: 1px solid var(--color-primary);
+    border-radius: 5px;
+}
+
+.formulario-insertar label {
+    margin-bottom: 5px;
+    color: var(--color-text);
+}
+
+.formulario-insertar input {
+    margin-bottom: 15px;
+    padding: 10px;
+    border: 1px solid var(--color-primary);
+    border-radius: 5px;
+}
+
+.formulario-insertar input[type="submit"] {
+    background-color: var(--color-primary);
+    color: white;
+    border: none;
+    cursor: pointer;
+    padding: 10px 20px;
+    transition: background-color 0.3s;
+}
+
+.formulario-insertar input[type="submit"]:hover {
+    background-color: var(--color-primary-dark);
+}
+
+.submenu {
+    margin-bottom: 20px;
+}
+
+.submenu ul {
+    list-style-type: none;
+    padding: 0;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.submenu li {
+    margin-bottom: 10px;
+}
+
+.submenu a {
+    color: var(--color-primary);
+    text-decoration: none;
+    display: block;
+    padding: 10px 20px;
+    border: 1px solid var(--color-primary);
+    border-radius: 5px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.submenu a:hover {
+    background-color: var(--color-primary);
+    color: white;
+}
+
+.capturar-form {
+    display: none;
+}
+
+.capturar-form.active {
+    display: block;
+}
 
 @media (max-width: 1024px) {
     .card {
