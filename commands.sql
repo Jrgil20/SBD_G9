@@ -782,7 +782,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-------------------------------------------------  multas  ---------------------------------------------------------
+
 
 
 -------------------------------------------------------------------------------------------------------------------
@@ -843,6 +843,66 @@ BEGIN
     END IF;
 
   RETURN monto;
+END;
+$$ LANGUAGE plpgsql;
+
+------------------------------------------------  multas  ---------------------------------------------------------
+
+-- Crear la función para verificar pagos y generar multas
+CREATE OR REPLACE FUNCTION reporte_multas_generadas_y_pagadas(
+  p_idSubastadora NUMERIC,
+  p_idProductora NUMERIC,
+  p_idContrato NUMERIC
+) RETURNS TABLE(
+  mes DATE,
+  multa_generada BOOLEAN,
+  fecha_generacion_multa DATE,
+  monto_multa NUMERIC,
+  multa_pagada BOOLEAN,
+  fecha_pago_multa DATE
+) AS $$
+BEGIN
+  RETURN QUERY
+  WITH pagos_pagos AS (
+    SELECT
+      date_trunc('month', fechaPago)::DATE AS mes,
+      fechaPago,
+      montoComision
+    FROM PAGOS
+    WHERE idContratoSubastadora = p_idSubastadora
+      AND idContratoProductora = p_idProductora
+      AND idNContrato = p_idContrato
+      AND tipo = 'pago'
+  ),
+  multas_generadas AS (
+    SELECT
+      p.mes,
+      EXTRACT(DAY FROM p.fechaPago) > 5 AS multa_generada,
+      CASE WHEN EXTRACT(DAY FROM p.fechaPago) > 5 THEN p.mes + INTERVAL '6 days' ELSE NULL END AS fecha_generacion_multa,
+      CASE WHEN EXTRACT(DAY FROM p.fechaPago) > 5 THEN p.montoComision * 0.2 ELSE 0 END AS monto_multa
+    FROM pagos_pagos p
+  ),
+  pagos_multas AS (
+    SELECT
+      date_trunc('month', fechaPago)::DATE AS mes,
+      fechaPago AS fecha_pago_multa
+    FROM PAGOS
+    WHERE idContratoSubastadora = p_idSubastadora
+      AND idContratoProductora = p_idProductora
+      AND idNContrato = p_idContrato
+      AND tipo = 'multa'
+  )
+  SELECT
+    mg.mes,
+    mg.multa_generada,
+    mg.fecha_generacion_multa::DATE,
+    mg.monto_multa,
+    pm.fecha_pago_multa IS NOT NULL AS multa_pagada,
+    pm.fecha_pago_multa
+  FROM multas_generadas mg
+  LEFT JOIN pagos_multas pm ON mg.mes = pm.mes
+  WHERE mg.multa_generada = TRUE
+  ORDER BY mg.mes;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -1156,6 +1216,9 @@ SELECT * FROM CANTIDAD_OFRECIDA;
 
 -- Insertar datos de prueba en la tabla PAGOS
 INSERT INTO PAGOS (idContratoSubastadora, idContratoProductora, idNContrato, fechaPago, montoComision, tipo) VALUES
+(1, 1, 1001, '2023-01-10', 100.00, 'pago'),
+(1, 1, 1001, '2023-02-15', 200.00, 'pago'),
+(1, 1, 1001, '2023-03-20', 150.00, 'multa'),
 (2, 2, 1002, '2023-02-15', 200.00, 'pago'),
 (3, 3, 1003, '2023-03-15', 250.00, 'multa');
 
@@ -1275,3 +1338,6 @@ SELECT * FROM DETALLE_FACTURA;
 SELECT ventas_periodo(1001, '2023-01-01', '2024-01-01');
 
 SELECT MontoComision(1001, '2023-04-01');
+
+-- Ejecutar la función para obtener el reporte de multas generadas y pagadas
+SELECT * FROM reporte_multas_generadas_y_pagadas(1, 1, 1001);
