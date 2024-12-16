@@ -785,6 +785,7 @@ $$ LANGUAGE plpgsql;
 
 
 
+
 -------------------------------------------------------------------------------------------------------------------
 --  ===========================================================================================================  --
 --  ======================================= Programas y Reportes  =============================================  --
@@ -847,6 +848,22 @@ END;
 $$ LANGUAGE plpgsql;
 
 ------------------------------------------------  multas  ---------------------------------------------------------
+
+-- Crear la función para obtener el monto de la comisión
+CREATE OR REPLACE FUNCTION MontoMulta(NumContrato NUMERIC, Fechamulta DATE)
+RETURNS NUMERIC AS $$
+DECLARE
+  monto NUMERIC := 0;
+  tipo VARCHAR(2);
+  inicioMes DATE;
+  FinMes DATE;
+BEGIN
+  inicioMes := date_trunc('month', FechaComision);
+  FinMes := date_trunc('month', FechaComision) + INTERVAL '1 month' - INTERVAL '1 day';
+    monto := ventas_periodo(NumContrato, inicioMes, FinMes) * 0.2;
+  RETURN monto;
+END;
+$$ LANGUAGE plpgsql;
 
 -- Crear la función para verificar pagos y generar multas
 CREATE OR REPLACE FUNCTION reporte_multas_generadas_y_pagadas(
