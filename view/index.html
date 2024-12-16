@@ -23,6 +23,7 @@
                 <li><a href="#" data-section="productores"><i class="fas fa-seedling"></i> Productores</a></li>
                 <li><a href="#" data-section="subastas"><i class="fas fa-gavel"></i> Subastas</a></li>
                 <li><a href="#" data-section="facturas"><i class="fas fa-file-invoice-dollar"></i> Facturas</a></li>
+                <li><a href="#" data-section="insertar-datos"><i class="fas fa-plus"></i> Insertar Datos</a></li>
             </ul>
         </nav>
         <main class="content">
@@ -189,6 +190,170 @@
                 <div id="catalogo-flores" class="cards-container">
                     <div class="cards"></div>
                 </div>
+            </section>
+            <section id="insertar-datos">
+                <h2>Insertar Datos</h2>
+                <nav class="submenu">
+                    <ul>
+                        <li><a href="#" data-section="capturar-lote">Capturar Lote</a></li>
+                        <li><a href="#" data-section="capturar-factura">Capturar Factura</a></li>
+                        <li><a href="#" data-section="capturar-afiliacion">Capturar Afiliación</a></li>
+                        <li><a href="#" data-section="capturar-catalogo-floristeria">Capturar Catálogo Floristería</a></li>
+                        <li><a href="#" data-section="capturar-bouquet">Capturar Bouquet</a></li>
+                        <li><a href="#" data-section="capturar-historico-precio">Capturar Histórico Precio</a></li>
+                    </ul>
+                </nav>
+                <!-- Forms for each capture type -->
+                <div class="capturar-form" id="capturar-lote-form">
+                    <form action="/insert-lote" method="post" class="formulario-insertar">
+                        <label for="idCantidadContratoSubastadora">ID Cantidad Contrato Subastadora:</label>
+                        <input type="number" id="idCantidadContratoSubastadora" name="idCantidadContratoSubastadora" required><br><br>
+                        
+                        <label for="idCantidadContratoProductora">ID Cantidad Contrato Productora:</label>
+                        <input type="number" id="idCantidadContratoProductora" name="idCantidadContratoProductora" required><br><br>
+                        
+                        <label for="idCantidad_NContrato">ID Cantidad N Contrato:</label>
+                        <input type="number" id="idCantidad_NContrato" name="idCantidad_NContrato" required><br><br>
+                        
+                        <label for="idCantidadCatalogoProductora">ID Cantidad Catálogo Productora:</label>
+                        <input type="number" id="idCantidadCatalogoProductora" name="idCantidadCatalogoProductora" required><br><br>
+                        
+                        <label for="idCantidadCorte">ID Cantidad Corte:</label>
+                        <input type="number" id="idCantidadCorte" name="idCantidadCorte" required><br><br>
+                        
+                        <label for="idCantidadvnb">ID Cantidad VNB:</label>
+                        <input type="number" id="idCantidadvnb" name="idCantidadvnb" required><br><br>
+                        
+                        <label for="NumLote">Número de Lote:</label>
+                        <input type="number" id="NumLote" name="NumLote" required><br><br>
+                        
+                        <label for="bi">BI:</label>
+                        <input type="number" id="bi" name="bi" required><br><br>
+                        
+                        <label for="cantidad">Cantidad:</label>
+                        <input type="number" id="cantidad" name="cantidad" required><br><br>
+                        
+                        <label for="precioInicial">Precio Inicial:</label>
+                        <input type="number" step="0.01" id="precioInicial" name="precioInicial" required><br><br>
+                        
+                        <label for="precioFinal">Precio Final:</label>
+                        <input type="number" step="0.01" id="precioFinal" name="precioFinal" required><br><br>
+                        
+                        <label for="idFactura">ID Factura:</label>
+                        <input type="number" id="idFactura" name="idFactura" required><br><br>
+                        
+                        <input type="submit" value="Submit">
+                    </form>
+                </div>
+                <!-- Form for Capturar Factura -->
+                <div class="capturar-form" id="capturar-factura-form">
+                    <form action="/insert-factura" method="post" class="formulario-insertar">
+                        <label for="facturaId">Factura ID:</label>
+                        <input type="number" id="facturaId" name="facturaId" required><br><br>
+                        
+                        <label for="idAfiliacionFloristeria">ID Afiliación Floristería:</label>
+                        <input type="number" id="idAfiliacionFloristeria" name="idAfiliacionFloristeria" required><br><br>
+                        
+                        <label for="idAfiliacionSubastadora">ID Afiliación Subastadora:</label>
+                        <input type="number" id="idAfiliacionSubastadora" name="idAfiliacionSubastadora" required><br><br>
+                        
+                        <label for="fechaEmision">Fecha Emisión:</label>
+                        <input type="date" id="fechaEmision" name="fechaEmision" required><br><br>
+                        
+                        <label for="montoTotal">Monto Total:</label>
+                        <input type="number" step="0.01" id="montoTotal" name="montoTotal" required><br><br>
+                        
+                        <label for="numeroEnvio">Número Envío:</label>
+                        <input type="text" id="numeroEnvio" name="numeroEnvio" required><br><br>
+                        
+                        <input type="submit" value="Submit">
+                    </form>
+                </div>
+                <!-- Form for Capturar Afiliación -->
+                <div class="capturar-form" id="capturar-afiliacion-form">
+                    <form action="/insert-afiliacion" method="post" class="formulario-insertar">
+                        <label for="idFloristeria">ID Floristería:</label>
+                        <input type="number" id="idFloristeria" name="idFloristeria" required><br><br>
+                        
+                        <label for="idSubastadora">ID Subastadora:</label>
+                        <input type="number" id="idSubastadora" name="idSubastadora" required><br><br>
+                        
+                        <input type="submit" value="Submit">
+                    </form>
+                </div>
+                <!-- Form for Capturar Catálogo Floristería -->
+                <div class="capturar-form" id="capturar-catalogo-floristeria-form">
+                    <form action="/insert-catalogo-floristeria" method="post" class="formulario-insertar">
+                        <label for="idFloristeria">ID Floristería:</label>
+                        <input type="number" id="idFloristeria" name="idFloristeria" required><br><br>
+                        
+                        <label for="codigo">Código:</label>
+                        <input type="text" id="codigo" name="codigo" required><br><br>
+                        
+                        <label for="idCorteFlor">ID Corte Flor:</label>
+                        <input type="number" id="idCorteFlor" name="idCorteFlor" required><br><br>
+                        
+                        <label for="idColor">ID Color:</label>
+                        <input type="number" id="idColor" name="idColor" required><br><br>
+                        
+                        <label for="nombrePropio">Nombre Propio:</label>
+                        <input type="text" id="nombrePropio" name="nombrePropio" required><br><br>
+                        
+                        <label for="descripcion">Descripción:</label>
+                        <textarea id="descripcion" name="descripcion" required></textarea><br><br>
+                        
+                        <input type="submit" value="Submit">
+                    </form>
+                </div>
+                <!-- Form for Capturar Detalle Bouquet -->
+                <div class="capturar-form" id="capturar-bouquet-form">
+                    <form action="/insert-detalle-bouquet" method="post" class="formulario-insertar">
+                        <label for="idCatalogoFloristeria">ID Catalogo Floristería:</label>
+                        <input type="number" id="idCatalogoFloristeria" name="idCatalogoFloristeria" required><br><br>
+                        
+                        <label for="idCatalogoCodigo">ID Catalogo Código:</label>
+                        <input type="text" id="idCatalogoCodigo" name="idCatalogoCodigo" required><br><br>
+                        
+                        <label for="bouquetId">Bouquet ID:</label>
+                        <input type="number" id="bouquetId" name="bouquetId" required><br><br>
+                        
+                        <label for="cantidad">Cantidad:</label>
+                        <input type="number" id="cantidad" name="cantidad" required><br><br>
+                        
+                        <label for="talloTamano">Tamaño Tallo:</label>
+                        <input type="number" id="talloTamano" name="talloTamano" required><br><br>
+                        
+                        <label for="descripcion">Descripción:</label>
+                        <textarea id="descripcion" name="descripcion" required></textarea><br><br>
+                        
+                        <input type="submit" value="Submit">
+                    </form>
+                </div>
+                <!-- Form for Capturar Histórico Precio -->
+                <div class="capturar-form" id="capturar-historico-precio-form">
+                    <form action="/insert-historico-precio" method="post" class="formulario-insertar">
+                        <label for="idCatalogoFloristeria">ID Catalogo Floristería:</label>
+                        <input type="number" id="idCatalogoFloristeria" name="idCatalogoFloristeria" required><br><br>
+                        
+                        <label for="idCatalogoCodigo">ID Catalogo Código:</label>
+                        <input type="text" id="idCatalogoCodigo" name="idCatalogoCodigo" required><br><br>
+                        
+                        <label for="fechaInicio">Fecha Inicio:</label>
+                        <input type="date" id="fechaInicio" name="fechaInicio" required><br><br>
+                        
+                        <label for="fechaFin">Fecha Fin:</label>
+                        <input type="date" id="fechaFin" name="fechaFin"><br><br>
+                        
+                        <label for="precio">Precio:</label>
+                        <input type="number" step="0.01" id="precio" name="precio" required><br><br>
+                        
+                        <label for="tamanoTallo">Tamaño Tallo:</label>
+                        <input type="number" id="tamanoTallo" name="tamanoTallo" required><br><br>
+                        
+                        <input type="submit" value="Submit">
+                    </form>
+                </div>
+                <!-- ...additional forms for other capture types (hidden by default)... -->
             </section>
         </main>
     </div>
