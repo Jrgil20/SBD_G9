@@ -61,6 +61,24 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Handle submenu clicks in "Insertar Datos" section
+    const submenuLinks = document.querySelectorAll('.submenu a');
+    const capturarForms = document.querySelectorAll('.capturar-form');
+
+    submenuLinks.forEach(link => {
+        link.addEventListener('click', event => {
+            event.preventDefault();
+            const sectionId = event.currentTarget.getAttribute('data-section') + '-form';
+            capturarForms.forEach(form => {
+                if (form.id === sectionId) {
+                    form.classList.add('active');
+                } else {
+                    form.classList.remove('active');
+                }
+            });
+        });
+    });
+
     // Cargar el panel principal al inicio
     cambiarSeccion('main');
 });
