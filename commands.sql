@@ -1638,8 +1638,16 @@ SELECT * FROM CONTRATO;
 INSERT INTO CANTIDAD_OFRECIDA (idContratoSubastadora, idContratoProductora, idNContrato, idCatalogoProductora,idCatalogoCorte, idVnb, cantidad) VALUES
 (1, 1, 1001, 1, 1, 1, 100),
 (2, 2, 1002, 2, 2, 2, 200),
-(3, 3, 1003, 3, 3, 3 ,300);
-
+(3, 3, 1003, 3, 3, 3 ,300),
+(1, 1, 1004, 1, 1, 1, 150),
+(2, 2, 1005, 2, 2, 2, 250),
+(3, 3, 1006, 3, 3, 3, 350),
+(1, 1, 1007, 1, 4, 4, 200),
+(2, 2, 1008, 2, 5, 5, 300),
+(3, 3, 1009, 3, 6, 6, 400),
+(1, 1, 1004, 1, 7, 7, 180),
+(2, 2, 1005, 2, 8, 8, 280),
+(3, 3, 1006, 3, 9, 9, 380);
 -- Verificar los datos insertados
 SELECT * FROM CANTIDAD_OFRECIDA;
 
@@ -1650,7 +1658,12 @@ INSERT INTO CONTACTOS (idFloristeria, contactoId, documentoIdentidad, primerNomb
 (1, 5, 667788990, 'Charlie', 'Black', 'Taylor', 'James'),
 (2, 4, 554433221, 'Bob', 'White', 'Jones', 'David'),
 (3, 1, 123456789, 'John', 'Doe', 'Smith', 'Michael'),
-(4, 2, 987654321, 'Jane', 'Doe', 'Johnson', 'Emily');
+(4, 2, 987654321, 'Jane', 'Doe', 'Johnson', 'Emily'),
+(1, 6, 112233445, 'Alice', 'Brown', 'Williams', 'Sophia'),
+(2, 5, 998877665, 'Eve', 'Green', 'Davis', 'Olivia'),
+(3, 2, 443322110, 'Frank', 'Blue', 'Miller', 'Daniel'),
+(4, 3, 556677889, 'Grace', 'Yellow', 'Wilson', 'Emma'),
+(1, 7, 334455667, 'Hank', 'Purple', 'Moore', 'Liam');
 
 -- Verificar los datos insertados
 SELECT * FROM CONTACTOS;
@@ -1659,7 +1672,13 @@ SELECT * FROM CONTACTOS;
 INSERT INTO AFILIACION (idFloristeria, idSubastadora) VALUES 
 (1, 1),
 (2, 2),
-(3, 3);
+(3, 3),
+(4, 1),
+(5, 2),
+(6, 3),
+(1, 2),
+(2, 3),
+(3, 1);
 
 -- Verificar los datos insertados
 SELECT * FROM AFILIACION;
@@ -1670,7 +1689,12 @@ INSERT INTO FACTURA (facturaId, idAfiliacionFloristeria, idAfiliacionSubastadora
 (1, 1, 1, '2021-01-18 16:00:00', 10000.00, NULL),
 (2, 1, 1, '2021-02-15 16:00:00', 1100.00, 3232),
 (3, 2, 2, '2023-05-01 16:00:00', 750.00, 12346),
-(4, 3, 3, '2023-06-01 16:00:00', 1000.00, 12347);
+(4, 3, 3, '2023-06-01 16:00:00', 1000.00, 12347),
+(5, 4, 1, '2023-07-01 16:00:00', 1250.00, 12348),
+(6, 5, 2, '2023-08-01 16:00:00', 1500.00, 12349),
+(7, 6, 3, '2023-09-01 16:00:00', 1750.00, 12350),
+(8, 1, 2, '2023-10-01 16:00:00', 2000.00, 12351),
+(9, 2, 3, '2023-11-01 16:00:00', 2250.00, 12352);
 
 -- Verificar los datos insertados
 SELECT * FROM FACTURA;
@@ -1693,7 +1717,15 @@ SELECT * FROM PAGOS;
 INSERT INTO LOTE (idCantidadContratoSubastadora, idCantidadContratoProductora, idCantidad_NContrato, idCantidadCatalogoProductora, idCantidadCorte, idCantidadvnb, NumLote, bi, cantidad, precioInicial, precioFinal, idFactura) VALUES
 (1, 1, 1001, 1, 1, 1, 1, 1, 50, 10.00, 15.00, 1),
 (2, 2, 1002, 2, 2, 2, 2, 2, 100, 20.00, 25.00, 2),
-(3, 3, 1003, 3, 3, 3, 3, 3, 150, 30.00, 35.00, 3);
+(3, 3, 1003, 3, 3, 3, 3, 3, 150, 30.00, 35.00, 3),
+(1, 1, 1004, 1, 1, 1, 4, 1, 60, 12.00, 18.00, 1),
+(2, 2, 1005, 2, 2, 2, 5, 2, 120, 22.00, 28.00, 2),
+(3, 3, 1006, 3, 3, 3, 6, 3, 180, 32.00, 38.00, 3),
+(2, 2, 1008, 2, 5, 5, 8, 5, 140, 24.00, 30.00, 2),
+(3, 3, 1009, 3, 6, 6, 9, 6, 210, 34.00, 40.00, 3),
+(1, 1, 1004, 1, 7, 7, 10, 7, 80, 16.00, 22.00, 1),
+(2, 2, 1005, 2, 8, 8, 11, 8, 160, 26.00, 32.00, 2),
+(3, 3, 1006, 3, 9, 9, 12, 9, 240, 36.00, 42.00, 3);
 
 -- Verificar los datos insertados
 SELECT * FROM LOTE;
@@ -1705,7 +1737,11 @@ INSERT INTO CATALOGO_FLORISTERIA (idFloristeria, codigo, idCorteFlor, idColor, n
 (2, 2, 2, 3, 'Tulipán Amarillo', 'Tulipán amarillo brillante para alegrar el día'),
 (3, 3, 3, 4, 'Orquídea Púrpura', 'Orquídea exótica y elegante en color púrpura'),
 (4, 4, 4, 5, 'Girasol', 'Girasol alto y brillante que sigue al sol'),
-(5, 5, 5, 6, 'Lirio Blanco', 'Lirio blanco elegante y fragante para cualquier ocasión');
+(5, 5, 5, 6, 'Lirio Blanco', 'Lirio blanco elegante y fragante para cualquier ocasión'),
+(6, 6, 6, 7, 'Clavel Rojo', 'Clavel rojo popular en ramos y arreglos'),
+(1, 7, 7, 8, 'Margarita Blanca', 'Margarita sencilla y alegre en color blanco'),
+(2, 8, 8, 9, 'Hortensia Azul', 'Hortensia ornamental en racimos de color azul'),
+(3, 9, 9, 10, 'Peonía Rosa', 'Peonía grande y fragante en color rosa');
 
 -- Verificar los datos insertados
 SELECT * FROM CATALOGO_FLORISTERIA;
@@ -1717,7 +1753,11 @@ INSERT INTO HISTORICO_PRECIO_FLOR (idCatalogoFloristeria, idCatalogocodigo, fech
 (2, 2, '2023-01-01', NULL, 15.00, 60),
 (3, 3, '2023-01-01', NULL, 20.00, 70),
 (4, 4, '2023-01-01', NULL, 25.00, 80),
-(5, 5, '2023-01-01', NULL, 30.00, 90);
+(5, 5, '2023-01-01', NULL, 30.00, 90),
+(1, 7, '2023-02-01', NULL, 12.00, 55),
+(2, 8, '2023-02-01', NULL, 18.00, 65),
+(3, 9, '2023-02-01', NULL, 22.00, 75),
+(4, 4, '2023-02-01', NULL, 28.00, 85);
 
 -- Verificar los datos insertados
 SELECT * FROM HISTORICO_PRECIO_FLOR;
@@ -1729,8 +1769,14 @@ INSERT INTO DETALLE_BOUQUET (idCatalogoFloristeria, idCatalogocodigo, bouquetId,
 (2, 2, 2, 15, 60, 'Bouquet de tulipanes amarillos'),
 (3, 3, 3, 20, 70, 'Bouquet de orquídeas púrpuras'),
 (4, 4, 4, 25, 80, 'Bouquet de girasoles'),
-(5, 5, 5, 30, 90, 'Bouquet de lirios blancos');
+(5, 5, 5, 30, 90, 'Bouquet de lirios blancos'),
+(6, 6, 7, 40, 105, 'Bouquet de claveles rojos y blancos'),
+(1, 7, 8, 15, 60, 'Bouquet de margaritas blancas y amarillas'),
+(2, 8, 9, 20, 70, 'Bouquet de hortensias azules y rosas'),
+(3, 9, 10, 25, 80, 'Bouquet de peonías rosas y blancas');
 
+-- Verificar los datos insertados
+SELECT * FROM DETALLE_BOUQUET;
 -- Verificar los datos insertados
 SELECT * FROM DETALLE_BOUQUET;
 
@@ -1741,7 +1787,11 @@ INSERT INTO FACTURA_FINAL (idFloristeria, numFactura, fechaEmision, montoTotal, 
 (2, 2, '2023-08-01', 750.00, NULL, 1),
 (3, 3, '2023-09-01', 1000.00, 2, NULL),
 (4, 4, '2023-10-01', 1250.00, NULL, 2),
-(5, 5, '2023-11-01', 1500.00, 3, NULL);
+(5, 5, '2023-11-01', 1500.00, 3, NULL),
+(2, 6, '2023-12-01', 1750.00, NULL, 3),
+(3, 7, '2024-01-01', 2000.00, 4, NULL),
+(4, 8, '2024-02-01', 2250.00, NULL, 4),
+(5, 9, '2024-03-01', 2500.00, 5, NULL);
 
 -- Verificar los datos insertados
 SELECT * FROM FACTURA_FINAL;
@@ -1749,12 +1799,16 @@ SELECT * FROM FACTURA_FINAL;
 
 -- Insertar datos de prueba en la tabla DETALLE_FACTURA
 INSERT INTO DETALLE_FACTURA (idFActuraFloristeria, idNumFactura, detalleId, catalogoFloristeria, catalogoCodigo, bouquetFloristeria, bouquetcodigo, bouquetId, cantidad, valoracionPrecio, valorancionCalidad, valoracionPromedio, detalles) VALUES
-(1, 1, 1, 1, 1, NULL, NULL, NULL, 10, 9.5, 9.0, 9.25, 'Rosa Roja de alta calidad'),
-(2, 2, 2, NULL, NULL, 2, 2, 2, 15, 8.5, 8.0, 8.25, 'Bouquet de tulipanes amarillos'),
-(3, 3, 3, 3, 3, NULL, NULL, NULL, 20, 9.0, 9.5, 9.25, 'Orquídea Púrpura exótica'),
-(4, 4, 4, NULL, NULL, 4, 4, 4, 25, 8.0, 8.5, 8.25, 'Bouquet de girasoles'),
-(5, 5, 5, 5, 5, NULL, NULL, NULL, 30, 9.5, 9.0, 9.25, 'Lirio Blanco elegante');
-
+(1, 1, 1, 1, 1, NULL, NULL, NULL, 10, 0.5, 0.5, 0.5, 'Rosa Roja de alta calidad'),
+(2, 2, 2, NULL, NULL, 2, 2, 2, 15, 1.0, 1.0, 1.0, 'Bouquet de tulipanes amarillos'),
+(3, 3, 3, 3, 3, NULL, NULL, NULL, 20, 1.5, 1.5, 1.5, 'Orquídea Púrpura exótica'),
+(4, 4, 4, NULL, NULL, 4, 4, 4, 25, 2.0, 2.0, 2.0, 'Bouquet de girasoles'),
+(5, 5, 5, 5, 5, NULL, NULL, NULL, 30, 2.5, 2.5, 2.5, 'Lirio Blanco elegante'),
+(1, 1, 6, 1, 1, NULL, NULL, NULL, 10, 3.0, 3.0, 3.0, 'Rosa Roja de alta calidad'),
+(2, 2, 7, NULL, NULL, 2, 2, 2, 15, 3.5, 3.5, 3.5, 'Bouquet de tulipanes amarillos'),
+(3, 3, 8, 3, 3, NULL, NULL, NULL, 20, 4.0, 4.0, 4.0, 'Orquídea Púrpura exótica'),
+(4, 4, 9, NULL, NULL, 4, 4, 4, 25, 4.5, 4.5, 4.5, 'Bouquet de girasoles'),
+(5, 5, 10, 5, 5, NULL, NULL, NULL, 30, 5.0, 5.0, 5.0, 'Lirio Blanco elegante');
 -- Verificar los datos insertados
 SELECT * FROM DETALLE_FACTURA;
 
