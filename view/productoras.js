@@ -162,7 +162,7 @@ async function mostrarModalFlor(flor, productora) {
         modalBody.innerHTML = '<p>Error al cargar los detalles de la flor.</p>';
         modal.style.display = 'block';
     }
-
+}
 
 // Función para mostrar el modal de contratos
 function mostrarModalContratos(productora) {
