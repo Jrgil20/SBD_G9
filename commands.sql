@@ -1252,6 +1252,22 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION obtener_floristeria()
+RETURNS TABLE (
+  floristeriaId NUMERIC,
+  nombre VARCHAR,
+  email VARCHAR,
+  paginaWeb VARCHAR,
+  pais VARCHAR
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT f.floristeriaId, f.nombre, f.email, f.paginaWeb, p.nombrePais::VARCHAR AS pais
+  FROM floristerias f
+  JOIN pais p ON f.idPais = p.paisId;
+END;
+$$ LANGUAGE plpgsql;
+
 -------------------------------------------------------------------------------------------------------------------
 --  ===========================================================================================================  --
 --  ======================================== Inserts y consultas ==============================================  --
@@ -1632,10 +1648,12 @@ SELECT MontoComision(1001, '2023-04-01');
 -- Ejecutar la función para obtener el reporte de multas generadas y pagadas
 SELECT * FROM reporte_multas_generadas_y_pagadas(1, 1, 1001);
 
-SELECT obtener_informacion_factura(1);
+SELECT * FROM obtener_informacion_factura(1);
 
-SELECT informacion_de_productores();
+SELECT * FROM informacion_de_productores();
 
 SELECT * FROM CatalogoProductoraById(1);
 
 SELECT * FROM Obtener_DetalleFlores(1, 1);
+
+SELECT * FROM obtener_floristeria();
