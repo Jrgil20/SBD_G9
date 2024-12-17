@@ -910,6 +910,40 @@ $$ LANGUAGE plpgsql;
 
 ------------------------------------------------  multas  ---------------------------------------------------------
 
+-- Crear la función para verificar la fecha de pago dentro del período de validez del contrato
+CREATE OR REPLACE FUNCTION verificar_fecha_pago_validez() RETURNS TRIGGER AS $$
+DECLARE
+  fecha_emision DATE;
+  fecha_cancelacion DATE;
+BEGIN
+  IF NEW.tipo <> 'membresia' THEN
+    -- Obtener la fecha de emisión y la fecha de cancelación del contrato
+    SELECT fechaemision, cancelado INTO fecha_emision, fecha_cancelacion
+    FROM CONTRATO
+    WHERE idSubastadora = NEW.idContratoSubastadora
+      AND idProductora = NEW.idContratoProductora
+      AND nContrato = NEW.idNContrato;
+
+    -- Verificar que la fecha de pago esté dentro del período de validez del contrato
+    IF NEW.fechaPago <= fecha_emision THEN
+      RAISE EXCEPTION 'La fecha de pago debe ser mayor a la fecha de emisión del contrato';
+    ELSIF fecha_cancelacion IS NOT NULL AND NEW.fechaPago >= fecha_cancelacion THEN
+      RAISE EXCEPTION 'La fecha de pago debe ser menor a la fecha de cancelación del contrato';
+    ELSIF fecha_cancelacion IS NULL AND NEW.fechaPago >= fecha_emision + INTERVAL '1 year' THEN
+      RAISE EXCEPTION 'La fecha de pago debe ser menor a un año desde la fecha de emisión del contrato';
+    END IF;
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Crear el trigger para verificar la fecha de pago antes de insertar en PAGOS
+CREATE TRIGGER verificar_fecha_pago_validez
+BEFORE INSERT ON PAGOS
+FOR EACH ROW
+EXECUTE FUNCTION verificar_fecha_pago_validez();
+
 -- Crear la función para obtener el monto de la multa
 CREATE OR REPLACE FUNCTION MontoMulta(NumContrato NUMERIC, Fechamulta DATE)
 RETURNS NUMERIC AS $$
