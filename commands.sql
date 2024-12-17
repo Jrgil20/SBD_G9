@@ -1792,3 +1792,84 @@ SELECT * FROM obtener_informacion_de_flor(1, 1);
 
 SELECT * FROM Traer_lotes(1);
 
+CREATE OR REPLACE FUNCTION Paises_floristerias()
+RETURNS TABLE (
+  nombrePais TEXT
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT DISTINCT p.nombrePais
+  FROM FLORISTERIAS f
+  JOIN PAIS p ON f.idPais = p.paisId;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Ejecutar la función para obtener los nombres de los países de las floristerías
+SELECT * FROM Paises_floristerias();
+CREATE OR REPLACE FUNCTION Paises_productoras()
+RETURNS TABLE (
+  nombrePais TEXT
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT DISTINCT p.nombrePais
+  FROM PRODUCTORAS pr
+  JOIN PAIS p ON pr.idPais = p.paisId;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Ejecutar la función para obtener los nombres de los países de las productoras
+SELECT * FROM Paises_productoras();
+
+
+CREATE OR REPLACE FUNCTION floristerias_con_factura()
+RETURNS TABLE (
+  floristeriaId NUMERIC,
+  nombre VARCHAR
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT DISTINCT f.floristeriaId, f.nombre
+  FROM FLORISTERIAS f
+  JOIN FACTURA fa ON f.floristeriaId = fa.idAfiliacionFloristeria;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION subastadoras_con_factura()
+RETURNS TABLE (
+  subastadoraId NUMERIC,
+  nombreSubastadora VARCHAR
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT DISTINCT s.subastadoraId, s.nombreSubastadora
+  FROM SUBASTADORA s
+  JOIN FACTURA fa ON s.subastadoraId = fa.idAfiliacionSubastadora;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION facturas_afiliacion(
+  p_idAfiliacionFloristeria NUMERIC DEFAULT NULL,
+  p_idAfiliacionSubastadora NUMERIC DEFAULT NULL
+) RETURNS TABLE (
+  facturaId NUMERIC,
+  idAfiliacionFloristeria NUMERIC,
+  idAfiliacionSubastadora NUMERIC,
+  fechaEmision TIMESTAMP,
+  montoTotal NUMERIC,
+  numeroEnvio NUMERIC
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    facturaId,
+    idAfiliacionFloristeria,
+    idAfiliacionSubastadora,
+    fechaEmision,
+    montoTotal,
+    numeroEnvio
+  FROM FACTURA
+  WHERE (p_idAfiliacionFloristeria IS NULL OR idAfiliacionFloristeria = p_idAfiliacionFloristeria)
+    AND (p_idAfiliacionSubastadora IS NULL OR idAfiliacionSubastadora = p_idAfiliacionSubastadora);
+END;
+$$ LANGUAGE plpgsql;
