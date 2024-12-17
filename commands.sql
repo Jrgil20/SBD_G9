@@ -1341,7 +1341,7 @@ SELECT crear_nuevo_contrato(3, 3, 1003, '2021-03-01', 0.15, 'Cc', NULL, NULL, NU
 
 -- Cancelar todos los contratos, la fecha de cancelación es 3 días después de la fecha de emisión
 UPDATE CONTRATO
-SET cancelado = fechaemision + INTERVAL '3 days'
+SET cancelado = fechaemision + INTERVAL '6 months'
 WHERE nContrato IN (1001, 1002, 1003);
 
 -- Insertar nuevos contratos en la tabla CONTRATO
@@ -1349,9 +1349,9 @@ SELECT crear_nuevo_contrato(1, 1, 1004, '2022-01-01', 0.55, 'Ca', NULL, NULL, NU
 SELECT crear_nuevo_contrato(2, 2, 1005, '2022-05-01', 0.30, 'Cb', NULL, NULL, NULL, NULL);
 SELECT crear_nuevo_contrato(3, 3, 1006, '2022-06-01', 0.10, 'Cc', NULL, NULL, NULL, NULL);
 
-SELECT renovar_contrato(1, 1, 1004, 1007, '2023-01-01');
-SELECT renovar_contrato(2, 2, 1005, 1008, '2023-05-01');
-SELECT renovar_contrato(3, 3, 1006, 1009, '2023-06-01');
+SELECT renovar_contrato(1, 1, 1004, 1007, '2023-01-02');
+SELECT renovar_contrato(2, 2, 1005, 1008, '2023-05-02');
+SELECT renovar_contrato(3, 3, 1006, 1009, '2023-06-02');
 
 -- Verificar los datos insertados
 SELECT * FROM CONTRATO;
@@ -1368,12 +1368,12 @@ SELECT * FROM CANTIDAD_OFRECIDA;
 
 -- Insertar datos de prueba en la tabla PAGOS
 INSERT INTO PAGOS (idContratoSubastadora, idContratoProductora, idNContrato, fechaPago, montoComision, tipo) VALUES
-(1, 1, 1001, '2023-01-10', 100.00, 'pago'),
-(1, 1, 1001, '2023-02-03', 40.00, 'multa'),
-(1, 1, 1001, '2023-02-15', 200.00, 'pago'),
-(1, 1, 1001, '2023-03-20', 150.00, 'multa'),
-(2, 2, 1002, '2023-02-15', 200.00, 'pago'),
-(3, 3, 1003, '2023-03-15', 250.00, 'multa');
+(1, 1, 1001, '2021-02-10', 100.00, 'pago'),
+(1, 1, 1001, '2021-03-03', 40.00, 'multa'),
+(1, 1, 1001, '2021-03-15', 200.00, 'pago'),
+(1, 1, 1001, '2021-03-20', 150.00, 'multa'),
+(2, 2, 1002, '2021-06-15', 200.00, 'pago'),
+(3, 3, 1003, '2021-07-15', 250.00, 'pago');
 
 -- Verificar los datos insertados
 SELECT * FROM PAGOS;
