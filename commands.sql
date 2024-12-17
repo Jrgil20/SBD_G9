@@ -1189,6 +1189,44 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+CREATE OR REPLACE FUNCTION informacion_de_productores()
+RETURNS TABLE (
+  productoraid NUMERIC,
+  nombreproductora VARCHAR,
+  paginaweb VARCHAR,
+  pais TEXT
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT p.productoraid, p.nombreproductora, p.paginaweb, pa.nombrepais AS pais
+  FROM productoras p
+  JOIN pais pa ON p.idpais = pa.paisid;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION CatalogoProductoraById(productorId NUMERIC)
+RETURNS TABLE (
+  corteid NUMERIC,
+  nombrecomun VARCHAR,
+  nombrepropio VARCHAR,
+  vbn NUMERIC
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    fc.corteid,
+    fc.nombrecomun, 
+    cp.nombrepropio, 
+    cp.vbn
+  FROM flor_cortes fc
+  INNER JOIN catalogoproductor cp ON fc.corteid = cp.idcorte
+  INNER JOIN productoras p ON cp.idproductora = p.productoraid
+  WHERE p.productoraid = productorId
+  ORDER BY fc.nombrecomun;
+END;
+$$ LANGUAGE plpgsql;
+
 -------------------------------------------------------------------------------------------------------------------
 --  ===========================================================================================================  --
 --  ======================================== Inserts y consultas ==============================================  --
@@ -1569,4 +1607,8 @@ SELECT MontoComision(1001, '2023-04-01');
 -- Ejecutar la función para obtener el reporte de multas generadas y pagadas
 SELECT * FROM reporte_multas_generadas_y_pagadas(1, 1, 1001);
 
- SELECT obtener_informacion_factura(1);
+SELECT obtener_informacion_factura(1);
+
+SELECT informacion_de_productores();
+
+SELECT * FROM CatalogoProductoraById(1);
