@@ -265,18 +265,18 @@ CHECK (idCatalogoProductora = idContratoProductora);
 -----------------------------------------------------------------------------------------------------------------
 
 -- Crear la secuencia para PAGOS
-CREATE SEQUENCE pagos_seq START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE Pagos_seq START WITH 1 INCREMENT BY 1;
 
 -- Crear la tabla
 CREATE TABLE PAGOS(
   idContratoSubastadora NUMERIC NOT NULL,
   idContratoProductora NUMERIC NOT NULL,
   idNContrato NUMERIC NOT NULL,
-  pagoId NUMERIC NOT NULL DEFAULT nextval('pagos_seq'),
+  PagoId NUMERIC NOT NULL DEFAULT nextval('Pagos_seq'),
   fechaPago DATE NOT NULL,
   montoComision NUMERIC NOT NULL,
   tipo VARCHAR NOT NULL,
-  PRIMARY KEY (idContratoSubastadora, idContratoProductora, idNContrato, pagoId)
+  PRIMARY KEY (idContratoSubastadora, idContratoProductora, idNContrato, PagoId)
 );
 
 -- Agregar claves foráneas y check
@@ -285,7 +285,7 @@ ADD CONSTRAINT fk_Contrato_Pagos FOREIGN KEY (idContratoSubastadora, idContratoP
 REFERENCES CONTRATO (idSubastadora, idProductora, nContrato);
 
 ALTER TABLE PAGOS
-ADD CONSTRAINT check_tipoProductor CHECK (tipo IN ('membresia', 'pago','multa'));
+ADD CONSTRAINT check_tipoProductor CHECK (tipo IN ('membresia', 'Pago','multa'));
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -328,7 +328,7 @@ CREATE TABLE FACTURA(
   facturaId NUMERIC NOT NULL,
   idAfiliacionFloristeria NUMERIC NOT NULL,
   idAfiliacionSubastadora NUMERIC NOT NULL,
-  fechaEmision DATE NOT NULL,
+  fechaEmision TIMESTAMP NOT NULL,
   montoTotal NUMERIC NOT NULL,
   numeroEnvio NUMERIC,
   PRIMARY KEY (facturaId)
@@ -749,10 +749,10 @@ BEFORE UPDATE ON CONTRATO
 FOR EACH ROW
 EXECUTE FUNCTION verificar_update_contrato();
 
---------------------------------------------------   pagos  -------------------------------------------------------
+--------------------------------------------------   Pagos  -------------------------------------------------------
 
--- Crear la función para pagar un contrato ( insert en pago )
-CREATE OR REPLACE FUNCTION pago_contrato(
+-- Crear la función para pagar un contrato ( insert en Pago )
+CREATE OR REPLACE FUNCTION Pago_contrato(
   Pago_idContratoSubastadora NUMERIC,
   Pago_idContratoProductora NUMERIC,
   Pago_idNContrato NUMERIC,
@@ -768,53 +768,53 @@ BEGIN
       AND nContrato = idNContrato;
   END IF;
   
-  -- Insertar el pago en la tabla PAGOS
+  -- Insertar el Pago en la tabla PAGOS
   INSERT INTO PAGOS (idContratoSubastadora, idContratoProductora, idNContrato, fechaPago, montoComision, tipo)
   VALUES (Pago_idContratoSubastadora, Pago_idContratoProductora, Pago_idNContrato, Pago_fechaPago, 500.00, 'membresia');
 END;
 $$ LANGUAGE plpgsql;
 
 -- Trigger para pagar un contrato después de insertar un contrato
-CREATE OR REPLACE FUNCTION pago_contrato_nuevo() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION Pago_contrato_nuevo() RETURNS TRIGGER AS $$
 BEGIN
-  PERFORM pago_contrato(NEW.idSubastadora, NEW.idProductora, NEW.nContrato, NEW.fechaemision);
+  PERFORM Pago_contrato(NEW.idSubastadora, NEW.idProductora, NEW.nContrato, NEW.fechaemision);
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER pago_contrato_nuevo
+CREATE TRIGGER Pago_contrato_nuevo
 AFTER INSERT ON CONTRATO
 FOR EACH ROW
-EXECUTE FUNCTION pago_contrato_nuevo();
+EXECUTE FUNCTION Pago_contrato_nuevo();
 
--- Crear la función para verificar la fecha de pago
-CREATE OR REPLACE FUNCTION check_fecha_pago() RETURNS TRIGGER AS $$
+-- Crear la función para verificar la fecha de Pago
+CREATE OR REPLACE FUNCTION check_fecha_Pago() RETURNS TRIGGER AS $$
 DECLARE
-  ultima_fecha_pago DATE;
+  ultima_fecha_Pago DATE;
 BEGIN
-  SELECT MAX(fechaPago) INTO ultima_fecha_pago
+  SELECT MAX(fechaPago) INTO ultima_fecha_Pago
   FROM PAGOS
   WHERE idContratoSubastadora = NEW.idContratoSubastadora
     AND idContratoProductora = NEW.idContratoProductora
     AND idNContrato = NEW.idNContrato;
 
-  IF ultima_fecha_pago IS NOT NULL AND NEW.fechaPago <= ultima_fecha_pago THEN
-    RAISE EXCEPTION 'La fecha de pago debe ser mayor a la última fecha de pago registrada';
+  IF ultima_fecha_Pago IS NOT NULL AND NEW.fechaPago <= ultima_fecha_Pago THEN
+    RAISE EXCEPTION 'La fecha de Pago debe ser mayor a la última fecha de Pago registrada';
   END IF;
 
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
--- Crear el trigger para verificar la fecha de pago antes de insertar
-CREATE TRIGGER check_fecha_pago
+-- Crear el trigger para verificar la fecha de Pago antes de insertar
+CREATE TRIGGER check_fecha_Pago
 BEFORE INSERT ON PAGOS
 FOR EACH ROW
-EXECUTE FUNCTION check_fecha_pago();
+EXECUTE FUNCTION check_fecha_Pago();
 
 -- Insertar datos de prueba en la tabla PAGOS con condición de que el tipo sea diferente a 'membresia'
--- Crear la función para insertar pagos con la condición de que el tipo no sea 'membresia'
-CREATE OR REPLACE FUNCTION insertar_pago(
+-- Crear la función para insertar Pagos con la condición de que el tipo no sea 'membresia'
+CREATE OR REPLACE FUNCTION insertar_Pago(
   p_idContratoSubastadora NUMERIC,
   p_idContratoProductora NUMERIC,
   p_idNContrato NUMERIC,
@@ -824,7 +824,7 @@ CREATE OR REPLACE FUNCTION insertar_pago(
 ) RETURNS VOID AS $$
 BEGIN
   IF p_tipo <> 'membresia' THEN
-    IF p_tipo = 'pago' THEN
+    IF p_tipo = 'Pago' THEN
       -- Calcular el monto de la comisión según la función MontoComision
       IF p_montoComision <> MontoComision(p_idNContrato, p_fechaPago) THEN
         RAISE EXCEPTION 'El monto de la comisión no coincide con el monto calculado';
@@ -838,7 +838,7 @@ BEGIN
     VALUES (p_idContratoSubastadora, p_idContratoProductora, p_idNContrato, p_fechaPago, p_montoComision, p_tipo);
   
   ELSE
-    RAISE NOTICE 'El pago de menbresia se hara al registrar el contrato, como parte de este';
+    RAISE NOTICE 'El Pago de menbresia se hara al registrar el contrato, como parte de este';
   END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -908,10 +908,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-------------------------------------------------  multas  ---------------------------------------------------------
 
--- Crear la función para verificar la fecha de pago dentro del período de validez del contrato
-CREATE OR REPLACE FUNCTION verificar_fecha_pago_validez() RETURNS TRIGGER AS $$
+-- Crear la función para verificar la fecha de Pago dentro del período de validez del contrato
+CREATE OR REPLACE FUNCTION verificar_fecha_Pago_validez() RETURNS TRIGGER AS $$
 DECLARE
   fecha_emision DATE;
   fecha_cancelacion DATE;
@@ -924,13 +923,13 @@ BEGIN
       AND idProductora = NEW.idContratoProductora
       AND nContrato = NEW.idNContrato;
 
-    -- Verificar que la fecha de pago esté dentro del período de validez del contrato
+    -- Verificar que la fecha de Pago esté dentro del período de validez del contrato
     IF NEW.fechaPago <= fecha_emision THEN
-      RAISE EXCEPTION 'La fecha de pago debe ser mayor a la fecha de emisión del contrato';
+      RAISE EXCEPTION 'La fecha de Pago debe ser mayor a la fecha de emisión del contrato';
     ELSIF fecha_cancelacion IS NOT NULL AND NEW.fechaPago >= fecha_cancelacion THEN
-      RAISE EXCEPTION 'La fecha de pago debe ser menor a la fecha de cancelación del contrato';
+      RAISE EXCEPTION 'La fecha de Pago debe ser menor a la fecha de cancelación del contrato';
     ELSIF fecha_cancelacion IS NULL AND NEW.fechaPago >= fecha_emision + INTERVAL '1 year' THEN
-      RAISE EXCEPTION 'La fecha de pago debe ser menor a un año desde la fecha de emisión del contrato';
+      RAISE EXCEPTION 'La fecha de Pago debe ser menor a un año desde la fecha de emisión del contrato';
     END IF;
   END IF;
 
@@ -938,11 +937,40 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Crear el trigger para verificar la fecha de pago antes de insertar en PAGOS
-CREATE TRIGGER verificar_fecha_pago_validez
+-- Crear el trigger para verificar la fecha de Pago antes de insertar en PAGOS
+CREATE TRIGGER verificar_fecha_Pago_validez
 BEFORE INSERT ON PAGOS
 FOR EACH ROW
-EXECUTE FUNCTION verificar_fecha_pago_validez();
+EXECUTE FUNCTION verificar_fecha_Pago_validez();
+
+-- Crear la función para insertar un Pago
+CREATE OR REPLACE FUNCTION insertar_Pago(
+  p_idContratoSubastadora NUMERIC,
+  p_idContratoProductora NUMERIC,
+  p_idNContrato NUMERIC,
+  p_fechaPago DATE,
+  p_montoComision NUMERIC,
+  p_tipo VARCHAR
+) RETURNS VOID AS $$
+BEGIN
+  -- Verificar que el tipo de Pago no sea 'membresia'
+  IF p_tipo <> 'membresia' THEN
+    -- Insertar el Pago en la tabla PAGOS
+    IF p_tipo = 'Pago' THEN
+      IF p_montoComision <> MontoComision(p_idNContrato, p_fechaPago) THEN
+        RAISE NOTICE 'El monto de la comisión no coincide con el monto calculado';
+      END IF;
+    END IF;
+    INSERT INTO PAGOS (idContratoSubastadora, idContratoProductora, idNContrato, fechaPago, montoComision, tipo)
+    VALUES (p_idContratoSubastadora, p_idContratoProductora, p_idNContrato, p_fechaPago, p_montoComision, p_tipo);
+  ELSE
+    RAISE NOTICE 'El Pago de membresía se realiza al registrar el contrato, como parte de este';
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+------------------------------------------------  multas  ---------------------------------------------------------
+
 
 -- Crear la función para obtener el monto de la multa
 CREATE OR REPLACE FUNCTION MontoMulta(NumContrato NUMERIC, Fechamulta DATE)
@@ -960,7 +988,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Crear la función para verificar pagos y generar multas
+-- Crear la función para verificar Pagos y generar multas
 CREATE OR REPLACE FUNCTION reporte_multas_generadas_y_pagadas(
   p_idSubastadora NUMERIC,
   p_idProductora NUMERIC,
@@ -972,7 +1000,7 @@ RETURNS TABLE (
   fecha_generacion_multa DATE,
   monto_multa NUMERIC,
   multa_pagada BOOLEAN,
-  fecha_pago_multa DATE
+  fecha_Pago_multa DATE
 ) AS $$
 DECLARE
   contrato_inicio DATE;
@@ -980,7 +1008,7 @@ DECLARE
   fecha_actual DATE := CURRENT_DATE;
   fecha_fin DATE;
   fecha_mes DATE := NULL;
-  existe_pago BOOLEAN := FALSE;
+  existe_Pago BOOLEAN := FALSE;
 BEGIN
   -- Obtener la fecha de inicio del contrato
   SELECT fechaemision INTO contrato_inicio
@@ -995,25 +1023,25 @@ BEGIN
   fecha_mes := date_trunc('month', contrato_inicio);
 
   WHILE fecha_mes <= fecha_fin LOOP
-    -- Verificar si existe un pago de comisión en los primeros 5 días del mes
+    -- Verificar si existe un Pago de comisión en los primeros 5 días del mes
     SELECT EXISTS (
       SELECT 1
       FROM PAGOS
       WHERE idContratoSubastadora = p_idSubastadora
         AND idContratoProductora = p_idProductora
         AND idNContrato = p_idContrato
-        AND tipo = 'pago'
+        AND tipo = 'Pago'
         AND date_trunc('month', fechaPago) = fecha_mes
         AND EXTRACT(DAY FROM fechaPago) <= 5
-    ) INTO existe_pago;
+    ) INTO existe_Pago;
 
-    IF NOT existe_pago THEN
+    IF NOT existe_Pago THEN
       -- Multa generada
       multa_generada := TRUE;
       fecha_generacion_multa := fecha_mes + INTERVAL '5 days';
       monto_multa := MontoMulta(p_idContrato, fecha_mes);
       multa_pagada := FALSE;
-      fecha_pago_multa := NULL;
+      fecha_Pago_multa := NULL;
       RAISE NOTICE 'Se generó una multa para el mes %.', fecha_mes::DATE;
     ELSE
       -- No hay multa
@@ -1021,7 +1049,7 @@ BEGIN
       fecha_generacion_multa := NULL;
       monto_multa := 0;
       multa_pagada := FALSE;
-      fecha_pago_multa := NULL;
+      fecha_Pago_multa := NULL;
 
       -- Verificar si se pagó una multa en el mes actual
       SELECT EXISTS (
@@ -1035,7 +1063,7 @@ BEGIN
       ) INTO multa_pagada;
 
       IF multa_pagada THEN
-        fecha_pago_multa := (
+        fecha_Pago_multa := (
           SELECT fechaPago
           FROM PAGOS
           WHERE idContratoSubastadora = p_idSubastadora
@@ -1058,6 +1086,52 @@ BEGIN
   END LOOP;
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION insertar_factura(
+  p_facturaId NUMERIC,
+  p_idAfiliacionFloristeria NUMERIC,
+  p_idAfiliacionSubastadora NUMERIC,
+  p_fechaEmision TIMESTAMP,
+  p_montoTotal NUMERIC,
+  p_numeroEnvio NUMERIC
+) RETURNS VOID AS $$
+BEGIN
+  IF p_fechaEmision > NOW() THEN
+    RAISE EXCEPTION 'La fecha de emisión no puede ser mayor a la fecha y hora actual';
+  END IF;
+
+  IF p_fechaEmision::date = CURRENT_DATE THEN
+    IF CURRENT_TIME < '15:00:00' THEN
+      RAISE EXCEPTION 'Las subastas no han terminado';
+    END IF;
+  END IF;
+
+  IF EXTRACT(ISODOW FROM p_fechaEmision) > 5 THEN
+    RAISE EXCEPTION 'Las facturas no pueden ser emitidas en sábado o domingo';
+  END IF;
+
+  IF p_fechaEmision::time < '15:00:00' OR p_fechaEmision::time > '19:00:00' THEN
+    RAISE EXCEPTION 'La hora de emisión debe estar entre las 15:00 y las 19:00 horas';
+  END IF;
+
+  INSERT INTO FACTURA (
+    facturaId,
+    idAfiliacionFloristeria,
+    idAfiliacionSubastadora,
+    fechaEmision,
+    montoTotal,
+    numeroEnvio
+  ) VALUES (
+    p_facturaId,
+    p_idAfiliacionFloristeria,
+    p_idAfiliacionSubastadora,
+    p_fechaEmision,
+    p_montoTotal,
+    p_numeroEnvio
+  );
+END;
+$$ LANGUAGE plpgsql;
+
 
 --------------------------------------------- REPORTE: FACTURA ----------------------------------------------------
 
@@ -1366,18 +1440,6 @@ INSERT INTO CANTIDAD_OFRECIDA (idContratoSubastadora, idContratoProductora, idNC
 SELECT * FROM CANTIDAD_OFRECIDA;
 
 
--- Insertar datos de prueba en la tabla PAGOS
-INSERT INTO PAGOS (idContratoSubastadora, idContratoProductora, idNContrato, fechaPago, montoComision, tipo) VALUES
-(1, 1, 1001, '2021-02-10', 100.00, 'pago'),
-(1, 1, 1001, '2021-03-03', 40.00, 'multa'),
-(1, 1, 1001, '2021-03-15', 200.00, 'pago'),
-(1, 1, 1001, '2021-03-20', 150.00, 'multa'),
-(2, 2, 1002, '2021-06-15', 200.00, 'pago'),
-(3, 3, 1003, '2021-07-15', 250.00, 'pago');
-
--- Verificar los datos insertados
-SELECT * FROM PAGOS;
-
 
 -- Insertar datos de prueba en la tabla CONTACTOS
 
@@ -1402,13 +1464,25 @@ SELECT * FROM AFILIACION;
 
 -- Insertar datos de prueba en la tabla FACTURA
 INSERT INTO FACTURA (facturaId, idAfiliacionFloristeria, idAfiliacionSubastadora, fechaEmision, montoTotal, numeroEnvio) VALUES
-(1, 1, 1, '2023-04-01', 500.00, 12345),
-(2, 2, 2, '2023-05-01', 750.00, 12346),
-(3, 3, 3, '2023-06-01', 1000.00, 12347);
+(1, 1, 1, '2021-01-18 16:00:00', 10000.00, NULL),
+(2, 1, 1, '2021-02-15 16:00:00', 1100.00, 3232),
+(3, 2, 2, '2023-05-01 16:00:00', 750.00, 12346),
+(4, 3, 3, '2023-06-01 16:00:00', 1000.00, 12347);
 
 -- Verificar los datos insertados
 SELECT * FROM FACTURA;
 
+
+SELECT MontoComision( 1001, '2021-01-10');
+
+-- Insertar datos de prueba en la tabla PAGOS
+SELECT insertar_Pago(1, 1, 1001, '2021-02-10', 50.00, 'Pago');
+SELECT insertar_Pago(1, 1, 1001, '2021-03-03', 220.00, 'multa');
+SELECT insertar_Pago(1, 1, 1001, '2021-03-15', 5.5, 'Pago');
+
+
+-- Verificar los datos insertados
+SELECT * FROM PAGOS;
 
 -- Insertar datos de prueba en la tabla LOTE
 INSERT INTO LOTE (idCantidadContratoSubastadora, idCantidadContratoProductora, idCantidad_NContrato, idCantidadCatalogoProductora, idCantidadCorte, idCantidadvnb, NumLote, bi, cantidad, precioInicial, precioFinal, idFactura) VALUES
