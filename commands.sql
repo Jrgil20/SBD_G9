@@ -1399,3 +1399,5 @@ SELECT MontoComision(1001, '2023-04-01');
 
 -- Ejecutar la función para obtener el reporte de multas generadas y pagadas
 SELECT * FROM reporte_multas_generadas_y_pagadas(1, 1, 1001);
+
+ SELECT obtener_informacion_factura(1);
