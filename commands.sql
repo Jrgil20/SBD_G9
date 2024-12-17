@@ -1678,7 +1678,9 @@ SELECT * FROM FACTURA;
 
 SELECT MontoComision( 1001, '2021-01-10');
 
--- Insertar datos de prueba en la tabla PAGOS
+-- Insertar datos de prueba en la tabla PAGOS 
+
+-- contrato(1, 1, 1001) comienza  '2021-01-01' cancelado 6 meses despues 
 SELECT insertar_Pago(1, 1, 1001, '2021-02-10', 50.00, 'Pago');
 SELECT insertar_Pago(1, 1, 1001, '2021-03-03', 220.00, 'multa');
 SELECT insertar_Pago(1, 1, 1001, '2021-03-15', 5.5, 'Pago');
