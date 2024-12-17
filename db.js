@@ -20,7 +20,7 @@ pool.connect((err) => {
 
 const getProductoras = async () => {
   try {
-    const result = await pool.query('SELECT p.productoraid, p.nombreproductora, p.paginaweb, pa.nombrepais AS pais FROM productoras p JOIN pais pa ON p.idpais = pa.paisid');
+    const result = await pool.query('SELECT * FROM informacion_de_productores()');
     
     return result.rows;
   } catch (err) {
@@ -31,18 +31,7 @@ const getProductoras = async () => {
 
 const getCatalogoProductoraById = async (productorId) => {
   try {
-    const result = await pool.query(`
-      SELECT
-      fc.corteid,
-      fc.nombrecomun, 
-      cp.nombrepropio, 
-      cp.vbn
-      FROM flor_cortes fc
-      INNER JOIN catalogoproductor cp ON fc.corteid = cp.idcorte
-      INNER JOIN productoras p ON cp.idproductora = p.productoraid
-      WHERE p.productoraid = ${productorId}
-      ORDER BY fc.nombrecomun;
-    `);
+    const result = await pool.query(`SELECT * FROM CatalogoProductoraById(${productorId});`);
     return result.rows;
   } catch (err) {
     console.error('Error querying the database', err);
@@ -52,15 +41,7 @@ const getCatalogoProductoraById = async (productorId) => {
 
 const getDetalleFlores = async (florId,productorId) => {
   try {
-    const result = await pool.query(`SELECT
-    cp.nombrepropio, 
-    cp.descripcion,
-    fc.colores, 
-    fc.etimologia, 
-    fc.genero_especie ,
-    fc.temperatura 
-    FROM catalogoproductor cp INNER JOIN flor_cortes fc ON cp.idcorte = fc.corteid 
-    WHERE cp.idproductora = ${productorId} AND fc.corteid = ${florId}; `);
+    const result = await pool.query(`SELECT * FROM Obtener_DetalleFlores(${productorId}, ${florId});`);
     return result.rows;
   } catch (err) {
     console.error('Error querying the database', err);
@@ -70,9 +51,7 @@ const getDetalleFlores = async (florId,productorId) => {
 
 const getFloristerias = async () => {
   try {
-    const result = await pool.query(`
-      SELECT f.floristeriaid, f.nombre, f.email, f.paginaweb, p.nombrepais AS pais FROM floristerias f JOIN pais p ON f.idpais = p.paisid
-    `);
+    const result = await pool.query('SELECT * FROM obtener_floristeria()');
     return result.rows;
   } catch (err) {
     console.error('Error querying the database:', err);
@@ -129,18 +108,7 @@ async function getInformacionFlor(idFloristeria, idFlor) {
 //Facturas
 async function getFacturas(){
   try{
-    const result=await pool.query(
-      `SELECT 
-          f.facturaId AS numero_factura,
-          s.nombreSubastadora,
-          fl.nombre,
-          TO_CHAR(f.fechaEmision, 'MM/DD/YYYY') AS fecha_emision_formateada,
-          f.montoTotal
-      FROM FACTURA f
-      INNER JOIN SUBASTADORA s ON f.idAfiliacionSubastadora = s.subastadoraId
-      INNER JOIN FLORISTERIAS fl ON f.idAfiliacionFloristeria = fl.floristeriaId
-      ORDER BY f.fechaEmision DESC;`
-    )
+    const result=await pool.query(`SELECT * FROM obtener_facturas();`)
     return result.rows;
   }catch(err){
     console.error('Error querying the database', err);
