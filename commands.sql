@@ -1189,6 +1189,85 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+CREATE OR REPLACE FUNCTION informacion_de_productores()
+RETURNS TABLE (
+  productoraid NUMERIC,
+  nombreproductora VARCHAR,
+  paginaweb VARCHAR,
+  pais TEXT
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT p.productoraid, p.nombreproductora, p.paginaweb, pa.nombrepais AS pais
+  FROM productoras p
+  JOIN pais pa ON p.idpais = pa.paisid;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION CatalogoProductoraById(productorId NUMERIC)
+RETURNS TABLE (
+  corteid NUMERIC,
+  nombrecomun VARCHAR,
+  nombrepropio VARCHAR,
+  vbn NUMERIC
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    fc.corteid,
+    fc.nombrecomun, 
+    cp.nombrepropio, 
+    cp.vbn
+  FROM flor_cortes fc
+  INNER JOIN catalogoproductor cp ON fc.corteid = cp.idcorte
+  INNER JOIN productoras p ON cp.idproductora = p.productoraid
+  WHERE p.productoraid = productorId
+  ORDER BY fc.nombrecomun;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION Obtener_DetalleFlores(productorId NUMERIC, florId NUMERIC)
+RETURNS TABLE (
+  nombrepropio VARCHAR,
+  descripcion VARCHAR,
+  colores VARCHAR,
+  etimologia VARCHAR,
+  genero_especie VARCHAR,
+  temperatura NUMERIC
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    cp.nombrepropio, 
+    cp.descripcion,
+    fc.colores, 
+    fc.etimologia, 
+    fc.genero_especie,
+    fc.temperatura
+  FROM catalogoproductor cp
+  INNER JOIN flor_cortes fc ON cp.idcorte = fc.corteid
+  WHERE cp.idproductora = productorId AND fc.corteid = florId;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION obtener_floristeria()
+RETURNS TABLE (
+  floristeriaId NUMERIC,
+  nombre VARCHAR,
+  email VARCHAR,
+  paginaWeb VARCHAR,
+  pais VARCHAR
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT f.floristeriaId, f.nombre, f.email, f.paginaWeb, p.nombrePais::VARCHAR AS pais
+  FROM floristerias f
+  JOIN pais p ON f.idPais = p.paisId;
+END;
+$$ LANGUAGE plpgsql;
+
 -------------------------------------------------------------------------------------------------------------------
 --  ===========================================================================================================  --
 --  ======================================== Inserts y consultas ==============================================  --
@@ -1569,4 +1648,12 @@ SELECT MontoComision(1001, '2023-04-01');
 -- Ejecutar la función para obtener el reporte de multas generadas y pagadas
 SELECT * FROM reporte_multas_generadas_y_pagadas(1, 1, 1001);
 
- SELECT obtener_informacion_factura(1);
+SELECT * FROM obtener_informacion_factura(1);
+
+SELECT * FROM informacion_de_productores();
+
+SELECT * FROM CatalogoProductoraById(1);
+
+SELECT * FROM Obtener_DetalleFlores(1, 1);
+
+SELECT * FROM obtener_floristeria();
