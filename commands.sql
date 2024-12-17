@@ -1644,7 +1644,6 @@ INSERT INTO CANTIDAD_OFRECIDA (idContratoSubastadora, idContratoProductora, idNC
 SELECT * FROM CANTIDAD_OFRECIDA;
 
 
-
 -- Insertar datos de prueba en la tabla CONTACTOS
 
 INSERT INTO CONTACTOS (idFloristeria, contactoId, documentoIdentidad, primerNombre, primerApellido, segundoApellido, segundoNombre) VALUES 
@@ -1759,9 +1758,22 @@ SELECT * FROM DETALLE_FACTURA;
 
 
 -- Insertar datos de prueba en la tabla TELEFONOS
-
+INSERT INTO TELEFONOS (codPais, codArea, numero, idSubastadora, idProductora, idFloristeria) VALUES
+(31, 20, 1234567, 1, NULL, NULL), -- Royal Flora Holland
+(31, 20, 2345678, 2, NULL, NULL), -- Plantion
+(31, 20, 3456789, 3, NULL, NULL), -- Dutch Flower Group
+(31, 20, 4567890, NULL, 1, NULL), -- Anthura
+(31, 20, 5678901, NULL, 2, NULL), -- Van den bos
+(31, 20, 6789012, NULL, 3, NULL), -- Hilverda florist
+(49, 30, 7890123, NULL, NULL, 1), -- FloraPrima
+(55, 21, 8901234, NULL, NULL, 2), -- Flowers for Brazil
+(45, 31, 9012345, NULL, NULL, 3), -- Blooming
+(48, 22, 1234568, NULL, NULL, 4), -- Poczta kwiatowa
+(34, 93, 2345679, NULL, NULL, 5), -- Herbs Barcelona
+(58, 212, 3456780, NULL, NULL, 6); -- Toscana Flores
 
 -- Verificar los datos insertados
+SELECT * FROM TELEFONOS;
 
 
 
