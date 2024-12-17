@@ -723,6 +723,9 @@ BEGIN
     ELSE
       RAISE EXCEPTION 'Solo se puede modificar el atributo cancelado y solo cuando este es NULL';
     END IF;
+    IF NEW.cancelado IS NOT NULL AND NEW.cancelado <= OLD.fechaemision THEN
+      RAISE EXCEPTION 'La fecha de cancelación debe ser posterior a la fecha de emisión del contrato';
+    END IF;
   END IF;
   RETURN NEW;
 END;
