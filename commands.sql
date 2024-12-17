@@ -693,7 +693,7 @@ DECLARE
     WHERE idSubastadora = R_Subastadora AND idProductora = R_idProductora AND nContrato = R_nContrato;
 
     IF R_fechaCancelacion IS NULL THEN
-      IF fechaRenovacion < R_fechaEmision + INTERVAL '1 year' THEN
+      IF fechaRenovacion <= R_fechaEmision + INTERVAL '1 year' THEN
         RAISE EXCEPTION 'La fecha de renovación debe ser al menos un año mayor a la fecha de emisión del contrato anterior';
       END IF;
     ELSE
