@@ -52,9 +52,10 @@ const getCatalogoProductoraById = async (productorId) => {
 
 const getDetalleFlores = async (florId,productorId) => {
   try {
-    const result = await pool.query(`SELECT 
+    const result = await pool.query(`SELECT
     cp.nombrepropio, 
-    cp.descripcion, 
+    cp.descripcion,
+    fc.colores, 
     fc.etimologia, 
     fc.genero_especie ,
     fc.temperatura 
@@ -79,5 +80,45 @@ const getFloristerias = async () => {
   }
 };
 
-module.exports = { pool, getProductoras, getFloristerias,getCatalogoProductoraById,getDetalleFlores};
+const getFloresValoraciones = async (floristeriaId) => {
+  try {
+    console.log(`Executing query for floristeria ID: ${floristeriaId}`);
+    const result = await pool.query(`
+      SELECT * from obtener_valoraciones_por_floristeria($1)
+    `, [floristeriaId]);
+    console.log('Query result:', result.rows);
+    return result.rows;
+  } catch (err) {
+    console.error('Error querying the database', err);
+    throw err;
+  }
+};
+
+async function getInformacionFlor(idFloristeria, idFlor) {
+  try {
+    const result = await pool.query(`
+      WITH FlorInformacion AS (
+        SELECT
+          cf.nombrepropio,
+          c.Nombre AS nombre_color,
+          db.talloTamano,
+          db.cantidad,
+          hp.precio
+        FROM CATALOGO_FLORISTERIA cf
+        INNER JOIN COLOR c ON cf.idColor = c.colorId
+        INNER JOIN DETALLE_BOUQUET db ON cf.idFloristeria = db.idCatalogoFloristeria AND cf.codigo = db.idCatalogocodigo
+        INNER JOIN HISTORICO_PRECIO_FLOR hp ON cf.idFloristeria = hp.idCatalogoFloristeria AND cf.codigo = hp.idCatalogocodigo
+        WHERE cf.idFloristeria = $1 AND cf.idcorteflor = $2
+      )
+      SELECT * FROM FlorInformacion;
+    `, [idFloristeria, idFlor]);
+    return result.rows;
+  } catch (err) {
+    console.error('Error querying the database', err);
+    throw err;
+  }
+}
+
+
+module.exports = { pool, getProductoras, getFloristerias,getCatalogoProductoraById,getDetalleFlores,getFloresValoraciones,getInformacionFlor };
 

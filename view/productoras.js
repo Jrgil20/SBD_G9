@@ -127,6 +127,7 @@ async function mostrarModalFlor(flor, productora) {
             <p>Género y Especie: ${detalleFlor.genero_especie}</p>
             <p>Etimología: ${detalleFlor.etimologia}</p>
             <p>Descripción: ${detalleFlor.descripcion}</p>
+            <p>Colores: ${detalleFlor.colores}</p>
             <p>Temperatura: ${detalleFlor.temperatura}</p>
         `;
         modal.style.display = 'block';
