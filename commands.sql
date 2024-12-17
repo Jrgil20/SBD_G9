@@ -533,6 +533,8 @@ ADD CONSTRAINT chk_telefono_ArcoExclusivo CHECK (
 
 ------------------------------------------------   Contratos  -----------------------------------------------------
 
+
+
 -- Crear la función para verificar la nacionalidad del productor en el contrato
 CREATE OR REPLACE FUNCTION check_nacionalidad_productor_contrato() RETURNS TRIGGER AS $$
 DECLARE
@@ -687,6 +689,21 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Function to cancel a contract
+CREATE OR REPLACE FUNCTION cancelar_contrato(
+  p_idSubastadora NUMERIC,
+  p_idProductora NUMERIC,
+  p_nContrato NUMERIC,
+  p_fecha_cancelacion DATE
+) RETURNS VOID AS $$
+BEGIN
+  UPDATE CONTRATO
+  SET cancelado = p_fecha_cancelacion
+  WHERE idSubastadora = p_idSubastadora 
+    AND idProductora = p_idProductora 
+    AND nContrato = p_nContrato;
+END;
+$$ LANGUAGE plpgsql;
 
 --------------------------------------------------   pagos  -------------------------------------------------------
 
@@ -849,7 +866,7 @@ $$ LANGUAGE plpgsql;
 
 ------------------------------------------------  multas  ---------------------------------------------------------
 
--- Crear la función para obtener el monto de la comisión
+-- Crear la función para obtener el monto de la multa
 CREATE OR REPLACE FUNCTION MontoMulta(NumContrato NUMERIC, Fechamulta DATE)
 RETURNS NUMERIC AS $$
 DECLARE
