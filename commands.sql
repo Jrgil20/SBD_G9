@@ -1355,6 +1355,42 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
+CREATE OR REPLACE FUNCTION Traer_lotes(p_facturaId NUMERIC)
+RETURNS TABLE (
+  idCantidadContratoSubastadora NUMERIC,
+  idCantidadContratoProductora NUMERIC,
+  idCantidad_NContrato NUMERIC,
+  idCantidadCatalogoProductora NUMERIC,
+  idCantidadCorte NUMERIC,
+  idCantidadvnb NUMERIC,
+  NumLote NUMERIC,
+  bi NUMERIC,
+  cantidad NUMERIC,
+  precioInicial NUMERIC,
+  precioFinal NUMERIC,
+  idFactura NUMERIC
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    l.idCantidadContratoSubastadora,
+    l.idCantidadContratoProductora,
+    l.idCantidad_NContrato,
+    l.idCantidadCatalogoProductora,
+    l.idCantidadCorte,
+    l.idCantidadvnb,
+    l.NumLote,
+    l.bi,
+    l.cantidad,
+    l.precioInicial,
+    l.precioFinal,
+    l.idFactura
+  FROM LOTE l
+  WHERE l.idFactura = p_facturaId;
+END;
+$$ LANGUAGE plpgsql;
+
 -------------------------------------------------------------------------------------------------------------------
 --  ===========================================================================================================  --
 --  ======================================== Inserts y consultas ==============================================  --
@@ -1748,3 +1784,5 @@ SELECT * FROM Obtener_DetalleFlores(1, 1);
 SELECT * FROM obtener_floristeria();
 
 SELECT * FROM obtener_informacion_de_flor(1, 1);
+
+SELECT * FROM Traer_lotes(1);
