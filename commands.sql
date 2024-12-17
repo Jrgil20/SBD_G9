@@ -582,6 +582,15 @@ BEGIN
     ) THEN
       contratoActivo := TRUE;
     END IF;
+    IF EXISTS (
+      SELECT 1 
+      FROM CONTRATO 
+      WHERE idProductora = NEW.idProductora 
+        AND idSubastadora = NEW.idSubastadora
+        AND (cancelado IS NULL AND fechaemision > fecha - INTERVAL '1 year')
+    ) THEN
+      RAISE NOTICE 'No se puede insertar el contrato porque ya existe un contrato activo entre la productora y la subastadora';
+    END IF;  
   ELSE
     IF EXISTS (
       SELECT 1 
