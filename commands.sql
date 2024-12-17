@@ -988,6 +988,34 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- FUNCTION: public.obtener_valoraciones_por_floristeria(numeric)
+
+-- DROP FUNCTION IF EXISTS public.obtener_valoraciones_por_floristeria(numeric);
+
+CREATE OR REPLACE FUNCTION obtener_valoraciones_por_floristeria(p_idfloristeria NUMERIC)
+RETURNS TABLE (
+  corteid NUMERIC,
+  nombrecomun VARCHAR,
+  valoracion_promedio NUMERIC
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    fc.corteId,
+    fc.nombrecomun,
+    ROUND(AVG(df.valoracionPromedio), 2) AS valoracion_promedio
+  FROM CATALOGO_FLORISTERIA cf
+  JOIN FLOR_CORTES fc ON cf.idCorteFlor = fc.corteId
+  LEFT JOIN DETALLE_FACTURA df
+    ON df.catalogoFloristeria = cf.idFloristeria AND df.catalogoCodigo = cf.codigo
+  WHERE cf.idFloristeria = p_idFloristeria
+  GROUP BY fc.corteId, fc.nombrecomun
+  ORDER BY COALESCE(valoracion_promedio, 0) DESC, fc.nombrecomun ASC;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
 -- Crear la función para verificar Pagos y generar multas
 CREATE OR REPLACE FUNCTION reporte_multas_generadas_y_pagadas(
   p_idSubastadora NUMERIC,
