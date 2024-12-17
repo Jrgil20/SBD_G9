@@ -858,9 +858,9 @@ DECLARE
   inicioMes DATE;
   FinMes DATE;
 BEGIN
-  inicioMes := date_trunc('month', FechaComision);
-  FinMes := date_trunc('month', FechaComision) + INTERVAL '1 month' - INTERVAL '1 day';
-    monto := ventas_periodo(NumContrato, inicioMes, FinMes) * 0.2;
+  inicioMes := date_trunc('month', Fechamulta);
+  FinMes := date_trunc('month', Fechamulta) + INTERVAL '1 month' - INTERVAL '1 day';
+  monto := ventas_periodo(NumContrato, inicioMes, FinMes) * 0.2;
   RETURN monto;
 END;
 $$ LANGUAGE plpgsql;
@@ -870,73 +870,97 @@ CREATE OR REPLACE FUNCTION reporte_multas_generadas_y_pagadas(
   p_idSubastadora NUMERIC,
   p_idProductora NUMERIC,
   p_idContrato NUMERIC
-) RETURNS TABLE(
+)
+RETURNS TABLE (
   mes DATE,
+  multa_generada BOOLEAN,
   fecha_generacion_multa DATE,
   monto_multa NUMERIC,
   multa_pagada BOOLEAN,
   fecha_pago_multa DATE
 ) AS $$
+DECLARE
+  contrato_inicio DATE;
+  contrato_fin DATE;
+  fecha_actual DATE := CURRENT_DATE;
+  fecha_fin DATE;
+  fecha_mes DATE := NULL;
+  existe_pago BOOLEAN := FALSE;
 BEGIN
-  RETURN QUERY
-  WITH pagos_pagos AS (
-    SELECT
-      date_trunc('month', fechaPago)::DATE AS mes,
-      MIN(fechaPago) AS fechaPago,
-      montoComision
-    FROM PAGOS
-    WHERE idContratoSubastadora = p_idSubastadora
-      AND idContratoProductora = p_idProductora
-      AND idNContrato = p_idContrato
-      AND tipo = 'pago'
-    GROUP BY date_trunc('month', fechaPago), montoComision
-  ),
-  meses_con_multas AS (
-    SELECT
-      p.mes,
-      CASE WHEN EXTRACT(DAY FROM p.fechaPago) > 5 THEN p.mes + INTERVAL '6 days' ELSE NULL END AS fecha_generacion_multa
-    FROM pagos_pagos p
-    WHERE EXTRACT(DAY FROM p.fechaPago) > 5
-  ),
-  ventas_mes_siguiente AS (
-    SELECT
-      date_trunc('month', fechaEmision)::DATE AS mes,
-      SUM(precioFinal) AS ventas
-    FROM LOTE l
-    INNER JOIN FACTURA f ON l.idFactura = f.facturaId
-    WHERE l.idCantidad_NContrato = p_idContrato
-    GROUP BY date_trunc('month', fechaEmision)
-  ),
-  monto_multas AS (
-    SELECT
-      mcm.mes,
-      mcm.fecha_generacion_multa,
-      CASE 
-        WHEN vms.ventas IS NOT NULL THEN vms.ventas * 0.2
-        ELSE NULL
-      END AS monto_multa
-    FROM meses_con_multas mcm
-    LEFT JOIN ventas_mes_siguiente vms ON vms.mes = mcm.mes + INTERVAL '1 month'
-  ),
-  pagos_multas AS (
-    SELECT
-      date_trunc('month', fechaPago - INTERVAL '1 month')::DATE AS mes,
-      fechaPago AS fecha_pago_multa
-    FROM PAGOS
-    WHERE idContratoSubastadora = p_idSubastadora
-      AND idContratoProductora = p_idProductora
-      AND idNContrato = p_idContrato
-      AND tipo = 'multa'
-  )
-  SELECT
-    mm.mes,
-    mm.fecha_generacion_multa::DATE,
-    mm.monto_multa,
-    pm.fecha_pago_multa IS NOT NULL AS multa_pagada,
-    pm.fecha_pago_multa
-  FROM monto_multas mm
-  LEFT JOIN pagos_multas pm ON mm.mes = pm.mes
-  ORDER BY mm.mes;
+  -- Obtener la fecha de inicio del contrato
+  SELECT fechaemision INTO contrato_inicio
+  FROM CONTRATO
+  WHERE idSubastadora = p_idSubastadora
+    AND idProductora = p_idProductora
+    AND nContrato = p_idContrato;
+
+  -- Establecer fecha fin (un año desde inicio o fecha actual, lo que sea menor)
+  contrato_fin := contrato_inicio + INTERVAL '1 year';
+  fecha_fin := LEAST(contrato_fin, fecha_actual);
+  fecha_mes := date_trunc('month', contrato_inicio);
+
+  WHILE fecha_mes <= fecha_fin LOOP
+    -- Verificar si existe un pago de comisión en los primeros 5 días del mes
+    SELECT EXISTS (
+      SELECT 1
+      FROM PAGOS
+      WHERE idContratoSubastadora = p_idSubastadora
+        AND idContratoProductora = p_idProductora
+        AND idNContrato = p_idContrato
+        AND tipo = 'pago'
+        AND date_trunc('month', fechaPago) = fecha_mes
+        AND EXTRACT(DAY FROM fechaPago) <= 5
+    ) INTO existe_pago;
+
+    IF NOT existe_pago THEN
+      -- Multa generada
+      multa_generada := TRUE;
+      fecha_generacion_multa := fecha_mes + INTERVAL '5 days';
+      monto_multa := MontoMulta(p_idContrato, fecha_mes);
+      multa_pagada := FALSE;
+      fecha_pago_multa := NULL;
+      RAISE NOTICE 'Se generó una multa para el mes %.', fecha_mes::DATE;
+    ELSE
+      -- No hay multa
+      multa_generada := FALSE;
+      fecha_generacion_multa := NULL;
+      monto_multa := 0;
+      multa_pagada := FALSE;
+      fecha_pago_multa := NULL;
+
+      -- Verificar si se pagó una multa en el mes actual
+      SELECT EXISTS (
+        SELECT 1
+        FROM PAGOS
+        WHERE idContratoSubastadora = p_idSubastadora
+          AND idContratoProductora = p_idProductora
+          AND idNContrato = p_idContrato
+          AND tipo = 'multa'
+          AND date_trunc('month', fechaPago) = fecha_mes
+      ) INTO multa_pagada;
+
+      IF multa_pagada THEN
+        fecha_pago_multa := (
+          SELECT fechaPago
+          FROM PAGOS
+          WHERE idContratoSubastadora = p_idSubastadora
+            AND idContratoProductora = p_idProductora
+            AND idNContrato = p_idContrato
+            AND tipo = 'multa'
+            AND date_trunc('month', fechaPago) = fecha_mes
+          LIMIT 1
+        );
+        monto_multa := MontoMulta(p_idContrato, fecha_mes);
+        RAISE NOTICE 'Se pagó una multa en el mes %.', fecha_mes::DATE;
+      END IF;
+    END IF;
+
+    -- Retornar los detalles
+    mes := fecha_mes::DATE;
+    RETURN NEXT;
+
+    fecha_mes := fecha_mes + INTERVAL '1 month';
+  END LOOP;
 END;
 $$ LANGUAGE plpgsql;
 
