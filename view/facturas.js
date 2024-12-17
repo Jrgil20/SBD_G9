@@ -81,26 +81,6 @@ export async function cargarDatosFacturas() {
         }
         const facturas = await response.json();
 
-        // Generar opciones de subastadoras y floristerías sin repeticiones
-        const subastadoras = [...new Set(facturas.map(factura => factura.nombresubastadora))];
-        const floristerias = [...new Set(facturas.map(factura => factura.nombre))];
-
-        const filtroSubastadoraSelect = document.getElementById('filtro-subastadora-facturas');
-        subastadoras.forEach(subastadora => {
-            const option = document.createElement('option');
-            option.value = subastadora;
-            option.textContent = subastadora;
-            filtroSubastadoraSelect.appendChild(option);
-        });
-
-        const filtroFloristeriaSelect = document.getElementById('filtro-floristeria-facturas');
-        floristerias.forEach(floristeria => {
-            const option = document.createElement('option');
-            option.value = floristeria;
-            option.textContent = floristeria;
-            filtroFloristeriaSelect.appendChild(option);
-        });
-
         facturas.forEach(factura => {
             const card = document.createElement('div');
             card.className = 'card';
@@ -163,34 +143,13 @@ function mostrarDetallesFactura(factura) {
 
 // Función para aplicar filtro a las facturas
 function aplicarFiltroFacturas() {
-    const subastadoraFilter = document.getElementById('filtro-subastadora-facturas').value.toLowerCase();
-    const floristeriaFilter = document.getElementById('filtro-floristeria-facturas').value.toLowerCase();
+    const clienteFilter = document.getElementById('clienteFilter').value.toLowerCase();
     const fechaFilter = document.getElementById('fechaFilter').value;
 
     const facturasFiltradas = facturasPrueba.filter(factura => 
-        (subastadoraFilter === '' || factura.subasta.nombre.toLowerCase().includes(subastadoraFilter)) &&
-        (floristeriaFilter === '' || factura.floristeria.nombre.toLowerCase().includes(floristeriaFilter)) &&
+        factura.floristeria.nombre.toLowerCase().includes(clienteFilter) &&
         (!fechaFilter || factura.fecha === fechaFilter)
     );
-
-    const contenedor = document.querySelector('#facturas .cards-container .cards');
-    if (contenedor) {
-        contenedor.innerHTML = '';
-
-        facturasFiltradas.forEach(factura => {
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.innerHTML = `
-                <h3>Factura #${factura.id}</h3>
-                <p>Subasta: ${factura.subasta.nombre}</p>
-                <p>Floristería: ${factura.floristeria.nombre}</p>
-                <p>Fecha: ${factura.fecha}</p>
-                <p>Monto: €${factura.monto}</p>
-            `;
-            card.addEventListener('click', () => mostrarDetallesFactura(factura));
-            contenedor.appendChild(card);
-        });
-    }
 }
 
 window.cargarDatosFacturas = cargarDatosFacturas;
