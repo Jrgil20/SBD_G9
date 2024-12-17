@@ -682,20 +682,32 @@ CREATE OR REPLACE FUNCTION renovar_contrato(
   fechaRenovacion DATE
 ) RETURNS VOID AS $$
 DECLARE
-  R_porcentajeProduccion NUMERIC(3,2);
-  R_tipoProductor VARCHAR;
-BEGIN
-  SELECT porcentajeProduccion, tipoProductor
-  INTO  R_porcentajeProduccion, R_tipoProductor
-  FROM CONTRATO
-  WHERE idSubastadora = R_Subastadora AND idProductora = R_idProductora AND nContrato = R_nContrato;
+   R_porcentajeProduccion NUMERIC(3,2);
+    R_tipoProductor VARCHAR;
+    R_fechaEmision DATE;
+    R_fechaCancelacion DATE;
+  BEGIN
+    SELECT porcentajeProduccion, tipoProductor, fechaemision, cancelado
+    INTO  R_porcentajeProduccion, R_tipoProductor, R_fechaEmision, R_fechaCancelacion
+    FROM CONTRATO
+    WHERE idSubastadora = R_Subastadora AND idProductora = R_idProductora AND nContrato = R_nContrato;
 
-  INSERT INTO CONTRATO (
-    idSubastadora, idProductora, nContrato, fechaemision, porcentajeProduccion, tipoProductor, idrenovS, idrenovP, ren_nContrato, cancelado
-  ) VALUES (
-    R_Subastadora, R_idProductora, Nuevo_nContrato, fechaRenovacion, R_porcentajeProduccion, R_tipoProductor, R_Subastadora, R_idProductora, R_nContrato, NULL
-  );
-END;
+    IF R_fechaCancelacion IS NULL THEN
+      IF fechaRenovacion < R_fechaEmision + INTERVAL '1 year' THEN
+        RAISE EXCEPTION 'La fecha de renovación debe ser al menos un año mayor a la fecha de emisión del contrato anterior';
+      END IF;
+    ELSE
+      IF fechaRenovacion <= R_fechaCancelacion THEN
+        RAISE EXCEPTION 'La fecha de renovación debe ser mayor a la fecha de cancelación del contrato anterior';
+      END IF;
+    END IF;
+
+    INSERT INTO CONTRATO (
+      idSubastadora, idProductora, nContrato, fechaemision, porcentajeProduccion, tipoProductor, idrenovS, idrenovP, ren_nContrato, cancelado
+    ) VALUES (
+      R_Subastadora, R_idProductora, Nuevo_nContrato, fechaRenovacion, R_porcentajeProduccion, R_tipoProductor, R_Subastadora, R_idProductora, R_nContrato, NULL
+    );
+  END;
 $$ LANGUAGE plpgsql;
 
 -- Function to cancel a contract
