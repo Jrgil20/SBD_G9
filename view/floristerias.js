@@ -46,7 +46,7 @@ export async function cargarDatosFloristerias() {
 }
 
 // Función para mostrar detalles de una floristería
-function mostrarDetallesFloristeria(floristeria) {
+export async function mostrarDetallesFloristeria(floristeria) {
     cambiarSeccion('detalles');
     const titulo = document.getElementById('vista-titulo');
     const info = document.getElementById('detalles-info');
@@ -98,51 +98,56 @@ function mostrarDetallesFloristeria(floristeria) {
     botonAplicarFiltro.addEventListener('click', () => filtrarFlores(floristeria.flores));
     filtrosContainer.appendChild(botonAplicarFiltro);
 
+    const botonRecomendador = document.createElement('button');
+    botonRecomendador.id = 'recomendador-btn';
+    botonRecomendador.textContent = 'Recomendador';
+    botonRecomendador.addEventListener('click', () => mostrarModalRecomendador(floristeria.nombre));
+    filtrosContainer.appendChild(botonRecomendador);
+
     catalogo.appendChild(filtrosContainer);
 
-    // Datos de prueba para las flores
-    const flores = [
-        { nombre: 'Gerbera Roja', vbn: '12345', imagen: 'gerbera_roja.jpg', calificacion: 4.5 },
-        { nombre: 'Gerbera Amarilla', vbn: '12346', imagen: 'gerbera_amarilla.jpg', calificacion: 4.0 },
-        { nombre: 'Rosa Roja', vbn: '12347', imagen: 'rosa_roja.jpg', calificacion: 5.0 },
-        { nombre: 'Rosa Blanca', vbn: '12348', imagen: 'rosa_blanca.jpg', calificacion: 3.5 },
-        { nombre: 'Tulipán Rojo', vbn: '12349', imagen: 'tulipan_rojo.jpg', calificacion: 4.8 },
-        { nombre: 'Tulipán Amarillo', vbn: '12350', imagen: 'tulipan_amarillo.jpg', calificacion: 4.2 }
-    ];
+    try {
+        const response = await fetch(`/api/floresValoraciones/${floristeria.floristeriaid}`);
+        if (!response.ok) {
+            throw new Error(`Error fetching flores con valoraciones: ${response.statusText}`);
+        }
+        const flores = await response.json();
 
-    // Ordenar flores por calificación
-    flores.sort((a, b) => b.calificacion - a.calificacion);
+        // Ordenar flores por calificación
+        flores.sort((a, b) => b.calificacion - a.calificacion);
 
-    // Crear contenedor deslizable verticalmente
-    const catalogoFloresContainer = document.createElement('div');
-    catalogoFloresContainer.className = 'catalogo-flores-container';
-
-    // Mostrar flores
-    flores.forEach(flor => {
-        const florCard = document.createElement('div');
-        florCard.className = 'card flor-card';
-        florCard.innerHTML = `
-            <img src="images/${flor.imagen}" alt="${flor.nombre}" onerror="this.onerror=null;this.src='images/default.jpg';">
-            <div class="flor-info">
-                <h3>${flor.nombre}</h3>
-                <p>VBN: ${flor.vbn}</p>
-                <p>Calificación: ${flor.calificacion}</p>
-            </div>
+        // Crear tabla para mostrar las flores
+        const tablaFlores = document.createElement('table');
+        tablaFlores.className = 'tabla-flores';
+        tablaFlores.innerHTML = `
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Calificación</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
         `;
-        florCard.addEventListener('click', () => mostrarModalFlor(flor));
-        catalogoFloresContainer.appendChild(florCard);
-    });
 
-    catalogo.appendChild(catalogoFloresContainer);
+        const tbody = tablaFlores.querySelector('tbody');
 
-    // Crear botón flotante
-    const botonFlotante = document.createElement('div');
-    botonFlotante.className = 'boton-flotante';
-    botonFlotante.innerHTML = `
-        <img src="./images/Florist-pana.png" alt="Florist">
-    `;
-    botonFlotante.addEventListener('click', () => mostrarModalPersonalizado());
-    document.body.appendChild(botonFlotante);
+        flores.forEach(flor => {
+            const fila = document.createElement('tr');
+            fila.innerHTML = `
+                <td>${flor.nombrecomun}</td>
+                <td>${flor.valoracion_promedio !== null ? flor.valoracion_promedio : 'Sin calificación'}</td>
+                `;
+            fila.addEventListener('click', () => mostrarModalFlor(flor,floristeria.floristeriaid));
+            tbody.appendChild(fila);
+        });
+
+        catalogo.appendChild(tablaFlores);
+    } catch (err) {
+        console.error('Error fetching flores con valoraciones:', err);
+        catalogo.innerHTML = '<p>Error al cargar las flores con valoraciones.</p>';
+    }
+
 }
 
 // Función para filtrar flores
@@ -167,37 +172,78 @@ function filtrarFlores(flores) {
             <img src="images/${flor.imagen}" alt="${flor.nombre}" onerror="this.onerror=null;this.src='images/default.jpg';">
             <div class="flor-info">
                 <h3>${flor.nombre}</h3>
-                <p>VBN: ${flor.vbn}</p>
                 <p>Calificación: ${flor.calificacion}</p>
             </div>
         `;
-        florCard.addEventListener('click', () => mostrarModalFlor(flor));
+        florCard.addEventListener('click', () => mostrarModalFlor(flor,floristeria.floristeriaid));
         catalogoFloresContainer.appendChild(florCard);
     });
 }
 
 // Función para mostrar el modal con la información completa de la flor
-function mostrarModalFlor(flor) {
+async function mostrarModalFlor(flor, floristeriaId) {
     const modal = document.getElementById('modal');
     const modalBody = document.getElementById('modal-body');
-    modalBody.innerHTML = `
-        <h2>${flor.nombre}</h2>
-        <img src="images/${flor.imagen}" alt="${flor.nombre}" onerror="this.onerror=null;this.src='images/default.jpg';">
-        <p>VBN: ${flor.vbn}</p>
-        <p>Calificación: ${flor.calificacion}</p>
-    `;
-    modal.style.display = 'block';
+    
+    try {
+        const response = await fetch(`/api/informacionFlor/${floristeriaId}/${flor.corteid}`);
+        if (!response.ok) {
+            throw new Error(`Error fetching información de la flor: ${response.statusText}`);
+        }
+        const informacionFlor = await response.json();
+        const detalleFlor = informacionFlor[0]; // Asumiendo que solo hay un resultado
+        console.log('Detalle de la flor:', detalleFlor);
+        modalBody.innerHTML = `
+            <h2>${detalleFlor.nombrepropio}</h2>
+            <img src="images/${flor.imagen}" alt="${detalleFlor.nombrepropio}" onerror="this.onerror=null;this.src='images/default.jpg';">
+            <p>Color: ${detalleFlor.nombre_color}</p>
+            <p>Categoria: ${flor.nombrecomun}</p>
+            <p>Longitud: ${detalleFlor.tallotamano} cm</p>
+            <p>Tamaño del Bouquet: ${detalleFlor.cantidad}  piezas</p>
+            <p>Precio: ${detalleFlor.precio} €</p>
+        `;
+        modal.style.display = 'block';
+    } catch (err) {
+        console.error('Error fetching información de la flor:', err);
+        modalBody.innerHTML = '<p>Error al cargar la información de la flor.</p>';
+        modal.style.display = 'block';
+    }
 }
 
 // Función para mostrar el modal personalizado
-function mostrarModalPersonalizado() {
+function mostrarModalRecomendador(nombreFloristeria) {
     const modal = document.getElementById('modal');
     const modalBody = document.getElementById('modal-body');
     modalBody.innerHTML = `
-        <h2>Modal Personalizado</h2>
-        <p>Contenido del modal personalizado.</p>
+        <h2>Recomendador</h2>
+        <img src="images/Florist-pana (1).png" alt="Florist">
+        <p>Hola, soy <strong>María</strong>, trabajo en <strong>${nombreFloristeria}</strong>, y estoy aquí para recomendarte mis flores para cualquier ocasión que necesites. Por favor, cuéntame cómo te sientes y para qué ocasión estás buscando regalar nuestras maravillosas flores?</p>
+        <div class="recomendador-form">
+            <select id="emocion">
+                <option value="feliz">Feliz</option>
+                <option value="triste">Triste</option>
+                <option value="enamorado">Enamorado</option>
+                <option value="agradecido">Agradecido</option>
+            </select>
+            <input type="text" id="ocasion" placeholder="Describe la ocasión">
+        </div>
+        <button id="recomendar-btn">Recomiéndame!</button>
     `;
     modal.style.display = 'block';
+
+    document.getElementById('recomendar-btn').addEventListener('click', () => {
+        const emocion = document.getElementById('emocion').value;
+        const ocasion = document.getElementById('ocasion').value;
+        filtrarFloresPorRecomendacion(emocion, ocasion);
+    });
+}
+
+// Función para filtrar flores basado en la recomendación
+function filtrarFloresPorRecomendacion(emocion, ocasion) {
+    // Aquí puedes implementar la lógica para filtrar las flores basado en la emoción y la ocasión
+    console.log(`Emoción: ${emocion}, Ocasion: ${ocasion}`);
+    // Por ahora, solo cerramos el modal
+    cerrarModal();
 }
 
 // Función para cerrar el modal
@@ -209,7 +255,7 @@ function cerrarModal() {
 window.cargarDatosFloristerias = cargarDatosFloristerias;
 window.mostrarDetallesFloristeria = mostrarDetallesFloristeria;
 window.mostrarModalFlor = mostrarModalFlor;
-window.mostrarModalPersonalizado = mostrarModalPersonalizado;
+window.mostrarModalPersonalizado = mostrarModalRecomendador;
 window.cerrarModal = cerrarModal;
 
 // Cargar datos iniciales

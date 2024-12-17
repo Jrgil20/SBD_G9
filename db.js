@@ -20,7 +20,47 @@ pool.connect((err) => {
 
 const getProductoras = async () => {
   try {
-    const result = await pool.query('SELECT productoraid, nombreproductora, paginaWeb, idPais FROM productoras');
+    const result = await pool.query('SELECT p.productoraid, p.nombreproductora, p.paginaweb, pa.nombrepais AS pais FROM productoras p JOIN pais pa ON p.idpais = pa.paisid');
+    
+    return result.rows;
+  } catch (err) {
+    console.error('Error querying the database', err);
+    throw err;
+  }
+};
+
+const getCatalogoProductoraById = async (productorId) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+      fc.corteid,
+      fc.nombrecomun, 
+      cp.nombrepropio, 
+      cp.vbn
+      FROM flor_cortes fc
+      INNER JOIN catalogoproductor cp ON fc.corteid = cp.idcorte
+      INNER JOIN productoras p ON cp.idproductora = p.productoraid
+      WHERE p.productoraid = ${productorId}
+      ORDER BY fc.nombrecomun;
+    `);
+    return result.rows;
+  } catch (err) {
+    console.error('Error querying the database', err);
+    throw err;
+  }
+};
+
+const getDetalleFlores = async (florId,productorId) => {
+  try {
+    const result = await pool.query(`SELECT
+    cp.nombrepropio, 
+    cp.descripcion,
+    fc.colores, 
+    fc.etimologia, 
+    fc.genero_especie ,
+    fc.temperatura 
+    FROM catalogoproductor cp INNER JOIN flor_cortes fc ON cp.idcorte = fc.corteid 
+    WHERE cp.idproductora = ${productorId} AND fc.corteid = ${florId}; `);
     return result.rows;
   } catch (err) {
     console.error('Error querying the database', err);
@@ -31,9 +71,7 @@ const getProductoras = async () => {
 const getFloristerias = async () => {
   try {
     const result = await pool.query(`
-      SELECT f.floristeriaid, f.nombre, f.email, f.paginaweb, p.nombrepais AS pais
-      FROM floristerias f
-      JOIN pais p ON f.idpais = p.paisid
+      SELECT f.floristeriaid, f.nombre, f.email, f.paginaweb, p.nombrepais AS pais FROM floristerias f JOIN pais p ON f.idpais = p.paisid
     `);
     return result.rows;
   } catch (err) {
@@ -42,5 +80,86 @@ const getFloristerias = async () => {
   }
 };
 
-module.exports = { pool, getProductoras, getFloristerias };
+const getFloresValoraciones = async (floristeriaId) => {
+  try {
+    console.log(`Executing query for floristeria ID: ${floristeriaId}`);
+    const result = await pool.query(`
+      SELECT * from obtener_valoraciones_por_floristeria($1)
+    `, [floristeriaId]);
+    console.log('Query result:', result.rows);
+    return result.rows;
+  } catch (err) {
+    console.error('Error querying the database', err);
+    throw err;
+  }
+};
+
+async function getInformacionFlor(idFloristeria, idFlor) {
+  try {
+    const result = await pool.query(`
+          WITH FlorInformacion AS (
+        SELECT
+            cf.nombrepropio,
+            c.Nombre AS nombre_color,
+            db.talloTamano,
+            db.cantidad,
+            hp.precio
+        FROM CATALOGO_FLORISTERIA cf
+        INNER JOIN COLOR c ON cf.idColor = c.colorId
+        INNER JOIN DETALLE_BOUQUET db ON cf.idFloristeria = db.idCatalogoFloristeria AND cf.codigo = db.idCatalogocodigo
+        INNER JOIN HISTORICO_PRECIO_FLOR hp ON cf.idFloristeria = hp.idCatalogoFloristeria AND cf.codigo = hp.idCatalogocodigo
+        WHERE cf.idFloristeria = $1 AND cf.idcorteflor = $2
+        AND hp.fechaInicio = (
+            SELECT MAX(fechaInicio)
+            FROM HISTORICO_PRECIO_FLOR hp2
+            WHERE hp2.idCatalogoFloristeria = hp.idCatalogoFloristeria
+            AND hp2.idCatalogocodigo = hp.idCatalogocodigo
+            AND hp2.fechaInicio <= CURRENT_DATE
+            AND hp2.fechaFin IS NULL
+        )
+    )
+    SELECT * FROM FlorInformacion;
+    `, [idFloristeria, idFlor]);
+    return result.rows;
+  } catch (err) {
+    console.error('Error querying the database', err);
+    throw err;
+  }
+}
+//Facturas
+async function getFacturas(){
+  try{
+    const result=await pool.query(
+      `SELECT 
+          f.facturaId AS numero_factura,
+          s.nombreSubastadora,
+          fl.nombre,
+          TO_CHAR(f.fechaEmision, 'MM/DD/YYYY') AS fecha_emision_formateada,
+          f.montoTotal
+      FROM FACTURA f
+      INNER JOIN SUBASTADORA s ON f.idAfiliacionSubastadora = s.subastadoraId
+      INNER JOIN FLORISTERIAS fl ON f.idAfiliacionFloristeria = fl.floristeriaId
+      ORDER BY f.fechaEmision DESC;`
+    )
+    return result.rows;
+  }catch(err){
+    console.error('Error querying the database', err);
+    throw err;
+  }
+}
+
+async function getInformacionFactura(idFactura){
+  try{
+    const result=await pool.query(
+      ``, 
+    )
+    return result.rows;
+  }catch(err){
+    console.error('Error querying the database', err);
+    throw err;
+  }
+}	
+
+
+module.exports = { pool, getProductoras, getFloristerias,getCatalogoProductoraById,getDetalleFlores,getFloresValoraciones,getInformacionFlor,getFacturas,getInformacionFactura};
 

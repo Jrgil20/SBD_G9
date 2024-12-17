@@ -1320,6 +1320,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+
 CREATE OR REPLACE FUNCTION obtener_informacion_de_flor(p_idFloristeria NUMERIC, p_idCorteFlor NUMERIC)
 RETURNS TABLE (
   nombrepropio VARCHAR,
@@ -1390,6 +1391,7 @@ BEGIN
   WHERE l.idFactura = p_facturaId;
 END;
 $$ LANGUAGE plpgsql;
+
 
 -------------------------------------------------------------------------------------------------------------------
 --  ===========================================================================================================  --
@@ -1771,7 +1773,9 @@ SELECT MontoComision(1001, '2023-04-01');
 -- Ejecutar la función para obtener el reporte de multas generadas y pagadas
 SELECT * FROM reporte_multas_generadas_y_pagadas(1, 1, 1001);
 
+
 SELECT * FROM obtener_facturas();
+
 
 SELECT * FROM obtener_informacion_factura(1);
 
@@ -1781,8 +1785,10 @@ SELECT * FROM CatalogoProductoraById(1);
 
 SELECT * FROM Obtener_DetalleFlores(1, 1);
 
+
 SELECT * FROM obtener_floristeria();
 
 SELECT * FROM obtener_informacion_de_flor(1, 1);
 
 SELECT * FROM Traer_lotes(1);
+

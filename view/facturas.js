@@ -66,7 +66,7 @@ const facturasPrueba = [
 ];
 
 // Función para cargar datos de facturas
-export function cargarDatosFacturas() {
+export async function cargarDatosFacturas() {
     const contenedor = document.querySelector('#facturas .cards-container .cards');
     if (!contenedor) {
         console.error('Contenedor de cards no encontrado para facturas');
@@ -74,21 +74,30 @@ export function cargarDatosFacturas() {
     }
     contenedor.innerHTML = '';
 
-    facturasPrueba.forEach(factura => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-            <h3>Factura #${factura.id}</h3>
-            <p>Subasta: ${factura.subasta.nombre}</p>
-            <p>Floristería: ${factura.floristeria.nombre}</p>
-            <p>Fecha: ${factura.fecha}</p>
-            <p>Monto: €${factura.monto}</p>
-        `;
-        card.addEventListener('click', () => mostrarDetallesFactura(factura));
-        contenedor.appendChild(card);
-    });
-}
+    try {
+        const response = await fetch('/api/facturas');
+        if (!response.ok) {
+            throw new Error(`Error fetching facturas: ${response.statusText}`);
+        }
+        const facturas = await response.json();
 
+        facturas.forEach(factura => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <h3>Factura #${factura.numero_factura}</h3>
+                <p>Subastadora: ${factura.nombresubastadora}</p>
+                <p>Floristería: ${factura.nombre}</p>
+                <p>Fecha: ${factura.fecha_emision_formateada}</p>
+                <p>Monto: €${factura.montototal}</p>
+            `;
+            card.addEventListener('click', () => mostrarDetallesFactura(factura));
+            contenedor.appendChild(card);
+        });
+    } catch (err) {
+        console.error('Error fetching facturas:', err);
+    }
+}
 // Función para mostrar detalles de una factura
 function mostrarDetallesFactura(factura) {
     cambiarSeccion('detalles-factura');

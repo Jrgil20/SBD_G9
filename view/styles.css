@@ -124,7 +124,6 @@ section.active {
 
 .main-card:hover {
     transform: translateY(-5px);
-    background-color: var(--color-secondary);
 }
 
 .main-card i {
@@ -147,39 +146,60 @@ section.active {
     padding: 5px;
 }
 
+/* Estilos para el modal */
 .modal {
     display: none;
     position: fixed;
-    z-index: 1;
+    z-index: 1001;
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
     overflow: auto;
-    background-color: rgba(0,0,0,0.4);
+    background-color: rgba(0, 0, 0, 0.5);
 }
 
 .modal-content {
-    background-color: var(--color-background);
+    background-color: #fefefe;
     margin: 15% auto;
     padding: 20px;
-    border: 1px solid var(--color-primary);
+    border: 1px solid #888;
     width: 80%;
-    max-width: 500px;
+    max-width: 600px;
+    text-align: center;
+}
+
+.modal-content img {
+    width: 200px; /* Ajusta el tamaño de la imagen según sea necesario */
+    height: 200px; /* Ajusta el tamaño de la imagen según sea necesario */
+    object-fit: cover;
     border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.modal-content div {
+    margin: 20px 0;
+}
+
+.modal-content label {
+    margin-right: 10px;
+}
+
+.modal-content input,
+.modal-content select {
+    margin-right: 10px;
 }
 
 .close {
-    color: var(--color-text);
+    color: #aaa;
     float: right;
     font-size: 28px;
     font-weight: bold;
-    cursor: pointer;
 }
 
 .close:hover,
 .close:focus {
-    color: var(--color-accent);
+    color: black;
     text-decoration: none;
     cursor: pointer;
 }
@@ -391,6 +411,7 @@ section.active {
 .filters {
     display: flex;
     flex-wrap: wrap;
+    gap: 10px;
     margin-bottom: 20px;
 }
 
@@ -398,15 +419,8 @@ section.active {
 .filters select,
 .filters button {
     padding: 8px;
-    margin-right: 10px;
-    margin-bottom: 10px;
-}
-
-.filters span {
-    padding: 8px;
-    background-color: #f0f0f0;
     border: 1px solid #ddd;
-    margin-left: auto;
+    border-radius: 4px;
 }
 
 .filters button {
@@ -417,6 +431,18 @@ section.active {
 }
 
 .filters button:hover {
+    background-color: var(--color-primary-dark);
+}
+
+#recomendar-btn{
+    background-color: var(--color-primary);
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 25px;
+}
+
+#recomendar-btn:hover{
     background-color: var(--color-primary-dark);
 }
 
@@ -459,59 +485,87 @@ section.active {
 }
 
 .catalogo-flores-container {
-    max-height: 60vh; /* Ajusta la altura máxima según sea necesario */
-    overflow-y: auto;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 20px;
 }
 
 .flor-card {
     display: flex;
-    flex-direction: row; /* Mostrar la información a la derecha de la imagen */
+    flex-direction: row;
     align-items: center;
-    margin-bottom: 10px;
-    padding: 10px;
+    justify-content: space-between;
+    text-align: left;
     border: 1px solid #ddd;
     border-radius: 5px;
-    width: 100%; /* Abarcar todo el ancho posible */
-    box-sizing: border-box; /* Incluir padding y border en el ancho total */
+    padding: 10px;
+    transition: transform 0.3s ease;
+    width: 100%;
 }
 
 .flor-card img {
-    width: 100px; /* Ajusta el tamaño de la imagen según sea necesario */
-    height: 100px; /* Ajusta el tamaño de la imagen según sea necesario */
-    object-fit: cover;
+    width: 100px;
+    height: auto;
     border-radius: 5px;
     margin-right: 10px;
+}
+
+.flor-card:hover {
+    transform: translateY(-5px);
 }
 
 .flor-info {
     display: flex;
     flex-direction: column;
-    flex-grow: 1; /* Permitir que la información crezca para ocupar el espacio disponible */
-    width: 100%;
+    align-items: flex-start;
+    justify-content: center;
+    flex-grow: 1;
 }
 
-.boton-flotante {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    width: 100px;
-    height: 100px;
-    background-color: #fff;
-    border-radius: 50%;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+.flor-info h3 {
+    margin: 0;
+}
+
+.flor-info p {
+    margin: 5px 0;
+}
+
+#recomendador-btn {
+    background-color: #ff69b4; /* Color rosado */
+    color: white;
+    border: none;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+#recomendador-btn:hover {
+    background-color: #ff1493; /* Color rosado oscuro */
+}
+
+.recomendador-form {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.recomendador-form select,
+.recomendador-form input {
+    margin: 10px 0;
+    padding: 10px;
+    width: 80%;
+    max-width: 300px;
+}
+
+.recomendador-form button {
+    padding: 10px 20px;
+    background-color: var(--color-primary);
+    color: white;
+    border: none;
     cursor: pointer;
 }
 
-.boton-flotante img {
-    width: 100px;
-    height: 100px;
-}
 
 .formulario-insertar {
     display: flex;
@@ -547,6 +601,39 @@ section.active {
 
 .formulario-insertar input[type="submit"]:hover {
     background-color: var(--color-primary-dark);
+}
+
+/* Estilos para el formulario de "Nuevo Contrato" */
+.formulario-insertar .form-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.formulario-insertar .form-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin-right: 10px;
+}
+
+.formulario-insertar .form-group:last-child {
+    margin-right: 0;
+}
+
+.formulario-insertar label {
+    margin-bottom: 5px;
+}
+
+.formulario-insertar input,
+.formulario-insertar select {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.formulario-insertar input[readonly] {
+    background-color: #f9f9f9;
 }
 
 .submenu {
@@ -654,3 +741,320 @@ section.active {
     }
 }
 
+.tabla-flores {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.tabla-flores th, .tabla-flores td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: left;
+}
+
+.tabla-flores th {
+    background-color: var(--color-primary);
+    color: white;
+}
+
+.tabla-flores tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.tabla-flores tr:hover {
+    background-color: #ddd;
+    cursor: pointer;
+}
+
+.filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.filters input, .filters select, .filters button {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.filters button {
+    background-color: var(--color-primary);
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.filters button:hover {
+    background-color: var(--color-primary-dark);
+}
+
+.filters span {
+    padding: 8px;
+    background-color: #f0f0f0;
+    border: 1px solid #ddd;
+    margin-left: auto;
+}
+
+/* Styles for Contratos button */
+.contratos-btn {
+    background-color: var(--color-primary);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 1em;
+    border-radius: 5px;
+    cursor: pointer;
+    float: right;
+    display: flex;
+    align-items: center;
+}
+
+.contratos-btn i {
+    margin-right: 5px;
+}
+
+.contratos-btn:hover {
+    background-color: var(--color-primary-dark);
+}
+
+/* Styles for Contratos modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1001;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: var(--color-background);
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid var(--color-primary);
+    width: 90%;
+    max-width: 800px;
+    border-radius: 5px;
+    position: relative;
+}
+
+.modal-content .close {
+    color: var(--color-text);
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.modal-content .close:hover {
+    color: var(--color-accent);
+}
+
+.contratos-options {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+}
+
+.contrato-card {
+    width: 45%;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+}
+
+.contrato-card i {
+    font-size: 2em;
+    margin-bottom: 10px;
+    color: var(--color-primary);
+}
+
+.contrato-card:hover {
+    background-color: var(--color-secondary);
+}
+
+.contrato-form {
+    margin-top: 20px;
+}
+
+.contrato-form h3 {
+    color: var(--color-primary);
+}
+
+.existing-contract {
+    background-color: #f9f9f9;
+    padding: 10px;
+    border: 1px solid var(--color-primary);
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+/* Estilos para el botón de "Contratos" */
+.contratos-btn {
+    background-color: var(--color-primary);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 1em;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.contratos-btn i {
+    margin-right: 5px;
+}
+
+.contratos-btn:hover {
+    background-color: var(--color-primary-dark);
+}
+
+/* Estilos para el modal de "Contratos" */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1001;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: var(--color-background);
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid var(--color-primary);
+    width: 90%;
+    max-width: 800px;
+    border-radius: 5px;
+    position: relative;
+}
+
+.modal-content .close {
+    color: var(--color-text);
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.modal-content .close:hover {
+    color: var(--color-accent);
+}
+
+.contratos-options {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+}
+
+.contrato-card {
+    width: 45%;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    border: 1px solid var(--color-primary);
+    border-radius: 5px;
+}
+
+.contrato-card i {
+    font-size: 2em;
+    margin-bottom: 10px;
+    color: var(--color-primary);
+}
+
+.contrato-card:hover {
+    background-color: var(--color-secondary);
+}
+
+.contrato-form {
+    margin-top: 20px;
+}
+
+.contrato-form h3 {
+    color: var(--color-primary);
+}
+
+.contrato-form label {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--color-text);
+}
+
+.contrato-form input,
+.contrato-form select {
+    padding: 8px;
+    margin-bottom: 15px;
+    border: 1px solid var(--color-primary);
+    border-radius: 5px;
+}
+
+.contrato-form input[type="submit"] {
+    background-color: var(--color-primary);
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.contrato-form input[type="submit"]:hover {
+    background-color: var(--color-primary-dark);
+}
+
+.existing-contract {
+    background-color: #f9f9f9;
+    padding: 10px;
+    border: 1px solid var(--color-primary);
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+/* Estilos para el contenedor flex de la información de la productora y el botón de contratos */
+.info-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.contratos-btn {
+    background-color: var(--color-primary);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 1em;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    margin-left: 20px;
+}
+
+.contratos-btn i {
+    margin-right: 5px;
+}
+
+.contratos-btn:hover {
+    background-color: var(--color-primary-dark);
+}
