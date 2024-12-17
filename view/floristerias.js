@@ -46,7 +46,7 @@ export async function cargarDatosFloristerias() {
 }
 
 // Función para mostrar detalles de una floristería
-function mostrarDetallesFloristeria(floristeria) {
+export async function mostrarDetallesFloristeria(floristeria) {
     cambiarSeccion('detalles');
     const titulo = document.getElementById('vista-titulo');
     const info = document.getElementById('detalles-info');
@@ -106,48 +106,48 @@ function mostrarDetallesFloristeria(floristeria) {
 
     catalogo.appendChild(filtrosContainer);
 
-    // Datos de prueba para las flores
-    const flores = [
-        { nombre: 'Gerbera Roja', vbn: '12345', imagen: 'gerbera_roja.jpg', calificacion: 4.5 },
-        { nombre: 'Gerbera Amarilla', vbn: '12346', imagen: 'gerbera_amarilla.jpg', calificacion: 4.0 },
-        { nombre: 'Rosa Roja', vbn: '12347', imagen: 'rosa_roja.jpg', calificacion: 5.0 },
-        { nombre: 'Rosa Blanca', vbn: '12348', imagen: 'rosa_blanca.jpg', calificacion: 3.5 },
-        { nombre: 'Tulipán Rojo', vbn: '12349', imagen: 'tulipan_rojo.jpg', calificacion: 4.8 },
-        { nombre: 'Tulipán Amarillo', vbn: '12350', imagen: 'tulipan_amarillo.jpg', calificacion: 4.2 }
-    ];
+    try {
+        const response = await fetch(`/api/floresValoraciones/${floristeria.floristeriaid}`);
+        if (!response.ok) {
+            throw new Error(`Error fetching flores con valoraciones: ${response.statusText}`);
+        }
+        const flores = await response.json();
 
-    // Ordenar flores por calificación
-    flores.sort((a, b) => b.calificacion - a.calificacion);
+        // Ordenar flores por calificación
+        flores.sort((a, b) => b.calificacion - a.calificacion);
 
-    // Crear tabla para mostrar las flores
-    const tablaFlores = document.createElement('table');
-    tablaFlores.className = 'tabla-flores';
-    tablaFlores.innerHTML = `
-        <thead>
-            <tr>
-                <th>Nombre</th>
-                <th>VBN</th>
-                <th>Calificación</th>
-            </tr>
-        </thead>
-        <tbody>
-        </tbody>
-    `;
-
-    const tbody = tablaFlores.querySelector('tbody');
-
-    flores.forEach(flor => {
-        const fila = document.createElement('tr');
-        fila.innerHTML = `
-            <td>${flor.nombre}</td>
-            <td>${flor.vbn}</td>
-            <td>${flor.calificacion}</td>
+        // Crear tabla para mostrar las flores
+        const tablaFlores = document.createElement('table');
+        tablaFlores.className = 'tabla-flores';
+        tablaFlores.innerHTML = `
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Calificación</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
         `;
-        fila.addEventListener('click', () => mostrarModalFlor(flor));
-        tbody.appendChild(fila);
-    });
 
-    catalogo.appendChild(tablaFlores);
+        const tbody = tablaFlores.querySelector('tbody');
+
+        flores.forEach(flor => {
+            const fila = document.createElement('tr');
+            fila.innerHTML = `
+                <td>${flor.nombrecomun}</td>
+                <td>${flor.valoracion_promedio !== null ? flor.valoracion_promedio : 'Sin calificación'}</td>
+                `;
+            fila.addEventListener('click', () => mostrarModalFlor(flor,floristeria.floristeriaid));
+            tbody.appendChild(fila);
+        });
+
+        catalogo.appendChild(tablaFlores);
+    } catch (err) {
+        console.error('Error fetching flores con valoraciones:', err);
+        catalogo.innerHTML = '<p>Error al cargar las flores con valoraciones.</p>';
+    }
+
 }
 
 // Función para filtrar flores
@@ -172,26 +172,42 @@ function filtrarFlores(flores) {
             <img src="images/${flor.imagen}" alt="${flor.nombre}" onerror="this.onerror=null;this.src='images/default.jpg';">
             <div class="flor-info">
                 <h3>${flor.nombre}</h3>
-                <p>VBN: ${flor.vbn}</p>
                 <p>Calificación: ${flor.calificacion}</p>
             </div>
         `;
-        florCard.addEventListener('click', () => mostrarModalFlor(flor));
+        florCard.addEventListener('click', () => mostrarModalFlor(flor,floristeria.floristeriaid));
         catalogoFloresContainer.appendChild(florCard);
     });
 }
 
 // Función para mostrar el modal con la información completa de la flor
-function mostrarModalFlor(flor) {
+async function mostrarModalFlor(flor, floristeriaId) {
     const modal = document.getElementById('modal');
     const modalBody = document.getElementById('modal-body');
-    modalBody.innerHTML = `
-        <h2>${flor.nombre}</h2>
-        <img src="images/${flor.imagen}" alt="${flor.nombre}" onerror="this.onerror=null;this.src='images/default.jpg';">
-        <p>VBN: ${flor.vbn}</p>
-        <p>Calificación: ${flor.calificacion}</p>
-    `;
-    modal.style.display = 'block';
+    
+    try {
+        const response = await fetch(`/api/informacionFlor/${floristeriaId}/${flor.corteid}`);
+        if (!response.ok) {
+            throw new Error(`Error fetching información de la flor: ${response.statusText}`);
+        }
+        const informacionFlor = await response.json();
+        const detalleFlor = informacionFlor[0]; // Asumiendo que solo hay un resultado
+        console.log('Detalle de la flor:', detalleFlor);
+        modalBody.innerHTML = `
+            <h2>${detalleFlor.nombrepropio}</h2>
+            <img src="images/${flor.imagen}" alt="${detalleFlor.nombrepropio}" onerror="this.onerror=null;this.src='images/default.jpg';">
+            <p>Color: ${detalleFlor.nombre_color}</p>
+            <p>Categoria: ${flor.nombrecomun}</p>
+            <p>Longitud: ${detalleFlor.tallotamano} cm</p>
+            <p>Tamaño del Bouquet: ${detalleFlor.cantidad}  piezas</p>
+            <p>Precio: ${detalleFlor.precio} €</p>
+        `;
+        modal.style.display = 'block';
+    } catch (err) {
+        console.error('Error fetching información de la flor:', err);
+        modalBody.innerHTML = '<p>Error al cargar la información de la flor.</p>';
+        modal.style.display = 'block';
+    }
 }
 
 // Función para mostrar el modal personalizado
@@ -244,4 +260,3 @@ window.cerrarModal = cerrarModal;
 
 // Cargar datos iniciales
 document.addEventListener('DOMContentLoaded', cargarDatosFloristerias);
-

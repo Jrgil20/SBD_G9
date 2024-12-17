@@ -13,13 +13,13 @@ export async function cargarDatosProductoras() {
             throw new Error(`Error fetching productoras: ${response.statusText}`);
         }
         const data = await response.json();
-
+        console.log('Productoras:', data);
         data.forEach(productora => {
+            
             const card = document.createElement('div');
             card.className = 'card';
             card.innerHTML = `
                 <h3>${productora.nombreproductora}</h3>
-                <p>${productora.email || ''}</p>
                 <p>${productora.paginaweb || ''}</p>
                 <p>País: ${productora.pais || 'Desconocido'}</p>
             `;
@@ -45,13 +45,13 @@ export async function cargarDatosProductoras() {
     }
 }
 
-// Función para mostrar detalles de una productora
-function mostrarDetallesProductora(productora) {
+//// Función para mostrar detalles de una productora
+async function mostrarDetallesProductora(productora) {
     cambiarSeccion('detalles');
     const titulo = document.getElementById('vista-titulo');
     const catalogo = document.querySelector('#catalogo-flores');
     const volverBtn = document.getElementById('volver-btn');
-
+    
     titulo.textContent = productora.nombreproductora;
     volverBtn.style.display = 'block';
     volverBtn.onclick = () => cambiarSeccion('productores');
@@ -64,10 +64,10 @@ function mostrarDetallesProductora(productora) {
     const info = document.createElement('div');
     info.className = 'info';
     info.innerHTML = `
-        <p>${productora.email ? `Email: ${productora.email}` : ''}</p>
         ${productora.paginaweb ? `<p>Página Web: <a href="http://${productora.paginaweb}" target="_blank">${productora.paginaweb}</a></p>` : ''}
         <p>País: ${productora.pais || 'Desconocido'}</p>
     `;
+
 
     // Crear botón de "Contratos"
     const contratosBtn = document.createElement('button');
@@ -90,81 +90,79 @@ function mostrarDetallesProductora(productora) {
     detallesInfo.appendChild(infoContainer);
 
     catalogo.innerHTML = '';
-
-    // Datos de prueba para las flores
-    const flores = [
-        { categoria: 'Gerberas', nombre: 'Gerbera Roja', vbn: '12345', imagen: 'gerbera_roja.jpg' },
-        { categoria: 'Gerberas', nombre: 'Gerbera Amarilla', vbn: '12346', imagen: 'gerbera_amarilla.jpg' },
-        { categoria: 'Rosas', nombre: 'Rosa Roja', vbn: '12347', imagen: 'rosa_roja.jpg' },
-        { categoria: 'Rosas', nombre: 'Rosa Blanca', vbn: '12348', imagen: 'rosa_blanca.jpg' },
-        { categoria: 'Tulipanes', nombre: 'Tulipán Rojo', vbn: '12349', imagen: 'tulipan_rojo.jpg' },
-        { categoria: 'Tulipanes', nombre: 'Tulipán Amarillo', vbn: '12350', imagen: 'tulipan_amarillo.jpg' }
-    ];
-
-    // Agrupar flores por categoría
-    const floresPorCategoria = flores.reduce((acc, flor) => {
-        if (!acc[flor.categoria]) {
-            acc[flor.categoria] = [];
+    
+    try {
+        const response = await fetch(`/api/catalogoProductor/${productora.productoraid}`);
+        if (!response.ok) {
+            throw new Error(`Error fetching catalogo: ${response.statusText}`);
         }
-        acc[flor.categoria].push(flor);
-        return acc;
-    }, {});
+        const catalogoProductor = await response.json();
+        console.log('Catalogo:', catalogoProductor);
+        // Agrupar flores por nombre_comun
+        const floresPorCategoria = catalogoProductor.reduce((acc, flor) => {
+            if (!acc[flor.nombrecomun]) {
+                acc[flor.nombrecomun] = [];
+            }
+            acc[flor.nombrecomun].push(flor);
+            return acc;
+        }, {});
 
-    // Crear contenedor deslizable verticalmente
-    const catalogoContainer = document.createElement('div');
-    catalogoContainer.className = 'catalogo-container';
+        // Crear elementos del DOM para cada categoría y sus flores
+        for (const [nombrecomun, flores] of Object.entries(floresPorCategoria)) {
+            const categoriaItem = document.createElement('div');
+            categoriaItem.className = 'categoria-item';
+            categoriaItem.innerHTML = `<h4> ${nombrecomun}</h4>`;
+            catalogo.appendChild(categoriaItem);
 
-    // Mostrar flores por categoría
-    Object.keys(floresPorCategoria).forEach(categoria => {
-        const categoriaDiv = document.createElement('div');
-        categoriaDiv.className = 'categoria';
-
-        const categoriaTitulo = document.createElement('h3');
-        categoriaTitulo.textContent = `Catálogo de ${categoria}`;
-        categoriaTitulo.className = 'categoria-titulo';
-        categoriaDiv.appendChild(categoriaTitulo);
-
-        const floresContainer = document.createElement('div');
-        floresContainer.className = 'flores-container';
-
-        floresPorCategoria[categoria].forEach(flor => {
-            const florCard = document.createElement('div');
-            florCard.className = 'card';
-            florCard.innerHTML = `
-                <img src="images/${flor.imagen}" alt="${flor.nombre}" onerror="this.onerror=null;this.src='images/default.jpg';">
-                <h3>${flor.nombre}</h3>
-                <p>VBN: ${flor.vbn}</p>
-            `;
-            florCard.addEventListener('click', () => mostrarModalFlor(flor));
-            floresContainer.appendChild(florCard);
-        });
-
-        // Ajustar el estilo de justify-content en función del desbordamiento
-        if (floresContainer.scrollWidth > floresContainer.clientWidth) {
-            floresContainer.style.justifyContent = 'flex-start';
-        } else {
-            floresContainer.style.justifyContent = 'center';
+            flores.forEach(flor => {
+                const florCard = document.createElement('div');
+                florCard.className = 'card flor-card';
+                florCard.innerHTML = `
+                <img src="images/${flor.imagen}" alt="${flor.nombrepropio}" onerror="this.onerror=null;this.src='images/default.jpg';">
+                    <p><strong> ${flor.nombrepropio}</strong></p>
+                    <p><strong>VBN:</strong> ${flor.vbn}</p>
+                `;
+                console.log(flor.corteid);
+                florCard.addEventListener('click', () => mostrarModalFlor(flor,productora));
+                categoriaItem.appendChild(florCard);
+            });
         }
-
-        categoriaDiv.appendChild(floresContainer);
-        catalogoContainer.appendChild(categoriaDiv);
-    });
-
-    catalogo.appendChild(catalogoContainer);
+    } catch (err) {
+        console.error('Error fetching catalogo:', err);
+        catalogo.innerHTML = '<p>Error al cargar el catálogo de flores.</p>';
+    }
 }
 
 // Función para mostrar el modal con la información completa de la flor
-function mostrarModalFlor(flor) {
+async function mostrarModalFlor(flor, productora) {
     const modal = document.getElementById('modal');
     const modalBody = document.getElementById('modal-body');
-    modalBody.innerHTML = `
-        <h2>${flor.nombre}</h2>
-        <img src="images/${flor.imagen}" alt="${flor.nombre}" onerror="this.onerror=null;this.src='images/default.jpg';">
-        <p>VBN: ${flor.vbn}</p>
-        <p>Descripción: ${flor.descripcion}</p>
-    `;
-    modal.style.display = 'block';
-}
+    
+    try {
+        const response = await fetch(`/api/detalleFlores/${flor.corteid}/${productora.productoraid}`);
+        if (!response.ok) {
+            throw new Error(`Error fetching detalle de flores: ${response.statusText}`);
+        }
+        const detalleFlores = await response.json();
+        const detalleFlor = detalleFlores[0]; // Asumiendo que solo hay un resultado
+
+        modalBody.innerHTML = `
+            <h2>${detalleFlor.nombrepropio}</h2>
+            <img src="images/${flor.imagen}" alt="${detalleFlor.nombrepropio}" onerror="this.onerror=null;this.src='images/default.jpg';">
+            <p>VBN: ${flor.vbn}</p>
+            <p>Género y Especie: ${detalleFlor.genero_especie}</p>
+            <p>Etimología: ${detalleFlor.etimologia}</p>
+            <p>Descripción: ${detalleFlor.descripcion}</p>
+            <p>Colores: ${detalleFlor.colores}</p>
+            <p>Temperatura: ${detalleFlor.temperatura}</p>
+        `;
+        modal.style.display = 'block';
+    } catch (err) {
+        console.error('Error fetching detalle de flores:', err);
+        modalBody.innerHTML = '<p>Error al cargar los detalles de la flor.</p>';
+        modal.style.display = 'block';
+    }
+
 
 // Función para mostrar el modal de contratos
 function mostrarModalContratos(productora) {
@@ -394,6 +392,7 @@ function mostrarModalContratos(productora) {
         return null; // Reemplazar con implementación real
     }
 }
+
 
 // Función para cerrar el modal
 function cerrarModal() {
