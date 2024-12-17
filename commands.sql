@@ -988,6 +988,34 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- FUNCTION: public.obtener_valoraciones_por_floristeria(numeric)
+
+-- DROP FUNCTION IF EXISTS public.obtener_valoraciones_por_floristeria(numeric);
+
+CREATE OR REPLACE FUNCTION obtener_valoraciones_por_floristeria(p_idfloristeria NUMERIC)
+RETURNS TABLE (
+  corteid NUMERIC,
+  nombrecomun VARCHAR,
+  valoracion_promedio NUMERIC
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    fc.corteId,
+    fc.nombrecomun,
+    ROUND(AVG(df.valoracionPromedio), 2) AS valoracion_promedio
+  FROM CATALOGO_FLORISTERIA cf
+  JOIN FLOR_CORTES fc ON cf.idCorteFlor = fc.corteId
+  LEFT JOIN DETALLE_FACTURA df
+    ON df.catalogoFloristeria = cf.idFloristeria AND df.catalogoCodigo = cf.codigo
+  WHERE cf.idFloristeria = p_idFloristeria
+  GROUP BY fc.corteId, fc.nombrecomun
+  ORDER BY COALESCE(valoracion_promedio, 0) DESC, fc.nombrecomun ASC;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
 -- Crear la función para verificar Pagos y generar multas
 CREATE OR REPLACE FUNCTION reporte_multas_generadas_y_pagadas(
   p_idSubastadora NUMERIC,
@@ -1135,6 +1163,29 @@ $$ LANGUAGE plpgsql;
 
 --------------------------------------------- REPORTE: FACTURA ----------------------------------------------------
 
+CREATE OR REPLACE FUNCTION obtener_facturas()
+RETURNS TABLE (
+  numero_factura NUMERIC,
+  nombreSubastadora TEXT,
+  nombre TEXT,
+  fecha_emision_formateada TEXT,
+  montoTotal NUMERIC
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    f.facturaId AS numero_factura,
+    s.nombreSubastadora,
+    fl.nombre::TEXT,
+    TO_CHAR(f.fechaEmision, 'MM/DD/YYYY') AS fecha_emision_formateada,
+    f.montoTotal
+  FROM FACTURA f
+  INNER JOIN SUBASTADORA s ON f.idAfiliacionSubastadora = s.subastadoraId
+  INNER JOIN FLORISTERIAS fl ON f.idAfiliacionFloristeria = fl.floristeriaId
+  ORDER BY f.fechaEmision DESC;
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION obtener_informacion_factura(factura_id NUMERIC)
 RETURNS TABLE (
     id_afiliacion_floristeria NUMERIC,
@@ -1267,6 +1318,80 @@ BEGIN
   JOIN pais p ON f.idPais = p.paisId;
 END;
 $$ LANGUAGE plpgsql;
+
+
+
+CREATE OR REPLACE FUNCTION obtener_informacion_de_flor(p_idFloristeria NUMERIC, p_idCorteFlor NUMERIC)
+RETURNS TABLE (
+  nombrepropio VARCHAR,
+  nombre_color VARCHAR,
+  talloTamano NUMERIC,
+  cantidad NUMERIC,
+  precio NUMERIC
+) AS $$
+BEGIN
+  RETURN QUERY
+  WITH FlorInformacion AS (
+    SELECT
+      cf.nombrepropio,
+      c.Nombre AS nombre_color,
+      db.talloTamano,
+      db.cantidad,
+      hp.precio
+    FROM CATALOGO_FLORISTERIA cf
+    INNER JOIN COLOR c ON cf.idColor = c.colorId
+    INNER JOIN DETALLE_BOUQUET db ON cf.idFloristeria = db.idCatalogoFloristeria AND cf.codigo = db.idCatalogocodigo
+    INNER JOIN HISTORICO_PRECIO_FLOR hp ON cf.idFloristeria = hp.idCatalogoFloristeria AND cf.codigo = hp.idCatalogocodigo
+    WHERE cf.idFloristeria = p_idFloristeria AND cf.idcorteflor = p_idCorteFlor
+    AND hp.fechaInicio = (
+      SELECT MAX(fechaInicio)
+      FROM HISTORICO_PRECIO_FLOR hp2
+      WHERE hp2.idCatalogoFloristeria = hp.idCatalogoFloristeria
+      AND hp2.idCatalogocodigo = hp.idCatalogocodigo
+      AND hp2.fechaInicio <= CURRENT_DATE
+      AND hp2.fechaFin IS NULL
+    )
+  )
+  SELECT * FROM FlorInformacion;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION Traer_lotes(p_facturaId NUMERIC)
+RETURNS TABLE (
+  idCantidadContratoSubastadora NUMERIC,
+  idCantidadContratoProductora NUMERIC,
+  idCantidad_NContrato NUMERIC,
+  idCantidadCatalogoProductora NUMERIC,
+  idCantidadCorte NUMERIC,
+  idCantidadvnb NUMERIC,
+  NumLote NUMERIC,
+  bi NUMERIC,
+  cantidad NUMERIC,
+  precioInicial NUMERIC,
+  precioFinal NUMERIC,
+  idFactura NUMERIC
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    l.idCantidadContratoSubastadora,
+    l.idCantidadContratoProductora,
+    l.idCantidad_NContrato,
+    l.idCantidadCatalogoProductora,
+    l.idCantidadCorte,
+    l.idCantidadvnb,
+    l.NumLote,
+    l.bi,
+    l.cantidad,
+    l.precioInicial,
+    l.precioFinal,
+    l.idFactura
+  FROM LOTE l
+  WHERE l.idFactura = p_facturaId;
+END;
+$$ LANGUAGE plpgsql;
+
 
 -------------------------------------------------------------------------------------------------------------------
 --  ===========================================================================================================  --
@@ -1648,6 +1773,10 @@ SELECT MontoComision(1001, '2023-04-01');
 -- Ejecutar la función para obtener el reporte de multas generadas y pagadas
 SELECT * FROM reporte_multas_generadas_y_pagadas(1, 1, 1001);
 
+
+SELECT * FROM obtener_facturas();
+
+
 SELECT * FROM obtener_informacion_factura(1);
 
 SELECT * FROM informacion_de_productores();
@@ -1656,4 +1785,10 @@ SELECT * FROM CatalogoProductoraById(1);
 
 SELECT * FROM Obtener_DetalleFlores(1, 1);
 
+
 SELECT * FROM obtener_floristeria();
+
+SELECT * FROM obtener_informacion_de_flor(1, 1);
+
+SELECT * FROM Traer_lotes(1);
+
