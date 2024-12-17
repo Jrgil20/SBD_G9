@@ -97,20 +97,28 @@ const getFloresValoraciones = async (floristeriaId) => {
 async function getInformacionFlor(idFloristeria, idFlor) {
   try {
     const result = await pool.query(`
-      WITH FlorInformacion AS (
+          WITH FlorInformacion AS (
         SELECT
-          cf.nombrepropio,
-          c.Nombre AS nombre_color,
-          db.talloTamano,
-          db.cantidad,
-          hp.precio
+            cf.nombrepropio,
+            c.Nombre AS nombre_color,
+            db.talloTamano,
+            db.cantidad,
+            hp.precio
         FROM CATALOGO_FLORISTERIA cf
         INNER JOIN COLOR c ON cf.idColor = c.colorId
         INNER JOIN DETALLE_BOUQUET db ON cf.idFloristeria = db.idCatalogoFloristeria AND cf.codigo = db.idCatalogocodigo
         INNER JOIN HISTORICO_PRECIO_FLOR hp ON cf.idFloristeria = hp.idCatalogoFloristeria AND cf.codigo = hp.idCatalogocodigo
         WHERE cf.idFloristeria = $1 AND cf.idcorteflor = $2
-      )
-      SELECT * FROM FlorInformacion;
+        AND hp.fechaInicio = (
+            SELECT MAX(fechaInicio)
+            FROM HISTORICO_PRECIO_FLOR hp2
+            WHERE hp2.idCatalogoFloristeria = hp.idCatalogoFloristeria
+            AND hp2.idCatalogocodigo = hp.idCatalogocodigo
+            AND hp2.fechaInicio <= CURRENT_DATE
+            AND hp2.fechaFin IS NULL
+        )
+    )
+    SELECT * FROM FlorInformacion;
     `, [idFloristeria, idFlor]);
     return result.rows;
   } catch (err) {
@@ -118,7 +126,40 @@ async function getInformacionFlor(idFloristeria, idFlor) {
     throw err;
   }
 }
+//Facturas
+async function getFacturas(){
+  try{
+    const result=await pool.query(
+      `SELECT 
+          f.facturaId AS numero_factura,
+          s.nombreSubastadora,
+          fl.nombre,
+          TO_CHAR(f.fechaEmision, 'MM/DD/YYYY') AS fecha_emision_formateada,
+          f.montoTotal
+      FROM FACTURA f
+      INNER JOIN SUBASTADORA s ON f.idAfiliacionSubastadora = s.subastadoraId
+      INNER JOIN FLORISTERIAS fl ON f.idAfiliacionFloristeria = fl.floristeriaId
+      ORDER BY f.fechaEmision DESC;`
+    )
+    return result.rows;
+  }catch(err){
+    console.error('Error querying the database', err);
+    throw err;
+  }
+}
+
+async function getInformacionFactura(idFactura){
+  try{
+    const result=await pool.query(
+      ``, 
+    )
+    return result.rows;
+  }catch(err){
+    console.error('Error querying the database', err);
+    throw err;
+  }
+}	
 
 
-module.exports = { pool, getProductoras, getFloristerias,getCatalogoProductoraById,getDetalleFlores,getFloresValoraciones,getInformacionFlor };
+module.exports = { pool, getProductoras, getFloristerias,getCatalogoProductoraById,getDetalleFlores,getFloresValoraciones,getInformacionFlor,getFacturas,getInformacionFactura};
 

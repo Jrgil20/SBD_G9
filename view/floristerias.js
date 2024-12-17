@@ -191,7 +191,7 @@ async function mostrarModalFlor(flor, floristeriaId) {
         }
         const informacionFlor = await response.json();
         const detalleFlor = informacionFlor[0]; // Asumiendo que solo hay un resultado
-
+        console.log('Detalle de la flor:', detalleFlor);
         modalBody.innerHTML = `
             <h2>${detalleFlor.nombrepropio}</h2>
             <img src="images/${flor.imagen}" alt="${detalleFlor.nombrepropio}" onerror="this.onerror=null;this.src='images/default.jpg';">
