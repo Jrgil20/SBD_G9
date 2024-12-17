@@ -1163,6 +1163,29 @@ $$ LANGUAGE plpgsql;
 
 --------------------------------------------- REPORTE: FACTURA ----------------------------------------------------
 
+CREATE OR REPLACE FUNCTION obtener_facturas()
+RETURNS TABLE (
+  numero_factura NUMERIC,
+  nombreSubastadora TEXT,
+  nombre TEXT,
+  fecha_emision_formateada TEXT,
+  montoTotal NUMERIC
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    f.facturaId AS numero_factura,
+    s.nombreSubastadora,
+    fl.nombre::TEXT,
+    TO_CHAR(f.fechaEmision, 'MM/DD/YYYY') AS fecha_emision_formateada,
+    f.montoTotal
+  FROM FACTURA f
+  INNER JOIN SUBASTADORA s ON f.idAfiliacionSubastadora = s.subastadoraId
+  INNER JOIN FLORISTERIAS fl ON f.idAfiliacionFloristeria = fl.floristeriaId
+  ORDER BY f.fechaEmision DESC;
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION obtener_informacion_factura(factura_id NUMERIC)
 RETURNS TABLE (
     id_afiliacion_floristeria NUMERIC,
@@ -1711,6 +1734,8 @@ SELECT MontoComision(1001, '2023-04-01');
 
 -- Ejecutar la función para obtener el reporte de multas generadas y pagadas
 SELECT * FROM reporte_multas_generadas_y_pagadas(1, 1, 1001);
+
+SELECT * FROM obtener_facturas();
 
 SELECT * FROM obtener_informacion_factura(1);
 
