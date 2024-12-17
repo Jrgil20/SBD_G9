@@ -147,6 +147,7 @@ export async function mostrarDetallesFloristeria(floristeria) {
         console.error('Error fetching flores con valoraciones:', err);
         catalogo.innerHTML = '<p>Error al cargar las flores con valoraciones.</p>';
     }
+
 }
 
 // Función para filtrar flores
