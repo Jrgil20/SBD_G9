@@ -714,6 +714,26 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Crear la función para verificar que solo se puede modificar el atributo cancelado cuando es NULL
+CREATE OR REPLACE FUNCTION verificar_update_contrato() RETURNS TRIGGER AS $$
+BEGIN
+  IF (TG_OP = 'UPDATE') THEN
+    IF NEW.cancelado IS NOT NULL AND OLD.cancelado IS NULL THEN
+      RETURN NEW;
+    ELSE
+      RAISE EXCEPTION 'Solo se puede modificar el atributo cancelado y solo cuando este es NULL';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Crear el trigger para verificar la actualización del contrato
+CREATE TRIGGER verificar_update_contrato
+BEFORE UPDATE ON CONTRATO
+FOR EACH ROW
+EXECUTE FUNCTION verificar_update_contrato();
+
 --------------------------------------------------   pagos  -------------------------------------------------------
 
 -- Crear la función para pagar un contrato ( insert en pago )
