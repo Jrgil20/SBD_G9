@@ -16,7 +16,9 @@ export async function cargarDatosFloristerias() {
 
         data.forEach(floristeria => {
             const card = document.createElement('div');
-            card.className = 'card';
+            card.className = 'card floristeria-card';
+            card.setAttribute('data-pais', floristeria.pais);
+            card.setAttribute('data-nombre', floristeria.nombre || '');
             card.innerHTML = `
                 <h3>${floristeria.nombre}</h3>
                 <p>${floristeria.email || ''}</p>
@@ -43,6 +45,32 @@ export async function cargarDatosFloristerias() {
     } catch (err) {
         console.error('Error fetching floristerias:', err);
     }
+}
+
+// Inicializar filtros en el panel principal
+const filtroPais = document.getElementById('filtro-pais-floristerias');
+const filtroNombre = document.getElementById('filtro-nombre-floristerias');
+const aplicarFiltroBtn = document.getElementById('aplicar-filtro-floristerias');
+
+aplicarFiltroBtn.addEventListener('click', () => {
+    const selectedPais = filtroPais.value.toLowerCase();
+    const nombreInput = filtroNombre.value.toLowerCase();
+    filtrarFloristerias(selectedPais, nombreInput);
+});
+
+function filtrarFloristerias(pais, nombre) {
+    const cards = document.querySelectorAll('.floristeria-card');
+    cards.forEach(card => {
+        const cardPais = card.getAttribute('data-pais').toLowerCase();
+        const cardNombre = card.getAttribute('data-nombre').toLowerCase();
+        const matchesPais = pais === '' || cardPais.includes(pais);
+        const matchesNombre = nombre === '' || cardNombre.includes(nombre);
+        if (matchesPais && matchesNombre) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
 }
 
 // Función para mostrar detalles de una floristería
@@ -84,18 +112,24 @@ export async function mostrarDetallesFloristeria(floristeria) {
     filtroCalificacion.id = 'filtro-calificacion-flores';
     filtroCalificacion.innerHTML = `
         <option value="">Todas las calificaciones</option>
+        <option value="10">10 estrellas</option>
+        <option value="9">9 estrellas</option>
+        <option value="8">8 estrellas</option>
+        <option value="7">7 estrellas</option>
+        <option value="6">6 estrellas</option>
         <option value="5">5 estrellas</option>
         <option value="4">4 estrellas</option>
         <option value="3">3 estrellas</option>
         <option value="2">2 estrellas</option>
         <option value="1">1 estrella</option>
+        <option value="0">0 estrellas</option>
     `;
     filtrosContainer.appendChild(filtroCalificacion);
 
     const botonAplicarFiltro = document.createElement('button');
     botonAplicarFiltro.id = 'aplicar-filtro-flores';
     botonAplicarFiltro.textContent = 'Aplicar Filtro';
-    botonAplicarFiltro.addEventListener('click', () => filtrarFlores(floristeria.flores));
+    botonAplicarFiltro.addEventListener('click', () => filtrarFlores());
     filtrosContainer.appendChild(botonAplicarFiltro);
 
     const botonRecomendador = document.createElement('button');
@@ -135,10 +169,10 @@ export async function mostrarDetallesFloristeria(floristeria) {
         flores.forEach(flor => {
             const fila = document.createElement('tr');
             fila.innerHTML = `
-                <td>${flor.nombrecomun}</td>
-                <td>${flor.valoracion_promedio !== null ? flor.valoracion_promedio : 'Sin calificación'}</td>
-                `;
-            fila.addEventListener('click', () => mostrarModalFlor(flor,floristeria.floristeriaid));
+                <td class="flor-nombre">${flor.nombrecomun}</td>
+                <td class="flor-valoracion">${flor.valoracion_promedio !== null ? flor.valoracion_promedio : 'Sin calificación'}</td>
+            `;
+            fila.addEventListener('click', () => mostrarModalFlor(flor, floristeria.floristeriaid));
             tbody.appendChild(fila);
         });
 
@@ -147,36 +181,27 @@ export async function mostrarDetallesFloristeria(floristeria) {
         console.error('Error fetching flores con valoraciones:', err);
         catalogo.innerHTML = '<p>Error al cargar las flores con valoraciones.</p>';
     }
-
 }
 
 // Función para filtrar flores
-function filtrarFlores(flores) {
+function filtrarFlores() {
     const filtroNombre = document.getElementById('filtro-nombre-flores').value.toLowerCase();
     const filtroFecha = document.getElementById('filtro-fecha-flores').value;
     const filtroCalificacion = document.getElementById('filtro-calificacion-flores').value;
-    const catalogoFloresContainer = document.querySelector('.catalogo-flores-container');
-    catalogoFloresContainer.innerHTML = '';
+    const filas = document.querySelectorAll('.tabla-flores tbody tr');
 
-    const floresFiltradas = flores.filter(flor => {
-        const cumpleNombre = flor.nombre.toLowerCase().includes(filtroNombre);
-        const cumpleFecha = filtroFecha === '' || flor.fecha === filtroFecha;
-        const cumpleCalificacion = filtroCalificacion === '' || flor.calificacion >= filtroCalificacion;
-        return cumpleNombre && cumpleFecha && cumpleCalificacion;
-    });
-
-    floresFiltradas.forEach(flor => {
-        const florCard = document.createElement('div');
-        florCard.className = 'card flor-card';
-        florCard.innerHTML = `
-            <img src="images/${flor.imagen}" alt="${flor.nombre}" onerror="this.onerror=null;this.src='images/default.jpg';">
-            <div class="flor-info">
-                <h3>${flor.nombre}</h3>
-                <p>Calificación: ${flor.calificacion}</p>
-            </div>
-        `;
-        florCard.addEventListener('click', () => mostrarModalFlor(flor,floristeria.floristeriaid));
-        catalogoFloresContainer.appendChild(florCard);
+    filas.forEach(fila => {
+        const florNombre = fila.querySelector('.flor-nombre').textContent.toLowerCase();
+        const florFecha = fila.querySelector('.flor-fecha') ? fila.querySelector('.flor-fecha').textContent : '';
+        const florValoracion = parseFloat(fila.querySelector('.flor-valoracion').textContent);
+        const matchesNombre = filtroNombre === '' || florNombre.includes(filtroNombre);
+        const matchesFecha = filtroFecha === '' || florFecha === filtroFecha;
+        const matchesCalificacion = filtroCalificacion === '' || florValoracion >= filtroCalificacion;
+        if (matchesNombre && matchesFecha && matchesCalificacion) {
+            fila.style.display = '';
+        } else {
+            fila.style.display = 'none';
+        }
     });
 }
 
