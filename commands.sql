@@ -1296,6 +1296,42 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
+CREATE OR REPLACE FUNCTION obtener_informacion_de_flor(p_idFloristeria NUMERIC, p_idCorteFlor NUMERIC)
+RETURNS TABLE (
+  nombrepropio VARCHAR,
+  nombre_color VARCHAR,
+  talloTamano NUMERIC,
+  cantidad NUMERIC,
+  precio NUMERIC
+) AS $$
+BEGIN
+  RETURN QUERY
+  WITH FlorInformacion AS (
+    SELECT
+      cf.nombrepropio,
+      c.Nombre AS nombre_color,
+      db.talloTamano,
+      db.cantidad,
+      hp.precio
+    FROM CATALOGO_FLORISTERIA cf
+    INNER JOIN COLOR c ON cf.idColor = c.colorId
+    INNER JOIN DETALLE_BOUQUET db ON cf.idFloristeria = db.idCatalogoFloristeria AND cf.codigo = db.idCatalogocodigo
+    INNER JOIN HISTORICO_PRECIO_FLOR hp ON cf.idFloristeria = hp.idCatalogoFloristeria AND cf.codigo = hp.idCatalogocodigo
+    WHERE cf.idFloristeria = p_idFloristeria AND cf.idcorteflor = p_idCorteFlor
+    AND hp.fechaInicio = (
+      SELECT MAX(fechaInicio)
+      FROM HISTORICO_PRECIO_FLOR hp2
+      WHERE hp2.idCatalogoFloristeria = hp.idCatalogoFloristeria
+      AND hp2.idCatalogocodigo = hp.idCatalogocodigo
+      AND hp2.fechaInicio <= CURRENT_DATE
+      AND hp2.fechaFin IS NULL
+    )
+  )
+  SELECT * FROM FlorInformacion;
+END;
+$$ LANGUAGE plpgsql;
+
 -------------------------------------------------------------------------------------------------------------------
 --  ===========================================================================================================  --
 --  ======================================== Inserts y consultas ==============================================  --
@@ -1685,3 +1721,5 @@ SELECT * FROM CatalogoProductoraById(1);
 SELECT * FROM Obtener_DetalleFlores(1, 1);
 
 SELECT * FROM obtener_floristeria();
+
+SELECT * FROM obtener_informacion_de_flor(1, 1);
