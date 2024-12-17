@@ -1227,6 +1227,31 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
+CREATE OR REPLACE FUNCTION Obtener_DetalleFlores(productorId NUMERIC, florId NUMERIC)
+RETURNS TABLE (
+  nombrepropio VARCHAR,
+  descripcion VARCHAR,
+  colores VARCHAR,
+  etimologia VARCHAR,
+  genero_especie VARCHAR,
+  temperatura NUMERIC
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    cp.nombrepropio, 
+    cp.descripcion,
+    fc.colores, 
+    fc.etimologia, 
+    fc.genero_especie,
+    fc.temperatura
+  FROM catalogoproductor cp
+  INNER JOIN flor_cortes fc ON cp.idcorte = fc.corteid
+  WHERE cp.idproductora = productorId AND fc.corteid = florId;
+END;
+$$ LANGUAGE plpgsql;
+
 -------------------------------------------------------------------------------------------------------------------
 --  ===========================================================================================================  --
 --  ======================================== Inserts y consultas ==============================================  --
@@ -1612,3 +1637,5 @@ SELECT obtener_informacion_factura(1);
 SELECT informacion_de_productores();
 
 SELECT * FROM CatalogoProductoraById(1);
+
+SELECT * FROM Obtener_DetalleFlores(1, 1);
