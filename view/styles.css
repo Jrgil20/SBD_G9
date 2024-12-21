@@ -532,15 +532,18 @@ section.active {
 }
 
 #recomendador-btn {
-    background-color: #ff69b4; /* Color rosado */
+    background-color: var(--color-accent);
     color: white;
     border: none;
     cursor: pointer;
-    margin-left: 10px;
+    padding: 10px 20px;
+    font-size: 1em;
+    border-radius: 5px;
+    margin-top: 10px;
 }
 
 #recomendador-btn:hover {
-    background-color: #ff1493; /* Color rosado oscuro */
+    background-color: #8b3e64;
 }
 
 .recomendador-form {
@@ -1057,4 +1060,10 @@ section.active {
 
 .contratos-btn:hover {
     background-color: var(--color-primary-dark);
+}
+
+.categoria-item h4{
+    text-align: center;
+    font-size: 30px;
+    background-color: var(--color-secondary);
 }

@@ -27,9 +27,9 @@ export async function cargarDatosProductoras() {
             contenedor.appendChild(card);
         });
 
-        // Generar opciones de países
+        // Generar opciones de países sin repeticiones
         const filtroPaisSelect = document.getElementById('filtro-pais-productoras');
-        const paises = [...new Set(data.map(productora => productora.pais))];
+        const paises = [...new Set(data.map(productora => productora.pais))].filter(pais => pais && pais.trim() !== '');
         paises.forEach(pais => {
             const option = document.createElement('option');
             option.value = pais;
@@ -43,6 +43,34 @@ export async function cargarDatosProductoras() {
     } catch (err) {
         console.error('Error fetching productoras:', err);
     }
+}
+
+// Inicializar filtros en el panel principal
+const filtroPais = document.getElementById('filtro-pais-productoras');
+const filtroNombre = document.getElementById('filtro-nombre-productoras');
+const aplicarFiltroBtn = document.getElementById('aplicar-filtro-productoras');
+
+aplicarFiltroBtn.addEventListener('click', () => {
+    const selectedPais = filtroPais.value.toLowerCase();
+    const nombreInput = filtroNombre.value.toLowerCase();
+    filtrarProductoras(selectedPais, nombreInput);
+});
+
+function filtrarProductoras(pais, nombre) {
+    const cards = document.querySelectorAll('.card');
+    cards.forEach(card => {
+        const cardPaisElement = card.querySelector('p:nth-child(3)');
+        const cardNombreElement = card.querySelector('h3');
+        const cardPais = cardPaisElement ? cardPaisElement.textContent.toLowerCase() : '';
+        const cardNombre = cardNombreElement ? cardNombreElement.textContent.toLowerCase() : '';
+        const matchesPais = pais === '' || cardPais.includes(pais);
+        const matchesNombre = nombre === '' || cardNombre.includes(nombre);
+        if (matchesPais && matchesNombre) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
 }
 
 //// Función para mostrar detalles de una productora

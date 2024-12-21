@@ -150,25 +150,6 @@ function aplicarFiltroFacturas() {
         factura.floristeria.nombre.toLowerCase().includes(clienteFilter) &&
         (!fechaFilter || factura.fecha === fechaFilter)
     );
-
-    const contenedor = document.querySelector('#facturas .cards-container .cards');
-    if (contenedor) {
-        contenedor.innerHTML = '';
-
-        facturasFiltradas.forEach(factura => {
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.innerHTML = `
-                <h3>Factura #${factura.id}</h3>
-                <p>Subasta: ${factura.subasta.nombre}</p>
-                <p>Floristería: ${factura.floristeria.nombre}</p>
-                <p>Fecha: ${factura.fecha}</p>
-                <p>Monto: €${factura.monto}</p>
-            `;
-            card.addEventListener('click', () => mostrarDetallesFactura(factura));
-            contenedor.appendChild(card);
-        });
-    }
 }
 
 window.cargarDatosFacturas = cargarDatosFacturas;
