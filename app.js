@@ -1,5 +1,5 @@
 const express = require('express');
-const { pool, getProductoras, getFloristerias,getCatalogoProductoraById, getDetalleFlores,getFloresValoraciones,getInformacionFlor,getFacturas} = require('./db');
+const { pool, getProductoras, getFloristerias, getCatalogoProductoraById, getDetalleFlores,getFloresValoraciones,getInformacionFlor,getFacturas, getFlorCortes } = require('./db');
 const path = require('path');
 
 const app = express();
@@ -107,6 +107,46 @@ app.get('/api/facturas', async (req, res) => {
   }
 });
 
+app.get('/api/florCortes', async (req, res) => {
+  try {
+    console.log('Received request to get flor cortes');
+    const florCortes = await getFlorCortes();
+    res.json(florCortes);
+  } catch (err) {
+    console.error('Error querying the database:', err);
+    res.status(500).json({ error: 'Error querying the database' });
+  }
+});
+
+app.get('/api/coloresDeCorte/:corteId', async (req, res) => {
+  const { corteId } = req.params;
+  try {
+    const result = await pool.query('SELECT colores FROM FLOR_CORTES WHERE corteId = $1', [corteId]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Corte no encontrado' });
+    }
+    const colores = result.rows[0].colores.split(',').map(color => color.trim());
+    res.json(colores);
+  } catch (err) {
+    console.error('Error querying the database:', err);
+    res.status(500).json({ error: 'Error querying the database' });
+  }
+});
+
+app.get('/api/coloresDeCortePorNombre/:nombre', async (req, res) => {
+  const { nombre } = req.params;
+  try {
+    const result = await pool.query('SELECT colores FROM FLOR_CORTES WHERE LOWER(nombrecomun) = LOWER($1)', [nombre]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Corte no encontrado' });
+    }
+    const colores = result.rows[0].colores.split(',').map(color => color.trim());
+    res.json(colores);
+  } catch (err) {
+    console.error('Error querying the database:', err);
+    res.status(500).json({ error: 'Error querying the database' });
+  }
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

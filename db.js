@@ -127,6 +127,28 @@ async function getInformacionFactura(idFactura){
   }
 }	
 
+const getFlorCortes = async () => {
+  try {
+    console.log('Executing query to get flor cortes');
+    const result = await pool.query('SELECT * FROM obtener_flor_cortes()');
+    console.log('Query result:', result.rows);
+    return result.rows;
+  } catch (err) {
+    console.error('Error querying the database', err);
+    throw err;
+  }
+};
 
-module.exports = { pool, getProductoras, getFloristerias,getCatalogoProductoraById,getDetalleFlores,getFloresValoraciones,getInformacionFlor,getFacturas,getInformacionFactura};
+module.exports = { 
+  pool, 
+  getProductoras, 
+  getFloristerias, 
+  getCatalogoProductoraById, 
+  getDetalleFlores, 
+  getFloresValoraciones, 
+  getInformacionFlor, 
+  getFacturas, 
+  getInformacionFactura,
+  getFlorCortes 
+};
 

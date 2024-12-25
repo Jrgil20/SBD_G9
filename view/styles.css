@@ -1067,3 +1067,25 @@ section.active {
     font-size: 30px;
     background-color: var(--color-secondary);
 }
+
+.btn-azul {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 4px;
+    margin-top: 10px;
+}
+
+.btn-azul i {
+    font-size: 18px;
+}
+
+.btn-azul:hover {
+    background-color: #0056b3;
+}

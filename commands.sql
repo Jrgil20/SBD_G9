@@ -1941,3 +1941,27 @@ BEGIN
     AND (p_idAfiliacionSubastadora IS NULL OR idAfiliacionSubastadora = p_idAfiliacionSubastadora);
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION obtener_flor_cortes()
+RETURNS TABLE (
+  corteId NUMERIC,
+  nombreComun VARCHAR,
+  Descripcion VARCHAR,
+  genero_especie VARCHAR,
+  etimologia VARCHAR,
+  colores VARCHAR,
+  temperatura NUMERIC
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    fc.corteId,
+    fc.nombreComun,
+    fc.Descripcion,
+    fc.genero_especie,
+    fc.etimologia,
+    fc.colores,
+    fc.temperatura
+  FROM FLOR_CORTES fc;
+END;
+$$ LANGUAGE plpgsql;
