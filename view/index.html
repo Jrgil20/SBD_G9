@@ -27,6 +27,8 @@
                 <li><a href="#" data-section="subastas"><i class="fas fa-gavel"></i> Subastas</a></li>
                 <li><a href="#" data-section="facturas"><i class="fas fa-file-invoice-dollar"></i> Facturas</a></li>
                 <li><a href="#" data-section="insertar-datos"><i class="fas fa-plus"></i> Insertar Datos</a></li>
+                <li><a href="#" data-section="contratos"><i class="fas fa-file-contract"></i> Contratos</a></li>
+                <li><a href="#" data-section="subastadoras"><i class="fas fa-university"></i> Subastadoras</a></li>
             </ul>
         </nav>
         <main class="content">
@@ -356,6 +358,38 @@
                     </form>
                 </div>
                 <!-- ...additional forms for other capture types (hidden by default)... -->
+            </section>
+            <!-- Sección Contratos -->
+            <section id="contratos">
+                <h2>Contratos</h2>
+                <select id="productoraSelect">
+                    <option value="">--Selecciona Productora--</option>
+                    <!-- Se llenará dinámicamente -->
+                </select>
+                <br><br>
+                <table id="tablaContratos">
+                    <thead>
+                        <tr>
+                            <th>Número Contrato</th>
+                            <th>Subastadora</th>
+                            <th>Fecha Emisión</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </section>
+
+            <!-- Sección Subastadoras -->
+            <section id="subastadoras">
+                <h2>Subastadoras</h2>
+                <div class="cards-container">
+                    <div class="cards" id="subastadoras-cards">
+                        <!-- Se llenará dinámicamente -->
+                    </div>
+                </div>
+                <div id="subastadora-detalle">
+                    <!-- Detalle al hacer clic -->
+                </div>
             </section>
         </main>
     </div>

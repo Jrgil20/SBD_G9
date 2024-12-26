@@ -177,15 +177,6 @@ export async function mostrarDetallesFloristeria(floristeria) {
         });
 
         catalogo.appendChild(tablaFlores);
-
-        // Botón Capturar Bouquet
-        const botonCapturarBouquet = document.createElement('button');
-        botonCapturarBouquet.id = 'capturar-bouquet-btn';
-        botonCapturarBouquet.className = 'btn-azul';
-        botonCapturarBouquet.innerHTML = '<i class="fas fa-plus-circle"></i> Capturar Bouquet';
-        botonCapturarBouquet.addEventListener('click', () => mostrarModalCapturarBouquet(floristeria.nombre));
-        catalogo.appendChild(botonCapturarBouquet);
-
     } catch (err) {
         console.error('Error fetching flores con valoraciones:', err);
         catalogo.innerHTML = '<p>Error al cargar las flores con valoraciones.</p>';
@@ -270,107 +261,6 @@ function mostrarModalRecomendador(nombreFloristeria) {
         const ocasion = document.getElementById('ocasion').value;
         filtrarFloresPorRecomendacion(emocion, ocasion);
     });
-}
-
-// Función para mostrar el modal de Capturar Bouquet
-async function mostrarModalCapturarBouquet(floristeriaNombre) {
-    const modal = document.getElementById('modal');
-    const modalBody = document.getElementById('modal-body');
-    modalBody.innerHTML = `
-        <h2>Capturar Bouquet</h2>
-        <form action="/insert-detalle-bouquet" method="post" class="formulario-insertar">
-            <label for="idCatalogoFloristeria">Floristería:</label>
-            <input type="text" id="idCatalogoFloristeria" name="idCatalogoFloristeria" value="${floristeriaNombre}" readonly><br><br>
-            
-            <label for="corteFlor">Corte Flor:</label>
-            <select id="corteFlor" name="corteFlor" required></select><br><br>
-            
-            <label for="color">Color:</label>
-            <select id="color" name="color" multiple required>
-                <option value="" disabled selected>Presiona aquí para ver los colores</option>
-            </select><br><br>
-            
-            <label for="cantidad">Cantidad:</label>
-            <input type="number" id="cantidad" name="cantidad" required><br><br>
-            
-            <label for="talloTamano">Tamaño Tallo:</label>
-            <input type="number" id="talloTamano" name="talloTamano" required><br><br>
-            
-            <label for="descripcion">Descripción:</label>
-            <textarea id="descripcion" name="descripcion" required></textarea><br><br>
-            
-            <input type="submit" value="Submit">
-        </form>
-    `;
-    modal.style.display = 'block';
-
-    try {
-        console.log('Fetching flor cortes');
-        const response = await fetch('/api/florCortes');
-        if (!response.ok) {
-            throw new Error(`Error fetching flor cortes: ${response.statusText}`);
-        }
-        const florCortes = await response.json();
-        console.log('Flor cortes data:', florCortes);
-        const corteFlorSelect = document.getElementById('corteFlor');
-        florCortes.forEach(flor => {
-            const option = document.createElement('option');
-            option.value = flor.corteid;
-            option.textContent = flor.nombrecomun;
-            corteFlorSelect.appendChild(option);
-        });
-
-        // Inicializar Select2 para el input de color
-        $('#color').select2({
-            placeholder: "Presiona aquí para ver los colores"
-        });
-
-        // Solo envía el nombre comun
-        corteFlorSelect.addEventListener('change', async (event) => {
-            const nombreCorte = event.target.options[event.target.selectedIndex].textContent;
-            await actualizarColoresPorNombre(nombreCorte);
-            actualizarDescripcion();
-        });
-
-        // Actualizar la descripción cuando se seleccionan colores
-        $('#color').on('change', actualizarDescripcion);
-
-    } catch (err) {
-        console.error('Error fetching flor cortes:', err);
-    }
-}
-
-// Nueva función para actualizar la descripción
-function actualizarDescripcion() {
-    const corteFlorSelect = document.getElementById('corteFlor');
-    const colorSelect = document.getElementById('color');
-    const corteFlor = corteFlorSelect.selectedOptions.length > 0 ? corteFlorSelect.selectedOptions[0].textContent : '';
-    const colores = Array.from(colorSelect.selectedOptions).map(option => option.textContent).join(', ');
-    const descripcion = `Bouquet ${corteFlor} ${colores}`;
-    document.getElementById('descripcion').value = descripcion;
-}
-
-// Nueva función
-async function actualizarColoresPorNombre(nombreCorte) {
-    try {
-        const response = await fetch(`/api/coloresDeCortePorNombre/${nombreCorte}`);
-        if (!response.ok) {
-            throw new Error(`Error fetching colores de corte: ${response.statusText}`);
-        }
-        const colores = await response.json();
-        const colorSelect = document.getElementById('color');
-        colorSelect.innerHTML = ''; 
-        colores.forEach(color => {
-            const option = document.createElement('option');
-            option.value = color;
-            option.textContent = color;
-            colorSelect.appendChild(option);
-        });
-        // Refrescar Select2 después de actualizar las opciones
-        $('#color').trigger('change');
-    } catch (err) {
-        console.error('Error fetching colores de corte:', err);
-    }
 }
 
 // Función para filtrar flores basado en la recomendación

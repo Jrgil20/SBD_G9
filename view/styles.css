@@ -1089,3 +1089,7 @@ section.active {
 .btn-azul:hover {
     background-color: #0056b3;
 }
+
+.panel.hidden {
+  display: none;
+}
