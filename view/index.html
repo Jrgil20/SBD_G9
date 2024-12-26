@@ -362,21 +362,24 @@
             <!-- Sección Contratos -->
             <section id="contratos">
                 <h2>Contratos</h2>
-                <select id="productoraSelect">
-                    <option value="">--Selecciona Productora--</option>
-                    <!-- Se llenará dinámicamente -->
-                </select>
-                <br><br>
-                <table id="tablaContratos">
-                    <thead>
-                        <tr>
-                            <th>Número Contrato</th>
-                            <th>Subastadora</th>
-                            <th>Fecha Emisión</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+                <div class="filters">
+                    <select id="productoraSelect">
+                        <option value="">--Selecciona Productora--</option>
+                        <!-- Se llenará dinámicamente -->
+                    </select>
+                </div>
+                <div class="cards-container">
+                    <table id="tablaContratos" class="styled-table">
+                        <thead>
+                            <tr>
+                                <th>Número Contrato</th>
+                                <th>Subastadora</th>
+                                <th>Fecha Emisión</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
             </section>
 
             <!-- Sección Subastadoras -->
