@@ -2009,3 +2009,46 @@ BEGIN
         c.idProductora = p_productora_id;
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION match_flowers(p_floristeria_id INTEGER, p_ocasion VARCHAR, p_emocion VARCHAR)
+RETURNS TABLE (
+    idFloristeria INTEGER,
+    nombre_comun VARCHAR,
+    color VARCHAR,
+    significado VARCHAR,
+    precio NUMERIC,
+    desc_color VARCHAR,
+    desc_enlace VARCHAR
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        cf.idFloristeria::INTEGER,
+        fc.nombreComun,
+        c.Nombre AS color,
+        s.Descripcion AS significado,
+        hpf.precio,
+        c.descripcion AS desc_color,
+        e.descripcion AS desc_enlace
+    FROM 
+        CATALOGO_FLORISTERIA cf
+    JOIN 
+        FLOR_CORTES fc ON cf.idCorteFlor = fc.corteId
+    JOIN 
+        COLOR c ON cf.idColor = c.colorId
+    LEFT JOIN 
+        ENLACES e ON c.colorId = e.idColor
+    JOIN 
+        SIGNIFICADO s ON e.IdSignificado = s.SignificadoId
+    JOIN 
+        HISTORICO_PRECIO_FLOR hpf ON cf.idFloristeria = hpf.idCatalogoFloristeria AND cf.codigo = hpf.idCatalogocodigo
+    WHERE 
+        cf.idFloristeria = p_floristeria_id
+        AND (REGEXP_LIKE(s.Descripcion, p_ocasion, 'i')
+            OR REGEXP_LIKE(e.Descripcion, p_emocion, 'i')
+            OR REGEXP_LIKE(c.descripcion, p_ocasion, 'i')
+            OR REGEXP_LIKE(c.descripcion, p_emocion, 'i')
+            OR REGEXP_LIKE(e.descripcion, p_ocasion, 'i')
+            OR REGEXP_LIKE(e.descripcion, p_emocion, 'i'));
+END;
+$$ LANGUAGE plpgsql;
