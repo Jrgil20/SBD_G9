@@ -163,6 +163,22 @@ app.get('/api/obtener-contratos-productora', async (req, res) => {
   }
 });
 
+app.get('/api/informacionFactura/:facturaId', async (req, res) => {
+  const { facturaId } = req.params;
+  try {
+    const result = await pool.query('SELECT * FROM obtener_informacion_factura($1)', [facturaId]);
+    const facturaInfo = result.rows[0];
+
+    const lotesResult = await pool.query('SELECT * FROM traer_lotes($1)', [facturaId]);
+    facturaInfo.lotes = lotesResult.rows;
+
+    res.json(facturaInfo);
+  } catch (err) {
+    console.error('Error querying the database:', err);
+    res.status(500).json({ error: 'Error querying the database' });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

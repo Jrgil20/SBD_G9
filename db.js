@@ -119,7 +119,7 @@ async function getFacturas(){
 
 async function getInformacionFactura(idFactura){
   try{
-    const result=await pool.query(`SELECT * FROM Traer_lotes(${idFactura});`,[idFactura] )
+    const result=await pool.query(`SELECT * FROM traer_lotes($1);`,[idFactura] )
     return result.rows;
   }catch(err){
     console.error('Error querying the database', err);
