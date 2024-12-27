@@ -367,6 +367,11 @@
                         <option value="">Seleccione una productora</option>
                     </select>
                 </div>
+                <div class="buttons-container">
+                    <button class="btn-azul" id="agregarContratoBtn"><i class="fas fa-plus"></i> Agregar Contrato</button>
+                    <button class="btn-azul" id="renovarContratoBtn"><i class="fas fa-sync-alt"></i> Renovar Contrato</button>
+                    <button class="btn-azul" id="registrarPagoBtn"><i class="fas fa-dollar-sign"></i> Registrar Pago</button>
+                </div>
                 <div class="cards-container">
                     <table id="tablaContratos" class="styled-table">
                         <thead>
@@ -383,6 +388,42 @@
                     </table>
                 </div>
             </section>
+            
+            <!-- Modal Agregar Contrato -->
+            <div id="modalAgregarContrato" class="modal">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h2>Agregar Contrato</h2>
+                    <!-- Formulario para agregar contrato -->
+                    <form id="formAgregarContrato">
+                        <!-- Campos del formulario -->
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Modal Renovar Contrato -->
+            <div id="modalRenovarContrato" class="modal">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h2>Renovar Contrato</h2>
+                    <!-- Formulario para renovar contrato -->
+                    <form id="formRenovarContrato">
+                        <!-- Campos del formulario -->
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Modal Registrar Pago -->
+            <div id="modalRegistrarPago" class="modal">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h2>Registrar Pago</h2>
+                    <!-- Formulario para registrar pago -->
+                    <form id="formRegistrarPago">
+                        <!-- Campos del formulario -->
+                    </form>
+                </div>
+            </div>
 
             <!-- Sección Subastadoras -->
             <section id="subastadoras">

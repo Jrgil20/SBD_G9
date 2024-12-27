@@ -1068,6 +1068,13 @@ section.active {
     background-color: var(--color-secondary);
 }
 
+.buttons-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    justify-content: flex-end;
+}
+
 .btn-azul {
     background-color: #007bff;
     color: white;
@@ -1093,8 +1100,6 @@ section.active {
 .panel.hidden {
   display: none;
 }
-
-/* ...existing code... */
 
 .styled-table {
     width: 100%;
@@ -1133,5 +1138,3 @@ section.active {
     font-weight: bold;
     color: var(--color-primary);
 }
-
-/* ...existing code... */

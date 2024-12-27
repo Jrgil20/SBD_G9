@@ -49,3 +49,39 @@ async function mostrarContratosPorProductora() {
 
 // Exponer función para cargar Contratos al inicio
 window.cargarDatosContratos = cargarDatosContratos;
+
+document.addEventListener('DOMContentLoaded', () => {
+    const modalAgregarContrato = document.getElementById('modalAgregarContrato');
+    const modalRenovarContrato = document.getElementById('modalRenovarContrato');
+    const modalRegistrarPago = document.getElementById('modalRegistrarPago');
+
+    const btnAgregarContrato = document.getElementById('agregarContratoBtn');
+    const btnRenovarContrato = document.getElementById('renovarContratoBtn');
+    const btnRegistrarPago = document.getElementById('registrarPagoBtn');
+
+    const closeButtons = document.querySelectorAll('.modal .close');
+
+    btnAgregarContrato.addEventListener('click', () => {
+        modalAgregarContrato.style.display = 'block';
+    });
+
+    btnRenovarContrato.addEventListener('click', () => {
+        modalRenovarContrato.style.display = 'block';
+    });
+
+    btnRegistrarPago.addEventListener('click', () => {
+        modalRegistrarPago.style.display = 'block';
+    });
+
+    closeButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            button.closest('.modal').style.display = 'none';
+        });
+    });
+
+    window.addEventListener('click', (event) => {
+        if (event.target.classList.contains('modal')) {
+            event.target.style.display = 'none';
+        }
+    });
+});
