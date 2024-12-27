@@ -141,7 +141,7 @@ const getFlorCortes = async () => {
 
 const getContratosProductora = async (productoraId) => {
   try {
-    const result = await pool.query('SELECT * FROM obtener_contratos_productora($1)', [productoraId]);
+    const result = await pool.query('SELECT * FROM obtener_contratos_productora($1) ORDER BY fechaEmision DESC', [productoraId]);
     return result.rows;
   } catch (err) {
     console.error('Error querying the database', err);

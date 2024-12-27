@@ -39,7 +39,7 @@ async function mostrarContratosPorProductora() {
             <td>${c.ncontrato}</td>
             <td>${c.idsubastadora}</td>
             <td>${new Date(c.fechaemision).toLocaleDateString()}</td>
-            <td>${c.porcentajeproduccion}%</td>
+            <td>${(c.porcentajeproduccion * 100).toFixed(2)}%</td>
             <td>${c.tipoproductor}</td>
             <td>${c.esactivo ? 'Activo' : 'Cancelado'}</td>
         `;
