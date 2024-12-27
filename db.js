@@ -63,7 +63,7 @@ const getFloresValoraciones = async (floristeriaId) => {
   try {
     console.log(`Executing query for floristeria ID: ${floristeriaId}`);
     const result = await pool.query(`
-      SELECT * from obtener_valoraciones_por_floristeria($1)
+      SELECT * from obtener_valoraciones_por_floristeria($1) ORDER BY valoracion_promedio ASC
     `, [floristeriaId]);
     console.log('Query result:', result.rows);
     return result.rows;
