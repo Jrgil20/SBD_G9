@@ -1,5 +1,5 @@
 const express = require('express');
-const { pool, getProductoras, getFloristerias, getCatalogoProductoraById, getDetalleFlores,getFloresValoraciones,getInformacionFlor,getFacturas, getFlorCortes } = require('./db');
+const { pool, getProductoras, getFloristerias, getCatalogoProductoraById, getDetalleFlores,getFloresValoraciones,getInformacionFlor,getFacturas, getFlorCortes, getContratosProductora } = require('./db');
 const path = require('path');
 
 const app = express();
@@ -142,6 +142,21 @@ app.get('/api/coloresDeCortePorNombre/:nombre', async (req, res) => {
     }
     const colores = result.rows[0].colores.split(',').map(color => color.trim());
     res.json(colores);
+  } catch (err) {
+    console.error('Error querying the database:', err);
+    res.status(500).json({ error: 'Error querying the database' });
+  }
+});
+
+app.get('/api/obtener-contratos-productora', async (req, res) => {
+  const { productoraId } = req.query;
+  if (!productoraId) {
+    return res.status(400).json({ error: 'productoraId is required' });
+  }
+
+  try {
+    const contratos = await getContratosProductora(productoraId);
+    res.json(contratos);
   } catch (err) {
     console.error('Error querying the database:', err);
     res.status(500).json({ error: 'Error querying the database' });

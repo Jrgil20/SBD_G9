@@ -1942,6 +1942,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+/* FUNCIONES HECHAS POR GABO */ 
+
 CREATE OR REPLACE FUNCTION obtener_flor_cortes()
 RETURNS TABLE (
   corteId NUMERIC,
@@ -1963,5 +1965,47 @@ BEGIN
     fc.colores,
     fc.temperatura
   FROM FLOR_CORTES fc;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION obtener_contratos_productora(
+    p_productora_id NUMERIC
+)
+RETURNS TABLE (
+    idSubastadora NUMERIC,
+    idProductora NUMERIC,
+    nContrato NUMERIC,
+    fechaEmision DATE,
+    porcentajeProduccion NUMERIC(3,2),
+    tipoProductor VARCHAR,
+    fechaRenovacion DATE,
+    fechaCancelacion DATE,
+    esActivo BOOLEAN
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        c.idSubastadora,
+        c.idProductora,
+        c.nContrato,
+        c.fechaEmision,
+        c.porcentajeProduccion,
+        c.tipoProductor,
+        CASE 
+            WHEN c.idrenovS IS NOT NULL AND c.idrenovS::VARCHAR LIKE '[0-9][0-9][0-9][0-9]' THEN TO_DATE(c.idrenovS::VARCHAR, 'YYYYMMDD')
+            ELSE NULL
+        END AS fechaRenovacion,
+        CASE 
+            WHEN c.cancelado IS NOT NULL AND c.cancelado::VARCHAR LIKE '[0-9][0-9][0-9][0-9]' THEN TO_DATE(c.cancelado::VARCHAR, 'YYYYMMDD')
+            ELSE NULL
+        END AS fechaCancelacion,
+        CASE 
+            WHEN c.cancelado IS NOT NULL THEN FALSE
+            ELSE TRUE
+        END AS esActivo
+    FROM 
+        contrato c
+    WHERE 
+        c.idProductora = p_productora_id;
 END;
 $$ LANGUAGE plpgsql;
