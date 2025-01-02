@@ -2296,3 +2296,39 @@ SELECT cambiar_precio_flor_super(
     p_nuevo_precio := 30.00,
     p_idCorteFlor := 5
 );*/ 
+
+-----------------------------------------------------------------------------------
+-- FUNCION PARA RETORNAR UNA TABLA QUE ME MUESTRE LAS FLORES ACTIVAS Y EXPIRADAS --
+-----------------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION obtener_flores_precio_activo()
+RETURNS TABLE (
+    floristeria_nombre VARCHAR,
+    flor_nombre VARCHAR,
+    precio_actual NUMERIC,
+    dias_para_expirar INTEGER,
+    estado VARCHAR
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        f.nombre AS floristeria_nombre,
+        c.nombrePropio AS flor_nombre,
+        h.precio AS precio_actual,
+        7 - (CURRENT_DATE - h.fechaInicio) AS dias_para_expirar,
+        CASE 
+            WHEN 7 - (CURRENT_DATE - h.fechaInicio) > 0 THEN 
+                CONCAT('Activo: ', 7 - (CURRENT_DATE - h.fechaInicio), ' días restantes')::VARCHAR
+            ELSE 
+                'Necesita actualización'::VARCHAR
+        END AS estado
+    FROM HISTORICO_PRECIO_FLOR h
+    JOIN CATALOGO_FLORISTERIA c 
+        ON h.idCatalogoFloristeria = c.idFloristeria
+        AND h.idCatalogocodigo = c.codigo
+    JOIN FLORISTERIAS f 
+        ON c.idFloristeria = f.floristeriaId
+    WHERE h.fechaFin IS NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+/* FIN DEL REQUERIMIENTO 1 */
