@@ -289,6 +289,50 @@ WHERE idAfiliacionFloristeria = CURRENT_USER_FLORISTERIA_ID; -- Implementa la l�
 GRANT SELECT ON V_FACTURAS TO USUARIO_FLORISTERIA;
 ```
 
-#### **Resumen**
+## Implementación de Vistas para Seguridad
 
-Estos comandos asignan permisos específicos a los roles `ADMINISTRADOR`, `DESARROLLADOR`, `USUARIO_SUBASTADORA`, `USUARIO_PRODUCTOR` y `USUARIO_FLORISTERIA`. Además, se crean vistas y se asignan permisos de selección a las vistas para el rol `USUARIO_FLORISTERIA`.
+Para mejorar la seguridad y el acceso controlado a los datos, se han creado las siguientes vistas:
+
+### Vistas de Consulta
+
+1. **V_CONSULTAR_CONTRATOS**
+   ```sql
+   CREATE VIEW V_CONSULTAR_CONTRATOS AS
+   SELECT * FROM CONTRATO;
+   ```
+
+2. **V_CONSULTAR_PAGOS**
+   ```sql
+   CREATE VIEW V_CONSULTAR_PAGOS AS
+   SELECT * FROM PAGOS;
+   ```
+
+3. **V_CONSULTAR_FACTURAS**
+   ```sql
+   CREATE VIEW V_CONSULTAR_FACTURAS AS
+   SELECT * FROM FACTURA;
+   ```
+
+### Vistas de Actualización
+
+1. **V_ACTUALIZAR_CONTRATOS**
+   ```sql
+   CREATE VIEW V_ACTUALIZAR_CONTRATOS AS
+   SELECT idSubastadora, idProductora, nContrato, cancelado FROM CONTRATO;
+   ```
+
+2. **V_ACTUALIZAR_PAGOS**
+   ```sql
+   CREATE VIEW V_ACTUALIZAR_PAGOS AS
+   SELECT idContratoSubastadora, idContratoProductora, idNContrato, PagoId, fechaPago, montoComision, tipo FROM PAGOS;
+   ```
+
+3. **V_ACTUALIZAR_FACTURAS**
+   ```sql
+   CREATE VIEW V_ACTUALIZAR_FACTURAS AS
+   SELECT facturaId, idAfiliacionFloristeria, idAfiliacionSubastadora, fechaEmision, montoTotal, numeroEnvio FROM FACTURA;
+   ```
+
+### Resumen
+
+Estas vistas permiten un acceso controlado y seguro a los datos, permitiendo a los usuarios consultar y actualizar información específica sin comprometer la integridad y seguridad de la base de datos.

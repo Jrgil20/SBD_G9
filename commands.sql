@@ -1941,3 +1941,23 @@ BEGIN
     AND (p_idAfiliacionSubastadora IS NULL OR idAfiliacionSubastadora = p_idAfiliacionSubastadora);
 END;
 $$ LANGUAGE plpgsql;
+
+-- Add views for consulting tables
+CREATE VIEW V_CONSULTAR_CONTRATOS AS
+SELECT * FROM CONTRATO;
+
+CREATE VIEW V_CONSULTAR_PAGOS AS
+SELECT * FROM PAGOS;
+
+CREATE VIEW V_CONSULTAR_FACTURAS AS
+SELECT * FROM FACTURA;
+
+-- Add views for updating specific data in tables
+CREATE VIEW V_ACTUALIZAR_CONTRATOS AS
+SELECT idSubastadora, idProductora, nContrato, cancelado FROM CONTRATO;
+
+CREATE VIEW V_ACTUALIZAR_PAGOS AS
+SELECT idContratoSubastadora, idContratoProductora, idNContrato, PagoId, fechaPago, montoComision, tipo FROM PAGOS;
+
+CREATE VIEW V_ACTUALIZAR_FACTURAS AS
+SELECT facturaId, idAfiliacionFloristeria, idAfiliacionSubastadora, fechaEmision, montoTotal, numeroEnvio FROM FACTURA;
