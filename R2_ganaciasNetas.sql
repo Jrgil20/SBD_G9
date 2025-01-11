@@ -14,6 +14,16 @@ DECLARE
   _ganancias_brutas NUMERIC;
   _costos NUMERIC;
 BEGIN
+
+  IF fecha_fin > CURRENT_DATE THEN
+    fecha_fin := CURRENT_DATE;
+    RAISE EXCEPTION 'se calcula las ganancias netas hasta el dia de hoy';
+  END IF;
+
+  IF fecha_inicio > CURRENT_DATE THEN
+    RAISE NOTICE 'No se puede calcular aun';
+  END IF;
+
   SELECT COALESCE(SUM(montoTotal), 0)
     INTO _ganancias_brutas
     FROM FACTURA_FINAL
