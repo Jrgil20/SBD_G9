@@ -1941,3 +1941,114 @@ BEGIN
     AND (p_idAfiliacionSubastadora IS NULL OR idAfiliacionSubastadora = p_idAfiliacionSubastadora);
 END;
 $$ LANGUAGE plpgsql;
+
+/* FUNCIONES HECHAS POR GABO */ 
+
+CREATE OR REPLACE FUNCTION obtener_flor_cortes()
+RETURNS TABLE (
+  corteId NUMERIC,
+  nombreComun VARCHAR,
+  Descripcion VARCHAR,
+  genero_especie VARCHAR,
+  etimologia VARCHAR,
+  colores VARCHAR,
+  temperatura NUMERIC
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    fc.corteId,
+    fc.nombreComun,
+    fc.Descripcion,
+    fc.genero_especie,
+    fc.etimologia,
+    fc.colores,
+    fc.temperatura
+  FROM FLOR_CORTES fc;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION obtener_contratos_productora(
+    p_productora_id NUMERIC
+)
+RETURNS TABLE (
+    idSubastadora NUMERIC,
+    idProductora NUMERIC,
+    nContrato NUMERIC,
+    fechaEmision DATE,
+    porcentajeProduccion NUMERIC(3,2),
+    tipoProductor VARCHAR,
+    fechaRenovacion DATE,
+    fechaCancelacion DATE,
+    esActivo BOOLEAN
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        c.idSubastadora,
+        c.idProductora,
+        c.nContrato,
+        c.fechaEmision,
+        c.porcentajeProduccion,
+        c.tipoProductor,
+        CASE 
+            WHEN c.idrenovS IS NOT NULL AND c.idrenovS::VARCHAR LIKE '[0-9][0-9][0-9][0-9]' THEN TO_DATE(c.idrenovS::VARCHAR, 'YYYYMMDD')
+            ELSE NULL
+        END AS fechaRenovacion,
+        CASE 
+            WHEN c.cancelado IS NOT NULL AND c.cancelado::VARCHAR LIKE '[0-9][0-9][0-9][0-9]' THEN TO_DATE(c.cancelado::VARCHAR, 'YYYYMMDD')
+            ELSE NULL
+        END AS fechaCancelacion,
+        CASE 
+            WHEN c.cancelado IS NOT NULL THEN FALSE
+            ELSE TRUE
+        END AS esActivo
+    FROM 
+        contrato c
+    WHERE 
+        c.idProductora = p_productora_id;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION match_flowers(p_floristeria_id INTEGER, p_ocasion VARCHAR, p_emocion VARCHAR)
+RETURNS TABLE (
+    idFloristeria INTEGER,
+    nombre_comun VARCHAR,
+    color VARCHAR,
+    significado VARCHAR,
+    precio NUMERIC,
+    desc_color VARCHAR,
+    desc_enlace VARCHAR
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        cf.idFloristeria::INTEGER,
+        fc.nombreComun,
+        c.Nombre AS color,
+        s.Descripcion AS significado,
+        hpf.precio,
+        c.descripcion AS desc_color,
+        e.descripcion AS desc_enlace
+    FROM 
+        CATALOGO_FLORISTERIA cf
+    JOIN 
+        FLOR_CORTES fc ON cf.idCorteFlor = fc.corteId
+    JOIN 
+        COLOR c ON cf.idColor = c.colorId
+    LEFT JOIN 
+        ENLACES e ON c.colorId = e.idColor
+    JOIN 
+        SIGNIFICADO s ON e.IdSignificado = s.SignificadoId
+    JOIN 
+        HISTORICO_PRECIO_FLOR hpf ON cf.idFloristeria = hpf.idCatalogoFloristeria AND cf.codigo = hpf.idCatalogocodigo
+    WHERE 
+        cf.idFloristeria = p_floristeria_id
+        AND (REGEXP_LIKE(s.Descripcion, p_ocasion, 'i')
+            OR REGEXP_LIKE(e.Descripcion, p_emocion, 'i')
+            OR REGEXP_LIKE(c.descripcion, p_ocasion, 'i')
+            OR REGEXP_LIKE(c.descripcion, p_emocion, 'i')
+            OR REGEXP_LIKE(e.descripcion, p_ocasion, 'i')
+            OR REGEXP_LIKE(e.descripcion, p_emocion, 'i'));
+END;
+$$ LANGUAGE plpgsql;

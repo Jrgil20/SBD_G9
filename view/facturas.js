@@ -80,6 +80,7 @@ export async function cargarDatosFacturas() {
             throw new Error(`Error fetching facturas: ${response.statusText}`);
         }
         const facturas = await response.json();
+        console.log(facturas);
 
         facturas.forEach(factura => {
             const card = document.createElement('div');
@@ -99,46 +100,58 @@ export async function cargarDatosFacturas() {
     }
 }
 // Función para mostrar detalles de una factura
-function mostrarDetallesFactura(factura) {
+async function mostrarDetallesFactura(factura) {
     cambiarSeccion('detalles-factura');
-    document.getElementById('vista-titulo').textContent = `Factura #${factura.id}`;
+    document.getElementById('vista-titulo').textContent = `Factura #${factura.numero_factura}`;
     document.getElementById('volver-btn').style.display = 'block';
     document.getElementById('volver-btn').onclick = () => cambiarSeccion('facturas');
 
-    document.getElementById('subastadora-nombre').textContent = `${factura.subasta.nombre} [#${factura.subasta.id}]`;
-    document.getElementById('subastadora-contacto').textContent = `Tel: ${factura.subasta.contacto}`;
-    document.getElementById('factura-fecha').textContent = `${factura.fecha}`;
-    document.getElementById('factura-numero').textContent = `${factura.id}`;
+    try {
+        const response = await fetch(`/api/informacionFactura/${factura.numero_factura}`);
+        if (!response.ok) {
+            throw new Error(`Error fetching factura details: ${response.statusText}`);
+        }
+        const facturaInfo = await response.json();
+        console.log(facturaInfo);
 
-    document.getElementById('floristeria-nombre').textContent = `${factura.floristeria.nombre} [#${factura.floristeria.id}]`;
-    document.getElementById('floristeria-contacto').textContent = `Tel: ${factura.floristeria.contacto}`;
-    document.getElementById('floristeria-email').textContent = `Email: ${factura.floristeria.email}`;
+        const subastadoraTelefono = facturaInfo.telefonos.find(t => t.idproductora == null && t.idfloristeria == null);
+        const floristeriaTelefono = facturaInfo.telefonos.find(t => t.idproductora == null && t.idsubastadora == null);
 
-    const lotesTableBody = document.getElementById('factura-lotes').querySelector('tbody');
-    lotesTableBody.innerHTML = ''; // Limpiar contenido previo
-    factura.lotes.forEach(lote => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td><a href="#" class="lote-link" data-lote-id="${lote.id}">${lote.id}</a></td>
-            <td>${lote.descripcion}</td>
-            <td>€${lote.precioFinal}</td>
-        `;
-        lotesTableBody.appendChild(row);
-    });
+        const subastadoraTelefonoCompleto = subastadoraTelefono ? `+${subastadoraTelefono.codpais} ${subastadoraTelefono.codarea} ${subastadoraTelefono.numero}` : 'No disponible';
+        const floristeriaTelefonoCompleto = floristeriaTelefono ? `+${floristeriaTelefono.codpais} ${floristeriaTelefono.codarea} ${floristeriaTelefono.numero}` : 'No disponible';
 
-    document.querySelectorAll('.lote-link').forEach(link => {
-        link.addEventListener('click', (event) => {
-            event.preventDefault();
-            const loteId = event.target.getAttribute('data-lote-id');
-            const lote = factura.lotes.find(l => l.id === loteId);
-            mostrarModalLote(lote);
+        document.getElementById('subastadora-nombre').textContent = `${facturaInfo.subastadora_info.nombresubastadora} [#${facturaInfo.id_afiliacion_subastadora}]`;
+        document.getElementById('subastadora-contacto').textContent = `Telefono: ${subastadoraTelefonoCompleto}`;
+
+        document.getElementById('factura-fecha').textContent = `${factura.fecha_emision_formateada}`;
+        document.getElementById('factura-numero').textContent = `${factura.numero_factura}`;
+
+        document.getElementById('floristeria-nombre').textContent = `${facturaInfo.floristeria_info.nombre} [#${facturaInfo.id_afiliacion_floristeria}]`;
+        document.getElementById('floristeria-contacto').textContent = `Telefono: ${floristeriaTelefonoCompleto}`;
+        document.getElementById('floristeria-email').textContent = `Email: ${facturaInfo.floristeria_info.email}`;
+
+        const lotesTableBody = document.getElementById('factura-lotes').querySelector('tbody');
+        lotesTableBody.innerHTML = '';
+        facturaInfo.lotes.forEach(lote => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${lote.numlote}</td>
+                <td>${lote.cantidad}</td>
+                <td>€${lote.preciofinal}</td>
+            `;
+            lotesTableBody.appendChild(row);
         });
-    });
 
-    document.getElementById('factura-envio').textContent = factura.envio ? 'Con envío' : 'Sin envío';
-    document.getElementById('factura-subtotal').textContent = `Subtotal: €${factura.subtotal}`;
-    document.getElementById('factura-recargo-envio').textContent = factura.envio ? `Recargo de envío: €${factura.recargoEnvio}` : '';
-    document.getElementById('factura-total').textContent = `Total: €${factura.total}`;
+        //NECESITA ARREGLARSE
+        
+        document.getElementById('factura-envio').textContent = factura.numeroenvio ? 'Con envío' : 'Sin envío';
+        //document.getElementById('factura-subtotal').textContent = `Subtotal: €${facturaInfo.subtotal}`;
+        document.getElementById('factura-recargo-envio').textContent = factura.envio ? `Recargo de envío: €${factura.recargoEnvio}` : '';
+        document.getElementById('factura-total').textContent = `Total: €${factura.montototal}`;
+
+    } catch (err) {
+        console.error('Error fetching factura details:', err);
+    }
 }
 
 // Función para aplicar filtro a las facturas
