@@ -63,7 +63,7 @@ const getFloresValoraciones = async (floristeriaId) => {
   try {
     console.log(`Executing query for floristeria ID: ${floristeriaId}`);
     const result = await pool.query(`
-      SELECT * from obtener_valoraciones_por_floristeria($1)
+      SELECT * from obtener_valoraciones_por_floristeria($1) ORDER BY valoracion_promedio ASC
     `, [floristeriaId]);
     console.log('Query result:', result.rows);
     return result.rows;
@@ -119,7 +119,7 @@ async function getFacturas(){
 
 async function getInformacionFactura(idFactura){
   try{
-    const result=await pool.query(`SELECT * FROM Traer_lotes(${idFactura});`,[idFactura] )
+    const result=await pool.query(`SELECT * FROM traer_lotes($1);`,[idFactura] )
     return result.rows;
   }catch(err){
     console.error('Error querying the database', err);
@@ -127,6 +127,39 @@ async function getInformacionFactura(idFactura){
   }
 }	
 
+const getFlorCortes = async () => {
+  try {
+    console.log('Executing query to get flor cortes');
+    const result = await pool.query('SELECT * FROM obtener_flor_cortes()');
+    console.log('Query result:', result.rows);
+    return result.rows;
+  } catch (err) {
+    console.error('Error querying the database', err);
+    throw err;
+  }
+};
 
-module.exports = { pool, getProductoras, getFloristerias,getCatalogoProductoraById,getDetalleFlores,getFloresValoraciones,getInformacionFlor,getFacturas,getInformacionFactura};
+const getContratosProductora = async (productoraId) => {
+  try {
+    const result = await pool.query('SELECT * FROM obtener_contratos_productora($1) ORDER BY fechaEmision DESC', [productoraId]);
+    return result.rows;
+  } catch (err) {
+    console.error('Error querying the database', err);
+    throw err;
+  }
+};
+
+module.exports = { 
+  pool, 
+  getProductoras, 
+  getFloristerias, 
+  getCatalogoProductoraById, 
+  getDetalleFlores, 
+  getFloresValoraciones, 
+  getInformacionFlor, 
+  getFacturas, 
+  getInformacionFactura,
+  getFlorCortes,
+  getContratosProductora
+};
 

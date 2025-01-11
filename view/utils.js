@@ -2,6 +2,8 @@ import { cargarDatosFloristerias } from './floristerias.js';
 import { cargarDatosProductoras } from './productoras.js';
 import { cargarDatosSubastas } from './subastas.js';
 import { cargarDatosFacturas } from './facturas.js';
+import { cargarDatosContratos } from './contratos.js';
+import { cargarDatosSubastadoras } from './subastadoras.js';
 
 // Función para cambiar entre secciones
 export function cambiarSeccion(seccion) {
@@ -46,6 +48,14 @@ export function cambiarSeccion(seccion) {
             tituloVista.textContent = 'Facturas';
             cargarDatosFacturas();
             break;
+        case 'contratos':
+            tituloVista.textContent = 'Contratos';
+            cargarDatosContratos();
+            break;
+        case 'subastadoras':
+            tituloVista.textContent = 'Subastadoras';
+            cargarDatosSubastadoras();
+            break;        
         default:
             tituloVista.textContent = '';
     }
