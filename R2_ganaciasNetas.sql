@@ -41,3 +41,5 @@ BEGIN
   RETURN QUERY SELECT _ganancias_brutas, _costos, _ganancias_brutas - _costos;
 END;
 $$ LANGUAGE plpgsql;
+
+SELECT * FROM ganancias_floristeria(2, '2023-01-01');
