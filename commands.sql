@@ -1735,13 +1735,13 @@ SELECT * FROM LOTE;
 INSERT INTO CATALOGO_FLORISTERIA (idFloristeria, codigo, idCorteFlor, idColor, nombrePropio, descripcion) VALUES
 (1, 1, 1, 2, 'Rosa Roja', 'Rosa roja clásica para ocasiones románticas'),
 (2, 2, 2, 3, 'Tulipán Amarillo', 'Tulipán amarillo brillante para alegrar el día'),
-(3, 3, 3, 4, 'Orquídea Púrpura', 'Orquídea exótica y elegante en color púrpura'),
+(3, 3, 3, 11, 'Orquídea Púrpura', 'Orquídea exótica y elegante en color púrpura'),
 (4, 4, 4, 5, 'Girasol', 'Girasol alto y brillante que sigue al sol'),
-(5, 5, 5, 6, 'Lirio Blanco', 'Lirio blanco elegante y fragante para cualquier ocasión'),
-(6, 6, 6, 7, 'Clavel Rojo', 'Clavel rojo popular en ramos y arreglos'),
-(1, 7, 7, 8, 'Margarita Blanca', 'Margarita sencilla y alegre en color blanco'),
-(2, 8, 8, 9, 'Hortensia Azul', 'Hortensia ornamental en racimos de color azul'),
-(3, 9, 9, 10, 'Peonía Rosa', 'Peonía grande y fragante en color rosa');
+(5, 5, 5, 1, 'Lirio Blanco', 'Lirio blanco elegante y fragante para cualquier ocasión'),
+(6, 6, 6, 2, 'Clavel Rojo', 'Clavel rojo popular en ramos y arreglos'),
+(1, 7, 7, 1, 'Margarita Blanca', 'Margarita sencilla y alegre en color blanco'),
+(2, 8, 8, 10, 'Hortensia Azul', 'Hortensia ornamental en racimos de color azul'),
+(3, 9, 9, 4, 'Peonía Rosa', 'Peonía grande y fragante en color rosa');
 
 -- Verificar los datos insertados
 SELECT * FROM CATALOGO_FLORISTERIA;
@@ -2054,6 +2054,14 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+-------------------------------------------------------------------------------------------------------------------
+--  ===========================================================================================================  --
+--  ==================================== Requerimientos individuales  =========================================  --
+--  ===========================================================================================================  --
+-------------------------------------------------------------------------------------------------------------------
+
+
+
 -----------------------------------------------------------------------
 -- REQUERIMIENTO 1 - MANTENIMIENTO DE HISTORICO DE PRECIOS DE FLORES --
 -----------------------------------------------------------------------
@@ -2331,4 +2339,59 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
 /* FIN DEL REQUERIMIENTO 1 */
+
+
+-----------------------------------------------------------------------
+-- REQUERIMIENTO 2 - GANANCIAS NETAS UNA FLORISTERIA --
+-----------------------------------------------------------------------
+
+
+CREATE OR REPLACE FUNCTION ganancias_floristeria(
+  p_idFloristeria NUMERIC,
+  p_mes DATE
+)
+RETURNS TABLE(
+  ganancias_brutas NUMERIC,
+  costos NUMERIC,
+  ganancias_netas NUMERIC
+)
+AS $$
+DECLARE
+  fecha_inicio DATE := DATE_TRUNC('month', p_mes);
+  fecha_fin DATE := (DATE_TRUNC('month', p_mes) + INTERVAL '1 month') - INTERVAL '1 day';
+  _ganancias_brutas NUMERIC;
+  _costos NUMERIC;
+BEGIN
+
+  IF fecha_fin > CURRENT_DATE THEN
+    fecha_fin := CURRENT_DATE;
+    RAISE EXCEPTION 'se calcula las ganancias netas hasta el dia de hoy';
+  END IF;
+
+  IF fecha_inicio > CURRENT_DATE THEN
+    RAISE NOTICE 'No se puede calcular aun';
+  END IF;
+
+  SELECT COALESCE(SUM(montoTotal), 0)
+    INTO _ganancias_brutas
+    FROM FACTURA_FINAL
+    WHERE idFloristeria = p_idFloristeria
+      AND fechaEmision >= fecha_inicio
+      AND fechaEmision <= fecha_fin;
+
+  SELECT COALESCE(SUM(montoTotal), 0)
+    INTO _costos
+    FROM FACTURA
+    WHERE idAfiliacionFloristeria = p_idFloristeria
+      AND fechaEmision >= fecha_inicio
+      AND fechaEmision <= fecha_fin;
+
+  RETURN QUERY SELECT _ganancias_brutas, _costos, _ganancias_brutas - _costos;
+END;
+$$ LANGUAGE plpgsql;
+
+SELECT * FROM ganancias_floristeria(2, '2023-01-01');
+
+/* FIN DEL REQUERIMIENTO 2 */
