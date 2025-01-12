@@ -2078,8 +2078,8 @@ SELECT * FROM CATALOGO_FLORISTERIA;
 
 -- Insertar datos de prueba en la tabla HISTORICO_PRECIO_FLOR
 INSERT INTO HISTORICO_PRECIO_FLOR (idCatalogoFloristeria, idCatalogocodigo, fechaInicio, fechaFin, precio, tamanoTallo) VALUES
-(1, 1, '2023-01-01', NULL, 10.00, 50),
-(1, 7, '2023-02-01', NULL, 12.50, 55),
+(1, 1, '2023-04-15', NULL, 10.00, 50),
+(1, 7, '2023-05-01', NULL, 12.50, 55),
 (1, 2, '2023-03-01', NULL, 15.00, 65),
 (1, 8, '2023-04-01', NULL, 17.50, 70),
 (1, 3, '2023-05-01', NULL, 20.00, 50),
@@ -2110,10 +2110,10 @@ INSERT INTO HISTORICO_PRECIO_FLOR (idCatalogoFloristeria, idCatalogocodigo, fech
 (5, 2, '2024-06-01', NULL, 42.50, 55),
 (5, 3, '2024-07-01', NULL, 45.00, 65),
 (5, 4, '2024-08-01', NULL, 47.50, 70),
-(6, 8, '2024-09-01', NULL, 10.00, 50),
-(6, 9, '2024-10-01', NULL, 12.50, 55),
-(6, 4, '2024-11-01', NULL, 15.00, 65),
-(6, 1, '2024-12-01', NULL, 17.50, 70),
+(6, 8, '2023-09-01', NULL, 10.00, 50),
+(6, 9, '2023-09-01', NULL, 12.50, 55),
+(6, 4, '2023-11-01', NULL, 15.00, 65),
+(6, 1, '2023-12-01', NULL, 17.50, 70),
 (6, 7, '2024-01-01', NULL, 20.00, 50),
 (6, 6, '2024-02-01', NULL, 22.50, 55);
 
