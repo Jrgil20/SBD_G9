@@ -375,7 +375,7 @@ SELECT
   fc.etimologia,
   fc.colores,
   fc.temperatura,
-  e.Descripcion AS descripcion,
+  e.Descripcion AS descripcionEnl,
   cp.nombrepropio AS nombrePropioCP
 FROM FLOR_CORTES fc
 LEFT JOIN ENLACES e ON fc.corteId = e.idCorte
@@ -1150,7 +1150,7 @@ SELECT
     co.idContratoProductora,
     p.nombreProductora,
     co.idNContrato,
-    cp.nombreProductora AS nombreProductoraCat,
+    p.nombreProductora AS nombreProductoraCat,
     fc.nombreComun AS nombreFlor,
     co.idVnb,
     co.cantidad
@@ -1552,9 +1552,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE VIEW vista_afiliacion AS
 SELECT
   idFloristeria,
-  idSubastadora,
-  afiliacionId,
-  fechaAfiliacion
+  idSubastadora
 FROM AFILIACION;
 
 -- Issue: AFILIACION Vista de detalles
@@ -1671,11 +1669,12 @@ $$ LANGUAGE plpgsql;
 -- Issue: FACTURA Vista principal
 CREATE OR REPLACE VIEW vista_factura AS
 SELECT
-  idFloristeria,
-  idSubastadora,
-  idAfiliacion,
-  numFactura,
-  fechaEmision
+  idafiliacionfloristeria,
+  idafiliacionsubastadora,
+  facturaid,
+  fechaEmision,
+  montototal,
+  numeroenvio
 FROM FACTURA;
 
 -- Issue: FACTURA Vista de detalles
@@ -1844,7 +1843,7 @@ SELECT
   p.nombreProductora,
   l.idCantidad_NContrato,
   l.idCantidadCatalogoProductora,
-  cp.nombreProductora AS nombreProductoraCat,
+  p.nombreProductora AS nombreProductoraCat,
   l.idCantidadCorte,
   fc.nombreComun AS nombreFlor,
   l.idCantidadvnb,
@@ -2047,8 +2046,8 @@ CREATE OR REPLACE FUNCTION actualizar_historico_precio_flor(
   p_idCatalogoFloristeria NUMERIC,
   p_idCatalogocodigo NUMERIC,
   p_fechaInicio DATE,
-  p_fechaFin DATE DEFAULT NULL,
   p_precio NUMERIC,
+  p_fechaFin DATE DEFAULT NULL,
   p_tamanoTallo NUMERIC DEFAULT NULL
 )
 RETURNS TEXT AS $$
@@ -2397,7 +2396,7 @@ CREATE OR REPLACE FUNCTION insertar_detalle_factura(
   p_bouquetFloristeria NUMERIC DEFAULT NULL,
   p_bouquetcodigo NUMERIC DEFAULT NULL,
   p_bouquetId NUMERIC DEFAULT NULL,
-  p_cantidad NUMERIC,
+  p_cantidad NUMERIC DEFAULT NULL,
   p_valoracionPrecio NUMERIC DEFAULT NULL,
   p_valorancionCalidad NUMERIC DEFAULT NULL,
   p_valoracionPromedio NUMERIC DEFAULT NULL,
@@ -2436,7 +2435,7 @@ CREATE OR REPLACE FUNCTION actualizar_detalle_factura(
   p_bouquetFloristeria NUMERIC DEFAULT NULL,
   p_bouquetcodigo NUMERIC DEFAULT NULL,
   p_bouquetId NUMERIC DEFAULT NULL,
-  p_cantidad NUMERIC,
+  p_cantidad NUMERIC DEFAULT NULL,
   p_valoracionPrecio NUMERIC DEFAULT NULL,
   p_valorancionCalidad NUMERIC DEFAULT NULL,
   p_valoracionPromedio NUMERIC DEFAULT NULL,
