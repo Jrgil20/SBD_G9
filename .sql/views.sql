@@ -2041,6 +2041,119 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Issue: Función para actualizar CATALOGO_FLORISTERIA
+CREATE OR REPLACE FUNCTION actualizar_catalogo_floristeria(
+  p_idFloristeria NUMERIC,
+  p_codigo NUMERIC,
+  p_idCorteFlor NUMERIC,
+  p_idColor NUMERIC,
+  p_nombrePropio VARCHAR,
+  p_descripcion VARCHAR DEFAULT NULL
+)
+RETURNS TEXT AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM CATALOGO_FLORISTERIA
+    WHERE idFloristeria = p_idFloristeria
+      AND codigo = p_codigo
+  ) THEN
+    RETURN 'Catálogo de floristería no encontrado.';
+  END IF;
+  UPDATE CATALOGO_FLORISTERIA
+  SET idCorteFlor = p_idCorteFlor,
+      idColor = p_idColor,
+      nombrePropio = p_nombrePropio,
+      descripcion = p_descripcion
+  WHERE idFloristeria = p_idFloristeria
+    AND codigo = p_codigo;
+  RETURN 'Catálogo de floristería actualizado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+-- Issue: Función para eliminar CATALOGO_FLORISTERIA
+CREATE OR REPLACE FUNCTION eliminar_catalogo_floristeria(
+  p_idFloristeria NUMERIC,
+  p_codigo NUMERIC
+)
+RETURNS TEXT AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM CATALOGO_FLORISTERIA
+    WHERE idFloristeria = p_idFloristeria
+      AND codigo = p_codigo
+  ) THEN
+    RETURN 'Catálogo de floristería no encontrado.';
+  END IF;
+  -- Verificar referencias en otras tablas
+  IF EXISTS (
+    SELECT 1 FROM DETALLE_BOUQUET
+    WHERE idCatalogoFloristeria = p_idFloristeria
+      AND idCatalogocodigo = p_codigo
+  ) THEN
+    RETURN 'No se puede eliminar el catálogo porque está referenciado en la tabla DETALLE_BOUQUET.';
+  END IF;
+  DELETE FROM CATALOGO_FLORISTERIA
+  WHERE idFloristeria = p_idFloristeria
+    AND codigo = p_codigo;
+  RETURN 'Catálogo de floristería eliminado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Issue: HISTORICO_PRECIO_FLOR Vista principal
+CREATE OR REPLACE VIEW vista_historico_precio_flor AS
+SELECT
+  idCatalogoFloristeria,
+  idCatalogocodigo,
+  fechaInicio,
+  fechaFin,
+  precio,
+  tamanoTallo
+FROM HISTORICO_PRECIO_FLOR;
+
+-- Issue: HISTORICO_PRECIO_FLOR Vista de detalles
+CREATE OR REPLACE VIEW vista_detalles_historico_precio_flor AS
+SELECT
+  hp.idCatalogoFloristeria,
+  f.nombre AS nombreFloristeria,
+  hp.idCatalogocodigo,
+  cf.nombrePropio AS nombreFlor,
+  hp.fechaInicio,
+  hp.fechaFin,
+  hp.precio,
+  hp.tamanoTallo
+FROM HISTORICO_PRECIO_FLOR hp
+JOIN CATALOGO_FLORISTERIA cf ON hp.idCatalogoFloristeria = cf.idFloristeria
+  AND hp.idCatalogocodigo = cf.codigo
+JOIN FLORISTERIAS f ON cf.idFloristeria = f.floristeriaId;
+
+-- Issue: Función para insertar HISTORICO_PRECIO_FLOR
+CREATE OR REPLACE FUNCTION insertar_historico_precio_flor(
+  p_idCatalogoFloristeria NUMERIC,
+  p_idCatalogocodigo NUMERIC,
+  p_fechaInicio DATE,
+  p_precio NUMERIC,
+  p_fechaFin DATE DEFAULT NULL,
+  p_tamanoTallo NUMERIC DEFAULT NULL
+)
+RETURNS TEXT AS $$
+BEGIN
+  -- Validar que el catálogo de floristería exista
+  IF NOT EXISTS (
+    SELECT 1 FROM CATALOGO_FLORISTERIA
+    WHERE idFloristeria = p_idCatalogoFloristeria
+      AND codigo = p_idCatalogocodigo
+  ) THEN
+    RETURN 'Catálogo de floristería no encontrado.';
+  END IF;
+  -- Insertar el nuevo registro histórico de precio de flor
+  INSERT INTO HISTORICO_PRECIO_FLOR (
+    idCatalogoFloristeria, idCatalogocodigo, fechaInicio, fechaFin, precio, tamanoTallo
+  ) VALUES (
+    p_idCatalogoFloristeria, p_idCatalogocodigo, p_fechaInicio, p_fechaFin, p_precio, p_tamanoTallo
+  );
+  RETURN 'Histórico de precio de flor insertado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
 -- Issue: Función para actualizar HISTORICO_PRECIO_FLOR
 CREATE OR REPLACE FUNCTION actualizar_historico_precio_flor(
   p_idCatalogoFloristeria NUMERIC,
