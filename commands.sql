@@ -323,6 +323,9 @@ ADD CONSTRAINT fk_idSubastadora_afiliacion FOREIGN KEY (idSubastadora) REFERENCE
 
 --------------------------------------------------------------------------------------------------------------------
 
+-- Crear la secuencia para FACTURA
+CREATE SEQUENCE factura_seq START WITH 1 INCREMENT BY 1;
+
 -- Crear la tabla
 CREATE TABLE FACTURA(
   facturaId NUMERIC NOT NULL,
@@ -333,6 +336,10 @@ CREATE TABLE FACTURA(
   numeroEnvio NUMERIC,
   PRIMARY KEY (facturaId)
 );
+
+-- Modificar la tabla FACTURA para usar la secuencia
+ALTER TABLE FACTURA
+ALTER COLUMN facturaId SET DEFAULT nextval('factura_seq');
 
 -- Agregar claves foráneas
 ALTER TABLE FACTURA
@@ -427,6 +434,9 @@ ADD Constraint fk_Catalogo_DetalleBouquet FOREIGN KEY (idCatalogoFloristeria, id
 
 --------------------------------------------------------------------------------------------------------------------
 
+-- Crear la secuencia para FACTURA_FINAL
+CREATE SEQUENCE factura_final_seq START WITH 1 INCREMENT BY 1;
+
 -- Crear la tabla 
 CREATE TABLE FACTURA_FINAL(
   idFloristeria NUMERIC NOT NULL,
@@ -454,6 +464,10 @@ ADD CONSTRAINT chk_FacturaFinal_ArcoExclusivo CHECK (
   (idClienteNatural IS NOT NULL AND idClienteJuridico IS NULL) OR 
   (idClienteNatural IS NULL AND idClienteJuridico IS NOT NULL)
 );
+
+-- Modificar la tabla FACTURA_FINAL para usar la secuencia
+ALTER TABLE FACTURA_FINAL
+ALTER COLUMN numFactura SET DEFAULT nextval('factura_final_seq');
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -1392,6 +1406,193 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION Paises_floristerias()
+RETURNS TABLE (
+  nombrePais TEXT
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT DISTINCT p.nombrePais
+  FROM FLORISTERIAS f
+  JOIN PAIS p ON f.idPais = p.paisId;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION Paises_productoras()
+RETURNS TABLE (
+  nombrePais TEXT
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT DISTINCT p.nombrePais
+  FROM PRODUCTORAS pr
+  JOIN PAIS p ON pr.idPais = p.paisId;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION floristerias_con_factura()
+RETURNS TABLE (
+  floristeriaId NUMERIC,
+  nombre VARCHAR
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT DISTINCT f.floristeriaId, f.nombre
+  FROM FLORISTERIAS f
+  JOIN FACTURA fa ON f.floristeriaId = fa.idAfiliacionFloristeria;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION subastadoras_con_factura()
+RETURNS TABLE (
+  subastadoraId NUMERIC,
+  nombreSubastadora VARCHAR
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT DISTINCT s.subastadoraId, s.nombreSubastadora
+  FROM SUBASTADORA s
+  JOIN FACTURA fa ON s.subastadoraId = fa.idAfiliacionSubastadora;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION facturas_afiliacion(
+  p_idAfiliacionFloristeria NUMERIC DEFAULT NULL,
+  p_idAfiliacionSubastadora NUMERIC DEFAULT NULL
+) RETURNS TABLE (
+  facturaId NUMERIC,
+  idAfiliacionFloristeria NUMERIC,
+  idAfiliacionSubastadora NUMERIC,
+  fechaEmision TIMESTAMP,
+  montoTotal NUMERIC,
+  numeroEnvio NUMERIC
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    facturaId,
+    idAfiliacionFloristeria,
+    idAfiliacionSubastadora,
+    fechaEmision,
+    montoTotal,
+    numeroEnvio
+  FROM FACTURA
+  WHERE (p_idAfiliacionFloristeria IS NULL OR idAfiliacionFloristeria = p_idAfiliacionFloristeria)
+    AND (p_idAfiliacionSubastadora IS NULL OR idAfiliacionSubastadora = p_idAfiliacionSubastadora);
+END;
+$$ LANGUAGE plpgsql;
+
+/* FUNCIONES HECHAS POR GABO */ 
+
+CREATE OR REPLACE FUNCTION obtener_flor_cortes()
+RETURNS TABLE (
+  corteId NUMERIC,
+  nombreComun VARCHAR,
+  Descripcion VARCHAR,
+  genero_especie VARCHAR,
+  etimologia VARCHAR,
+  colores VARCHAR,
+  temperatura NUMERIC
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    fc.corteId,
+    fc.nombreComun,
+    fc.Descripcion,
+    fc.genero_especie,
+    fc.etimologia,
+    fc.colores,
+    fc.temperatura
+  FROM FLOR_CORTES fc;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION obtener_contratos_productora(
+    p_productora_id NUMERIC
+)
+RETURNS TABLE (
+    idSubastadora NUMERIC,
+    idProductora NUMERIC,
+    nContrato NUMERIC,
+    fechaEmision DATE,
+    porcentajeProduccion NUMERIC(3,2),
+    tipoProductor VARCHAR,
+    fechaRenovacion DATE,
+    fechaCancelacion DATE,
+    esActivo BOOLEAN
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        c.idSubastadora,
+        c.idProductora,
+        c.nContrato,
+        c.fechaEmision,
+        c.porcentajeProduccion,
+        c.tipoProductor,
+        CASE 
+            WHEN c.idrenovS IS NOT NULL AND c.idrenovS::VARCHAR LIKE '[0-9][0-9][0-9][0-9]' THEN TO_DATE(c.idrenovS::VARCHAR, 'YYYYMMDD')
+            ELSE NULL
+        END AS fechaRenovacion,
+        CASE 
+            WHEN c.cancelado IS NOT NULL AND c.cancelado::VARCHAR LIKE '[0-9][0-9][0-9][0-9]' THEN TO_DATE(c.cancelado::VARCHAR, 'YYYYMMDD')
+            ELSE NULL
+        END AS fechaCancelacion,
+        CASE 
+            WHEN c.cancelado IS NOT NULL THEN FALSE
+            ELSE TRUE
+        END AS esActivo
+    FROM 
+        contrato c
+    WHERE 
+        c.idProductora = p_productora_id;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION match_flowers(p_floristeria_id INTEGER, p_ocasion VARCHAR, p_emocion VARCHAR)
+RETURNS TABLE (
+    idFloristeria INTEGER,
+    nombre_comun VARCHAR,
+    color VARCHAR,
+    significado VARCHAR,
+    precio NUMERIC,
+    desc_color VARCHAR,
+    desc_enlace VARCHAR
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        cf.idFloristeria::INTEGER,
+        fc.nombreComun,
+        c.Nombre AS color,
+        s.Descripcion AS significado,
+        hpf.precio,
+        c.descripcion AS desc_color,
+        e.descripcion AS desc_enlace
+    FROM 
+        CATALOGO_FLORISTERIA cf
+    JOIN 
+        FLOR_CORTES fc ON cf.idCorteFlor = fc.corteId
+    JOIN 
+        COLOR c ON cf.idColor = c.colorId
+    LEFT JOIN 
+        ENLACES e ON c.colorId = e.idColor
+    JOIN 
+        SIGNIFICADO s ON e.IdSignificado = s.SignificadoId
+    JOIN 
+        HISTORICO_PRECIO_FLOR hpf ON cf.idFloristeria = hpf.idCatalogoFloristeria AND cf.codigo = hpf.idCatalogocodigo
+    WHERE 
+        cf.idFloristeria = p_floristeria_id
+        AND (REGEXP_LIKE(s.Descripcion, p_ocasion, 'i')
+            OR REGEXP_LIKE(e.Descripcion, p_emocion, 'i')
+            OR REGEXP_LIKE(c.descripcion, p_ocasion, 'i')
+            OR REGEXP_LIKE(c.descripcion, p_emocion, 'i')
+            OR REGEXP_LIKE(e.descripcion, p_ocasion, 'i')
+            OR REGEXP_LIKE(e.descripcion, p_emocion, 'i'));
+END;
+$$ LANGUAGE plpgsql;
 
 -------------------------------------------------------------------------------------------------------------------
 --  ===========================================================================================================  --
@@ -1685,16 +1886,122 @@ SELECT * FROM AFILIACION;
 
 
 -- Insertar datos de prueba en la tabla FACTURA
-INSERT INTO FACTURA (facturaId, idAfiliacionFloristeria, idAfiliacionSubastadora, fechaEmision, montoTotal, numeroEnvio) VALUES
-(1, 1, 1, '2021-01-18 16:00:00', 10000.00, NULL),
-(2, 1, 1, '2021-02-15 16:00:00', 1100.00, 3232),
-(3, 2, 2, '2023-05-01 16:00:00', 750.00, 12346),
-(4, 3, 3, '2023-06-01 16:00:00', 1000.00, 12347),
-(5, 4, 1, '2023-07-01 16:00:00', 1250.00, 12348),
-(6, 5, 2, '2023-08-01 16:00:00', 1500.00, 12349),
-(7, 6, 3, '2023-09-01 16:00:00', 1750.00, 12350),
-(8, 1, 2, '2023-10-01 16:00:00', 2000.00, 12351),
-(9, 2, 3, '2023-11-01 16:00:00', 2250.00, 12352);
+INSERT INTO FACTURA (idAfiliacionFloristeria, idAfiliacionSubastadora, fechaEmision, montoTotal, numeroEnvio) VALUES
+(1, 1, '2023-04-10 16:00:00', 10010.00, 3262),
+(1, 1, '2023-05-10 16:00:00', 10040.00, 3263),
+(2, 2, '2023-05-01 16:00:00', 75000, 12346),
+(1, 1, '2023-06-10 16:00:00', 10025.00, 3264),
+(2, 3, '2023-06-04 16:00:00', 74000, 121237),
+(3, 3, '2023-06-01 16:00:00', 1000.00, 12347),
+(1, 1, '2023-07-10 16:00:00', 10035.00, 3265),
+(2, 2, '2023-07-08 16:00:00', 75300, 123476),
+(3, 3, '2023-07-11 16:00:00', 900.00, 12134),
+(4, 1, '2023-07-01 16:00:00', 1250.70, 22348),
+(1, 1, '2023-08-10 16:00:00', 10015.00, 3266),
+(2, 3, '2023-08-11 16:00:00', 72500, 12546),
+(3, 1, '2023-08-01 16:00:00', 1100.00, 12347),
+(4, 1, '2023-08-01 16:00:00', 1239.00, 22349),
+(5, 2, '2023-08-01 16:00:00', 500.00, 69349),
+(6, 3, '2023-08-01 16:00:00', 1750.00, 42349),
+(1, 1, '2023-09-10 16:00:00', 10045.00, 3267),
+(2, 2, '2023-09-05 16:00:00', 80000, 12333),
+(3, 3, '2023-09-11 16:00:00', 980.00, 12567),
+(4, 1, '2023-09-01 16:00:00', 1250.50, 22350),
+(5, 2, '2023-09-01 16:00:00', 3000.00, 69350),
+(6, 3, '2023-09-01 16:00:00', 1750.00, 42350),
+(1, 1, '2023-10-10 16:00:00', 10050.00, 3268),
+(1, 2, '2023-10-01 16:00:00', 2000.00, 12351),
+(2, 3, '2023-10-03 16:00:00', 72000, 12556),
+(3, 1, '2023-10-11 16:00:00', 1090.00, 12447),
+(4, 1, '2023-10-01 16:00:00', 1245.30, 22351),
+(5, 2, '2023-10-01 16:00:00', 15000.00, 69351),
+(6, 3, '2023-10-01 16:00:00', 1750.00, 42351),
+(1, 1, '2023-11-10 16:00:00', 10020.00, 3269),
+(2, 2, '2023-11-01 16:00:00', 90000, 15246),
+(3, 3, '2023-11-15 16:00:00', 800.00, 12347),
+(4, 1, '2023-11-01 16:00:00', 1250.90, 22352),
+(5, 2, '2023-11-01 16:00:00', 700.00, 69352),
+(6, 3, '2023-11-01 16:00:00', 1750.00, 42352),
+(1, 1, '2023-12-10 16:00:00', 10030.00, 3270),
+(2, 2, '2023-12-09 16:00:00', 65000, 9246),
+(3, 3, '2023-12-01 16:00:00', 1300.00, 12350),
+(4, 1, '2023-12-01 16:00:00', 1248.20, 22353),
+(5, 2, '2023-12-01 16:00:00', 2500.00, 69353),
+(6, 3, '2023-12-01 16:00:00', 1750.00, 42353),
+(1, 1, '2024-01-20 16:00:00', 10010.00, 3271),
+(2, 3, '2024-01-04 16:00:00', 79000, 19846),
+(3, 1, '2024-01-01 16:00:00', 1600.00, 12353),
+(4, 1, '2024-01-01 16:00:00', 1250.10, 22354),
+(5, 2, '2024-01-01 16:00:00', 12000.00, 69354),
+(6, 3, '2024-01-01 16:00:00', 1750.00, 42354),
+(1, 1, '2024-02-20 16:00:00', 13010.00, 3272),
+(2, 2, '2024-02-03 16:00:00', 75000, 123131),
+(3, 1, '2024-02-01 16:00:00', 1400.00, 12351),
+(4, 1, '2024-02-01 16:00:00', 1249.80, 22355),
+(5, 2, '2024-02-01 16:00:00', 800.00, 69355),
+(6, 3, '2024-02-01 16:00:00', 1750.00, 42355),
+(1, 1, '2024-03-02 16:00:00', 19010.00, 3273),
+(2, 3, '2024-03-07 16:00:00', 95000, 92546),
+(3, 3, '2024-03-01 16:00:00', 1500.00, 12352),
+(4, 1, '2024-03-01 16:00:00', 1250.60, 22356),
+(5, 2, '2024-03-01 16:00:00', 3500.00, 69356),
+(6, 3, '2024-03-01 16:00:00', 1750.00, 412356),
+(1, 1, '2024-04-10 16:00:00', 13010.00, 327423423),
+(2, 3, '2024-04-08 16:00:00', 75200, 12372),
+(3, 3, '2024-04-01 16:00:00', 1700.00, 12354),
+(4, 1, '2024-04-01 16:00:00', 1247.40, 22357),
+(5, 2, '2024-04-01 16:00:00', 9000.00, 69357),
+(6, 3, '2024-04-01 16:00:00', 1750.00, 42357),
+(1, 1, '2024-05-26 16:00:00', 13010.00, 3271234234),
+(2, 3, '2024-05-07 16:00:00', 71900, 12982),
+(3, 1, '2024-05-01 16:00:00', 1800.00, 12355),
+(4, 1, '2024-05-01 16:00:00', 1250.30, 22358),
+(5, 2, '2024-05-01 16:00:00', 1500.00, 69358),
+(6, 3, '2024-05-01 16:00:00', 1750.00, 42358),
+(1, 1, '2024-06-19 16:00:00', 8000.00, 3271545),
+(2, 2, '2024-06-09 16:00:00', 75500, 132146),
+(3, 3, '2024-06-01 16:00:00', 1900.00, 12356),
+(4, 1, '2024-06-01 16:00:00', 1246.50, 22359),
+(5, 2, '2024-06-01 16:00:00', 4000.00, 69359),
+(6, 3, '2024-06-01 16:00:00', 1750.00, 42359),
+(1, 1, '2024-07-14 16:00:00', 13010.00, 327142),
+(2, 3, '2024-07-12 16:00:00', 64000, 121346),
+(3, 1, '2024-07-01 16:00:00', 2000.00, 12357),
+(4, 1, '2024-07-01 16:00:00', 1250.20, 22360),
+(5, 2, '2024-07-01 16:00:00', 11000.00, 69360),
+(6, 3, '2024-07-01 16:00:00', 1750.00, 42360),
+(1, 1, '2024-08-12 16:00:00', 7010.00, 3271243),
+(2, 2, '2024-08-15 16:00:00', 75080, 123216),
+(3, 3, '2024-08-01 16:00:00', 2100.00, 12358),
+(4, 1, '2024-08-01 16:00:00', 1249.70, 22361),
+(5, 2, '2024-08-01 16:00:00', 600.00, 69361),
+(6, 3, '2024-08-01 16:00:00', 1750.00, 42361),
+(1, 1, '2024-09-04 16:00:00', 10310.00, 3271123),
+(2, 3, '2024-09-02 16:00:00', 75200, 23216),
+(3, 1, '2024-09-01 16:00:00', 2200.00, 12359),
+(4, 1, '2024-09-01 16:00:00', 1250.40, 22362),
+(5, 2, '2024-09-01 16:00:00', 3200.00, 69362),
+(6, 3, '2024-09-01 16:00:00', 1750.00, 42362),
+(1, 1, '2024-10-08 16:00:00', 13090.00, 32715464),
+(2, 2, '2024-10-09 16:00:00', 74500, 56346),
+(3, 3, '2024-10-01 16:00:00', 2300.00, 12360),
+(4, 1, '2024-10-01 16:00:00', 1248.90, 22363),
+(5, 2, '2024-10-01 16:00:00', 14000.00, 69363),
+(6, 3, '2024-10-01 16:00:00', 1750.00, 42363),
+(1, 1, '2024-11-03 16:00:00', 14010.00, 32715464),
+(2, 3, '20234-11-04 16:00:00', 75310, 43346),
+(3, 1, '2024-11-01 16:00:00', 2400.00, 12361),
+(4, 1, '2024-11-01 16:00:00', 1250.80, 22364),
+(5, 2, '2024-11-01 16:00:00', 1000.00, 69364),
+(6, 3, '2024-11-01 16:00:00', 1750.00, 42364),
+(6, 3, '2024-12-01 16:00:00', 1750.00, 42365),
+(1, 1, '2024-12-09 16:00:00', 15010.00, 32715464),
+(2, 2, '2024-12-08 16:00:00', 80000, 442432),
+(3, 3, '2024-12-01 16:00:00', 2500.00, 12362),
+(4, 1, '2024-12-01 16:00:00', 1247.60, 22365),
+(5, 2, '2024-12-01 16:00:00', 2700.00, 69365),
+(5, 2, '2025-01-01 16:00:00', 13000.00, 69366),
+(4, 1, '2025-01-02 16:00:00', 1250.00, 22366);
 
 -- Verificar los datos insertados
 SELECT * FROM FACTURA;
@@ -1734,14 +2041,43 @@ SELECT * FROM LOTE;
 -- Insertar datos de prueba en la tabla CATALOGO_FLORISTERIA
 INSERT INTO CATALOGO_FLORISTERIA (idFloristeria, codigo, idCorteFlor, idColor, nombrePropio, descripcion) VALUES
 (1, 1, 1, 2, 'Rosa Roja', 'Rosa roja clásica para ocasiones románticas'),
-(2, 2, 2, 3, 'Tulipán Amarillo', 'Tulipán amarillo brillante para alegrar el día'),
-(3, 3, 3, 11, 'Orquídea Púrpura', 'Orquídea exótica y elegante en color púrpura'),
-(4, 4, 4, 5, 'Girasol', 'Girasol alto y brillante que sigue al sol'),
-(5, 5, 5, 1, 'Lirio Blanco', 'Lirio blanco elegante y fragante para cualquier ocasión'),
-(6, 6, 6, 2, 'Clavel Rojo', 'Clavel rojo popular en ramos y arreglos'),
 (1, 7, 7, 1, 'Margarita Blanca', 'Margarita sencilla y alegre en color blanco'),
+(1, 2, 2, 3, 'Tulipán Amarillo', 'Tulipán amarillo brillante para alegrar el día'),
+(1, 8, 8, 10, 'Hortensia Azul', 'Hortensia ornamental en racimos de color azul'),
+(1, 3, 3, 11, 'Orquídea Púrpura', 'Orquídea exótica y elegante en color púrpura'),
+(1, 4, 4, 5, 'Girasol', 'Girasol alto y brillante que sigue al sol'),
+(1, 9, 9, 4, 'Peonía Rosa', 'Peonía grande y fragante en color rosa'),
+(1, 5, 5, 1, 'Lirio Blanco', 'Lirio blanco elegante y fragante para cualquier ocasión'),
+(1, 6, 6, 2, 'Clavel Rojo', 'Clavel rojo popular en ramos y arreglos'),
+(2, 2, 2, 3, 'Tulipán Amarillo', 'Tulipán amarillo brillante para alegrar el día'),
+(2, 3, 3, 11, 'Orquídea Púrpura', 'Orquídea exótica y elegante en color púrpura'),
+(2, 4, 4, 5, 'Girasol', 'Girasol alto y brillante que sigue al sol'),
+(2, 9, 9, 4, 'Peonía Rosa', 'Peonía grande y fragante en color rosa'),
+(2, 5, 5, 1, 'Lirio Blanco', 'Lirio blanco elegante y fragante para cualquier ocasión'),
 (2, 8, 8, 10, 'Hortensia Azul', 'Hortensia ornamental en racimos de color azul'),
-(3, 9, 9, 4, 'Peonía Rosa', 'Peonía grande y fragante en color rosa');
+(3, 3, 3, 11, 'Orquídea Púrpura', 'Orquídea exótica y elegante en color púrpura'),
+(3, 1, 1, 2, 'Rosa Roja', 'Rosa roja clásica para ocasiones románticas'),
+(3, 7, 7, 1, 'Margarita Blanca', 'Margarita sencilla y alegre en color blanco'),
+(3, 2, 2, 3, 'Tulipán Amarillo', 'Tulipán amarillo brillante para alegrar el día'),
+(3, 8, 8, 10, 'Hortensia Azul', 'Hortensia ornamental en racimos de color azul'),
+(3, 9, 9, 4, 'Peonía Rosa', 'Peonía grande y fragante en color rosa'),
+(4, 4, 4, 5, 'Girasol', 'Girasol alto y brillante que sigue al sol'),
+(4, 1, 1, 2, 'Rosa Roja', 'Rosa roja clásica para ocasiones románticas'),
+(4, 7, 7, 1, 'Margarita Blanca', 'Margarita sencilla y alegre en color blanco'),
+(4, 2, 2, 3, 'Tulipán Amarillo', 'Tulipán amarillo brillante para alegrar el día'),
+(4, 8, 8, 10, 'Hortensia Azul', 'Hortensia ornamental en racimos de color azul'),
+(4, 9, 9, 4, 'Peonía Rosa', 'Peonía grande y fragante en color rosa'),
+(5, 5, 5, 1, 'Lirio Blanco', 'Lirio blanco elegante y fragante para cualquier ocasión'),
+(5, 6, 6, 2, 'Clavel Rojo', 'Clavel rojo popular en ramos y arreglos'),
+(5, 2, 2, 3, 'Tulipán Amarillo', 'Tulipán amarillo brillante para alegrar el día'),
+(5, 3, 3, 11, 'Orquídea Púrpura', 'Orquídea exótica y elegante en color púrpura'),
+(5, 4, 4, 5, 'Girasol', 'Girasol alto y brillante que sigue al sol'),
+(6, 8, 8, 10, 'Hortensia Azul', 'Hortensia ornamental en racimos de color azul'),
+(6, 9, 9, 4, 'Peonía Rosa', 'Peonía grande y fragante en color rosa'),
+(6, 4, 4, 5, 'Girasol', 'Girasol alto y brillante que sigue al sol'),
+(6, 1, 1, 2, 'Rosa Roja', 'Rosa roja clásica para ocasiones románticas'),
+(6, 7, 7, 1, 'Margarita Blanca', 'Margarita sencilla y alegre en color blanco'),
+(6, 6, 6, 2, 'Clavel Rojo', 'Clavel rojo popular en ramos y arreglos');
 
 -- Verificar los datos insertados
 SELECT * FROM CATALOGO_FLORISTERIA;
@@ -1749,15 +2085,45 @@ SELECT * FROM CATALOGO_FLORISTERIA;
 
 -- Insertar datos de prueba en la tabla HISTORICO_PRECIO_FLOR
 INSERT INTO HISTORICO_PRECIO_FLOR (idCatalogoFloristeria, idCatalogocodigo, fechaInicio, fechaFin, precio, tamanoTallo) VALUES
-(1, 1, '2023-01-01', NULL, 10.00, 50),
-(2, 2, '2023-01-01', NULL, 15.00, 60),
-(3, 3, '2023-01-01', NULL, 20.00, 70),
-(4, 4, '2023-01-01', NULL, 25.00, 80),
-(5, 5, '2023-01-01', NULL, 30.00, 90),
-(1, 7, '2023-02-01', NULL, 12.00, 55),
-(2, 8, '2023-02-01', NULL, 18.00, 65),
-(3, 9, '2023-02-01', NULL, 22.00, 75),
-(4, 4, '2023-02-01', NULL, 28.00, 85);
+(1, 1, '2023-04-15', NULL, 10.00, 50),
+(1, 7, '2023-05-01', NULL, 12.50, 55),
+(1, 2, '2023-03-01', NULL, 15.00, 65),
+(1, 8, '2023-04-01', NULL, 17.50, 70),
+(1, 3, '2023-05-01', NULL, 20.00, 50),
+(1, 4, '2023-06-01', NULL, 22.50, 55),
+(1, 9, '2023-07-01', NULL, 25.00, 65),
+(1, 5, '2023-08-01', NULL, 27.50, 70),
+(1, 6, '2023-09-01', NULL, 30.00, 50),
+(2, 2, '2023-10-01', NULL, 32.50, 55),
+(2, 3, '2023-11-01', NULL, 35.00, 65),
+(2, 4, '2023-12-01', NULL, 37.50, 70),
+(2, 9, '2024-01-01', NULL, 40.00, 50),
+(2, 5, '2024-02-01', NULL, 42.50, 55),
+(2, 8, '2024-03-01', NULL, 45.00, 65),
+(3, 3, '2024-04-01', NULL, 47.50, 70),
+(3, 1, '2024-05-01', NULL, 10.00, 50),
+(3, 7, '2024-06-01', NULL, 12.50, 55),
+(3, 2, '2024-07-01', NULL, 15.00, 65),
+(3, 8, '2024-08-01', NULL, 17.50, 70),
+(3, 9, '2024-09-01', NULL, 20.00, 50),
+(4, 4, '2024-10-01', NULL, 22.50, 55),
+(4, 1, '2024-11-01', NULL, 25.00, 65),
+(4, 7, '2024-12-01', NULL, 27.50, 70),
+(4, 2, '2025-01-01', NULL, 30.00, 50),
+(4, 8, '2024-02-01', NULL, 32.50, 55),
+(4, 9, '2024-03-01', NULL, 35.00, 65),
+(5, 5, '2024-04-01', NULL, 37.50, 70),
+(5, 6, '2024-05-01', NULL, 40.00, 50),
+(5, 2, '2024-06-01', NULL, 42.50, 55),
+(5, 3, '2024-07-01', NULL, 45.00, 65),
+(5, 4, '2024-08-01', NULL, 47.50, 70),
+(6, 8, '2023-09-01', NULL, 10.00, 50),
+(6, 9, '2023-09-01', NULL, 12.50, 55),
+(6, 4, '2023-11-01', NULL, 15.00, 65),
+(6, 1, '2023-12-01', NULL, 17.50, 70),
+(6, 7, '2024-01-01', NULL, 20.00, 50),
+(6, 6, '2024-02-01', NULL, 22.50, 55);
+
 
 -- Verificar los datos insertados
 SELECT * FROM HISTORICO_PRECIO_FLOR;
@@ -1781,17 +2147,157 @@ SELECT * FROM DETALLE_BOUQUET;
 SELECT * FROM DETALLE_BOUQUET;
 
 
--- Insertar datos de prueba en la tabla FACTURA_FINAL
-INSERT INTO FACTURA_FINAL (idFloristeria, numFactura, fechaEmision, montoTotal, idClienteNatural, idClienteJuridico) VALUES
-(1, 1, '2023-07-01', 500.00, 1, NULL),
-(2, 2, '2023-08-01', 750.00, NULL, 1),
-(3, 3, '2023-09-01', 1000.00, 2, NULL),
-(4, 4, '2023-10-01', 1250.00, NULL, 2),
-(5, 5, '2023-11-01', 1500.00, 3, NULL),
-(2, 6, '2023-12-01', 1750.00, NULL, 3),
-(3, 7, '2024-01-01', 2000.00, 4, NULL),
-(4, 8, '2024-02-01', 2250.00, NULL, 4),
-(5, 9, '2024-03-01', 2500.00, 5, NULL);
+INSERT INTO FACTURA_FINAL (idFloristeria, fechaEmision, montoTotal, idClienteNatural, idClienteJuridico) VALUES
+(1, '2023-04-01', 1100.00, 1, NULL),
+(2, '2023-05-01', 75000.00, NULL, 1),
+(3, '2023-09-01', 1200.00, 2, NULL),
+(4, '2023-10-01', 1250.00, NULL, 2),
+(5, '2023-11-01', 15000.00, 3, NULL),
+(2, '2023-12-01', 75050.00, NULL, 3),
+(3, '2024-07-01', 14000.00, 4, NULL),
+(4, '2024-08-01', 2250.00, NULL, 4),
+(5, '2024-08-01', 2500.00, 5, NULL),
+(1, '2023-09-15', 6000.00, NULL, 1),
+(1, '2023-09-01', 7000.00, 2, NULL),
+(1, '2023-09-15', 8000.00, NULL, 2),
+(1, '2023-10-01', 9000.00, 3, NULL),
+(1, '2023-10-15', 10000.00, NULL, 3),
+(1, '2023-11-01', 11000.00, 4, NULL),
+(1, '2023-11-15', 12000.00, NULL, 4),
+(1, '2023-08-01', 13000.00, 5, NULL),
+(1, '2023-08-15', 20000.00, NULL, 5),
+(1, '2023-09-01', 5000.00, 1, NULL),
+(1, '2023-09-15', 6000.00, NULL, 1),
+(1, '2023-10-01', 7000.00, 2, NULL),
+(1, '2023-10-15', 8000.00, NULL, 2),
+(1, '2023-11-01', 9000.00, 3, NULL),
+(1, '2023-11-15', 10000.00, NULL, 3),
+(1, '2023-12-01', 11000.00, 4, NULL),
+(1, '2023-12-15', 1200.00, NULL, 4),
+(1, '2024-01-01', 1300.00, 5, NULL),
+(1, '2024-01-15', 3000.00, NULL, 5),
+(1, '2024-02-01', 500.00, 1, NULL),
+(1, '2024-02-15', 6000.00, NULL, 1),
+(1, '2024-03-01', 700.00, 2, NULL),
+(1, '2024-03-15', 8000.00, NULL, 2),
+(1, '2024-04-01', 900.00, 3, NULL),
+(1, '2024-04-15', 10000.00, NULL, 3),
+(1, '2024-05-01', 1100.00, 4, NULL),
+(1, '2024-05-15', 12000.00, NULL, 4),
+(1, '2024-06-01', 1300.00, 5, NULL),
+(1, '2024-06-15', 9000.00, NULL, 5),
+(1, '2024-07-01', 500.00, 1, NULL),
+(1, '2024-07-15', 6000.00, NULL, 1),
+(1, '2024-08-01', 700.00, 2, NULL),
+(1, '2024-08-15', 8000.00, NULL, 2),
+(1, '2024-09-01', 900.00, 3, NULL),
+(1, '2024-09-15', 10000.00, NULL, 3),
+(1, '2024-10-01', 1100.00, 4, NULL),
+(1, '2024-10-15', 12000.00, NULL, 4),
+(1, '2024-11-01', 1300.00, 5, NULL),
+(1, '2024-11-15', 3000.00, NULL, 5),
+(1, '2024-12-01', 500.00, 1, NULL),
+(1, '2024-12-15', 600.00, NULL, 1),
+(2, '2023-06-10', 700.00, 2, NULL),
+(2, '2023-07-01', 80000.00, NULL, 2),
+(2, '2023-08-01', 900.00, 3, NULL),
+(2, '2023-09-01', 100000.00, NULL, 3),
+(2, '2023-10-01', 1100.00, 4, NULL),
+(2, '2023-11-01', 120000.00, NULL, 4),
+(2, '2023-12-01', 1300.00, 5, NULL),
+(2, '2024-01-01', 30000.00, NULL, 5),
+(2, '2024-02-01', 500.00, 1, NULL),
+(2, '2024-03-01', 60000.00, NULL, 1),
+(2, '2024-04-01', 700.00, 2, NULL),
+(2, '2024-05-01', 80000.00, NULL, 2),
+(2, '2024-06-01', 9000.00, 3, NULL),
+(2, '2024-07-01', 1000.00, NULL, 3),
+(2, '2024-08-01', 1100.00, 4, NULL),
+(2, '2024-09-01', 120000.00, NULL, 4),
+(2, '2024-10-01', 1300.00, 5, NULL),
+(2, '2024-11-01', 90000.00, NULL, 5),
+(2, '2024-12-01', 500.00, 1, NULL),
+(2, '2025-01-01', 60000.00, NULL, 1),
+(3, '2023-06-10', 700.00, 2, NULL),
+(3, '2023-07-01', 80000.00, NULL, 2),
+(3, '2023-08-01', 900.00, 3, NULL),
+(3, '2023-09-01', 10000.00, NULL, 3),
+(3, '2023-10-01', 1100.00, 4, NULL),
+(3, '2023-11-01', 1200.00, NULL, 4),
+(3, '2023-12-01', 1300.00, 5, NULL),
+(3, '2024-01-01', 3000.00, NULL, 5),
+(3, '2024-02-01', 500.00, 1, NULL),
+(3, '2024-03-01', 6000.00, NULL, 1),
+(3, '2024-04-01', 700.00, 2, NULL),
+(3, '2024-05-01', 800.00, NULL, 2),
+(3, '2024-06-01', 900.00, 3, NULL),
+(3, '2024-07-01', 1000.00, NULL, 3),
+(3, '2024-08-01', 1100.00, 4, NULL),
+(3, '2024-09-01', 1200.00, NULL, 4),
+(3, '2024-10-01', 13000.00, 5, NULL),
+(3, '2024-11-01', 3000.00, NULL, 5),
+(3, '2024-12-01', 5000.00, 1, NULL),
+(3, '2025-01-01', 6000.00, NULL, 1),
+(4, '2023-06-10', 7000.00, 2, NULL),
+(4, '2023-07-01', 800.00, NULL, 2),
+(4, '2023-08-01', 900.00, 3, NULL),
+(4, '2023-09-01', 10000.00, NULL, 3),
+(4, '2023-10-01', 1100.00, 4, NULL),
+(4, '2023-11-01', 1200.00, NULL, 4),
+(4, '2023-12-01', 1300.00, 5, NULL),
+(4, '2024-01-01', 300.00, NULL, 5),
+(4, '2024-02-01', 500.00, 1, NULL),
+(4, '2024-03-01', 600.00, NULL, 1),
+(4, '2024-04-01', 700.00, 2, NULL),
+(4, '2024-05-01', 800.00, NULL, 2),
+(4, '2024-06-01', 900.00, 3, NULL),
+(4, '2024-07-01', 1000.00, NULL, 3),
+(4, '2024-08-01', 1100.00, 4, NULL),
+(4, '2024-09-01', 1200.00, NULL, 4),
+(4, '2024-10-01', 1300.00, 5, NULL),
+(4, '2024-11-01', 300.00, NULL, 5),
+(4, '2024-12-01', 500.00, 1, NULL),
+(4, '2025-01-01', 600.00, NULL, 1),
+(5, '2023-06-10', 700.00, 2, NULL),
+(5, '2023-07-01', 800.00, NULL, 2),
+(5, '2023-08-01', 900.00, 3, NULL),
+(5, '2023-09-01', 1000.00, NULL, 3),
+(5, '2023-10-01', 1100.00, 4, NULL),
+(5, '2023-11-01', 1200.00, NULL, 4),
+(5, '2023-12-01', 1300.00, 5, NULL),
+(5, '2024-01-01', 300.00, NULL, 5),
+(5, '2024-02-01', 500.00, 1, NULL),
+(5, '2024-03-01', 600.00, NULL, 1),
+(5, '2024-04-01', 700.00, 2, NULL),
+(5, '2024-05-01', 800.00, NULL, 2),
+(5, '2024-06-01', 900.00, 3, NULL),
+(5, '2024-07-01', 1000.00, NULL, 3),
+(5, '2024-08-01', 1100.00, 4, NULL),
+(5, '2024-09-01', 1200.00, NULL, 4),
+(5, '2024-10-01', 1300.00, 5, NULL),
+(5, '2024-11-01', 300.00, NULL, 5),
+(5, '2024-12-01', 500.00, 1, NULL),
+(5, '2025-01-01', 600.00, NULL, 1),
+(6, '2023-06-10', 700.00, 2, NULL),
+(6, '2023-07-01', 800.00, NULL, 2),
+(6, '2023-08-01', 900.00, 3, NULL),
+(6, '2023-09-01', 1000.00, NULL, 3),
+(6, '2023-10-01', 1100.00, 4, NULL),
+(6, '2023-11-01', 1200.00, NULL, 4),
+(6, '2023-12-01', 1300.00, 5, NULL),
+(6, '2024-01-01', 300.00, NULL, 5),
+(6, '2024-02-01', 500.00, 1, NULL),
+(6, '2024-03-01', 600.00, NULL, 1),
+(6, '2024-04-01', 700.00, 2, NULL),
+(6, '2024-05-01', 800.00, NULL, 2),
+(6, '2024-06-01', 900.00, 3, NULL),
+(6, '2024-07-01', 1000.00, NULL, 3),
+(6, '2024-08-01', 1100.00, 4, NULL),
+(6, '2024-09-01', 1200.00, NULL, 4),
+(6, '2024-10-01', 1300.00, 5, NULL),
+(6, '2024-11-01', 300.00, NULL, 5),
+(6, '2024-12-01', 500.00, 1, NULL),
+(6, '2025-01-01', 600.00, NULL, 1);
 
 -- Verificar los datos insertados
 SELECT * FROM FACTURA_FINAL;
@@ -1860,198 +2366,12 @@ SELECT * FROM obtener_informacion_de_flor(1, 1);
 
 SELECT * FROM Traer_lotes(1);
 
-CREATE OR REPLACE FUNCTION Paises_floristerias()
-RETURNS TABLE (
-  nombrePais TEXT
-) AS $$
-BEGIN
-  RETURN QUERY
-  SELECT DISTINCT p.nombrePais
-  FROM FLORISTERIAS f
-  JOIN PAIS p ON f.idPais = p.paisId;
-END;
-$$ LANGUAGE plpgsql;
 
 -- Ejecutar la función para obtener los nombres de los países de las floristerías
 SELECT * FROM Paises_floristerias();
-CREATE OR REPLACE FUNCTION Paises_productoras()
-RETURNS TABLE (
-  nombrePais TEXT
-) AS $$
-BEGIN
-  RETURN QUERY
-  SELECT DISTINCT p.nombrePais
-  FROM PRODUCTORAS pr
-  JOIN PAIS p ON pr.idPais = p.paisId;
-END;
-$$ LANGUAGE plpgsql;
 
 -- Ejecutar la función para obtener los nombres de los países de las productoras
 SELECT * FROM Paises_productoras();
-
-
-CREATE OR REPLACE FUNCTION floristerias_con_factura()
-RETURNS TABLE (
-  floristeriaId NUMERIC,
-  nombre VARCHAR
-) AS $$
-BEGIN
-  RETURN QUERY
-  SELECT DISTINCT f.floristeriaId, f.nombre
-  FROM FLORISTERIAS f
-  JOIN FACTURA fa ON f.floristeriaId = fa.idAfiliacionFloristeria;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION subastadoras_con_factura()
-RETURNS TABLE (
-  subastadoraId NUMERIC,
-  nombreSubastadora VARCHAR
-) AS $$
-BEGIN
-  RETURN QUERY
-  SELECT DISTINCT s.subastadoraId, s.nombreSubastadora
-  FROM SUBASTADORA s
-  JOIN FACTURA fa ON s.subastadoraId = fa.idAfiliacionSubastadora;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION facturas_afiliacion(
-  p_idAfiliacionFloristeria NUMERIC DEFAULT NULL,
-  p_idAfiliacionSubastadora NUMERIC DEFAULT NULL
-) RETURNS TABLE (
-  facturaId NUMERIC,
-  idAfiliacionFloristeria NUMERIC,
-  idAfiliacionSubastadora NUMERIC,
-  fechaEmision TIMESTAMP,
-  montoTotal NUMERIC,
-  numeroEnvio NUMERIC
-) AS $$
-BEGIN
-  RETURN QUERY
-  SELECT 
-    facturaId,
-    idAfiliacionFloristeria,
-    idAfiliacionSubastadora,
-    fechaEmision,
-    montoTotal,
-    numeroEnvio
-  FROM FACTURA
-  WHERE (p_idAfiliacionFloristeria IS NULL OR idAfiliacionFloristeria = p_idAfiliacionFloristeria)
-    AND (p_idAfiliacionSubastadora IS NULL OR idAfiliacionSubastadora = p_idAfiliacionSubastadora);
-END;
-$$ LANGUAGE plpgsql;
-
-/* FUNCIONES HECHAS POR GABO */ 
-
-CREATE OR REPLACE FUNCTION obtener_flor_cortes()
-RETURNS TABLE (
-  corteId NUMERIC,
-  nombreComun VARCHAR,
-  Descripcion VARCHAR,
-  genero_especie VARCHAR,
-  etimologia VARCHAR,
-  colores VARCHAR,
-  temperatura NUMERIC
-) AS $$
-BEGIN
-  RETURN QUERY
-  SELECT 
-    fc.corteId,
-    fc.nombreComun,
-    fc.Descripcion,
-    fc.genero_especie,
-    fc.etimologia,
-    fc.colores,
-    fc.temperatura
-  FROM FLOR_CORTES fc;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION obtener_contratos_productora(
-    p_productora_id NUMERIC
-)
-RETURNS TABLE (
-    idSubastadora NUMERIC,
-    idProductora NUMERIC,
-    nContrato NUMERIC,
-    fechaEmision DATE,
-    porcentajeProduccion NUMERIC(3,2),
-    tipoProductor VARCHAR,
-    fechaRenovacion DATE,
-    fechaCancelacion DATE,
-    esActivo BOOLEAN
-) AS $$
-BEGIN
-    RETURN QUERY
-    SELECT 
-        c.idSubastadora,
-        c.idProductora,
-        c.nContrato,
-        c.fechaEmision,
-        c.porcentajeProduccion,
-        c.tipoProductor,
-        CASE 
-            WHEN c.idrenovS IS NOT NULL AND c.idrenovS::VARCHAR LIKE '[0-9][0-9][0-9][0-9]' THEN TO_DATE(c.idrenovS::VARCHAR, 'YYYYMMDD')
-            ELSE NULL
-        END AS fechaRenovacion,
-        CASE 
-            WHEN c.cancelado IS NOT NULL AND c.cancelado::VARCHAR LIKE '[0-9][0-9][0-9][0-9]' THEN TO_DATE(c.cancelado::VARCHAR, 'YYYYMMDD')
-            ELSE NULL
-        END AS fechaCancelacion,
-        CASE 
-            WHEN c.cancelado IS NOT NULL THEN FALSE
-            ELSE TRUE
-        END AS esActivo
-    FROM 
-        contrato c
-    WHERE 
-        c.idProductora = p_productora_id;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION match_flowers(p_floristeria_id INTEGER, p_ocasion VARCHAR, p_emocion VARCHAR)
-RETURNS TABLE (
-    idFloristeria INTEGER,
-    nombre_comun VARCHAR,
-    color VARCHAR,
-    significado VARCHAR,
-    precio NUMERIC,
-    desc_color VARCHAR,
-    desc_enlace VARCHAR
-) AS $$
-BEGIN
-    RETURN QUERY
-    SELECT 
-        cf.idFloristeria::INTEGER,
-        fc.nombreComun,
-        c.Nombre AS color,
-        s.Descripcion AS significado,
-        hpf.precio,
-        c.descripcion AS desc_color,
-        e.descripcion AS desc_enlace
-    FROM 
-        CATALOGO_FLORISTERIA cf
-    JOIN 
-        FLOR_CORTES fc ON cf.idCorteFlor = fc.corteId
-    JOIN 
-        COLOR c ON cf.idColor = c.colorId
-    LEFT JOIN 
-        ENLACES e ON c.colorId = e.idColor
-    JOIN 
-        SIGNIFICADO s ON e.IdSignificado = s.SignificadoId
-    JOIN 
-        HISTORICO_PRECIO_FLOR hpf ON cf.idFloristeria = hpf.idCatalogoFloristeria AND cf.codigo = hpf.idCatalogocodigo
-    WHERE 
-        cf.idFloristeria = p_floristeria_id
-        AND (REGEXP_LIKE(s.Descripcion, p_ocasion, 'i')
-            OR REGEXP_LIKE(e.Descripcion, p_emocion, 'i')
-            OR REGEXP_LIKE(c.descripcion, p_ocasion, 'i')
-            OR REGEXP_LIKE(c.descripcion, p_emocion, 'i')
-            OR REGEXP_LIKE(e.descripcion, p_ocasion, 'i')
-            OR REGEXP_LIKE(e.descripcion, p_emocion, 'i'));
-END;
-$$ LANGUAGE plpgsql;
 
 
 -------------------------------------------------------------------------------------------------------------------
@@ -2392,6 +2712,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-SELECT * FROM ganancias_floristeria(2, '2023-01-01');
+SELECT * FROM ganancias_floristeria(2, '2023-09-01');
 
 /* FIN DEL REQUERIMIENTO 2 */
