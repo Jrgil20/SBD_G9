@@ -2714,4 +2714,51 @@ $$ LANGUAGE plpgsql;
 
 SELECT * FROM ganancias_floristeria(2, '2023-09-01');
 
+/* Funcion adicional que llama la anterioir para los 12 meses del anio*/
+
+CREATE OR REPLACE FUNCTION fn_ganancias_por_anio(
+  p_idFloristeria NUMERIC,
+  p_anio INT
+)
+RETURNS TABLE(
+  ganancias_brutas NUMERIC,
+  costos NUMERIC,
+  ganancias_netas NUMERIC,
+  mesdelanio VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  mes INT;
+  anioActual INT := EXTRACT(YEAR FROM CURRENT_DATE);
+  mesActual INT := EXTRACT(MONTH FROM CURRENT_DATE);
+  r RECORD;
+  meses TEXT[] := ARRAY['ene','feb','marzo','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+BEGIN
+  IF p_anio < anioActual THEN
+    mesActual := 12;
+  ELSIF p_anio > anioActual THEN
+    RAISE NOTICE 'El año es mayor al actual, no se calcula.';
+    RETURN;
+  END IF;
+
+  FOR mes IN 1..mesActual LOOP
+    SELECT * INTO r
+    FROM ganancias_floristeria(
+      p_idFloristeria,
+      TO_DATE(p_anio::text || '-' || mes::text || '-01','YYYY-MM-DD')
+    );
+
+    ganancias_brutas := r.ganancias_brutas;
+    costos := r.costos;
+    ganancias_netas := r.ganancias_netas;
+    mesdelanio := meses[mes];
+
+    RETURN NEXT;
+  END LOOP;
+END;
+$$;
+
+SELECT * FROM fn_ganancias_por_anio(2,2023)
+
 /* FIN DEL REQUERIMIENTO 2 */
