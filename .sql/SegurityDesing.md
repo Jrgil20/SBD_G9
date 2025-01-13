@@ -169,3 +169,68 @@ Para crear la base de datos utilizando los comandos de `commands.sql` desde el u
 
     Asegúrate de reemplazar `/ruta/a/commands.sql` con la ruta real al archivo `commands.sql`.
 
+## creamos lso roles usuario
+
+### floriteria
+
+```sql
+-- Role: "Floristeria "
+-- DROP ROLE IF EXISTS "Floristeria ";
+
+CREATE ROLE "Floristeria " WITH
+  NOLOGIN
+  NOSUPERUSER
+  INHERIT
+  NOCREATEDB
+  NOCREATEROLE
+  NOREPLICATION
+  NOBYPASSRLS;
+```
+
+### Subastadora
+
+```sql
+-- Role: "Subastadora"
+-- DROP ROLE IF EXISTS "Subastadora";
+
+CREATE ROLE "Subastadora" WITH
+  NOLOGIN
+  NOSUPERUSER
+  INHERIT
+  NOCREATEDB
+  NOCREATEROLE
+  NOREPLICATION
+  NOBYPASSRLS;
+```
+
+### Productora
+
+```sql
+-- Role: "Productora"
+-- DROP ROLE IF EXISTS "Productora";
+
+CREATE ROLE "Productora" WITH
+  NOLOGIN
+  NOSUPERUSER
+  INHERIT
+  NOCREATEDB
+  NOCREATEROLE
+  NOREPLICATION
+  NOBYPASSRLS;
+```
+
+### cliente
+
+```sql
+-- Role: cliente
+-- DROP ROLE IF EXISTS cliente;
+
+CREATE ROLE cliente WITH
+  NOLOGIN
+  NOSUPERUSER
+  INHERIT
+  NOCREATEDB
+  NOCREATEROLE
+  NOREPLICATION
+  NOBYPASSRLS;
+```
