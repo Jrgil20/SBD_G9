@@ -253,10 +253,10 @@ BEGIN
         f.nombre AS floristeria_nombre,
         c.nombrePropio AS flor_nombre,
         h.precio AS precio_actual,
-        7 - (CURRENT_DATE - h.fechaInicio) AS dias_para_expirar,
+        7 - EXTRACT(DAY FROM (CURRENT_TIMESTAMP - h.fechaInicio))::INTEGER AS dias_para_expirar,
         CASE 
-            WHEN 7 - (CURRENT_DATE - h.fechaInicio) > 0 THEN 
-                CONCAT('Activo: ', 7 - (CURRENT_DATE - h.fechaInicio), ' días restantes')::VARCHAR
+            WHEN 7 - EXTRACT(DAY FROM (CURRENT_TIMESTAMP - h.fechaInicio))::INTEGER > 0 THEN 
+                CONCAT('Activo: ', 7 - EXTRACT(DAY FROM (CURRENT_TIMESTAMP - h.fechaInicio))::INTEGER, ' días restantes')::VARCHAR
             ELSE 
                 'Necesita actualización'::VARCHAR
         END AS estado
@@ -502,10 +502,10 @@ BEGIN
         f.nombre AS floristeria_nombre,
         c.nombrePropio AS flor_nombre,
         h.precio AS precio_actual,
-        7 - (CURRENT_DATE - h.fechaInicio) AS dias_para_expirar,
+        7 - EXTRACT(DAY FROM (CURRENT_TIMESTAMP - h.fechaInicio))::INTEGER AS dias_para_expirar,
         CASE 
-            WHEN 7 - (CURRENT_DATE - h.fechaInicio) > 0 THEN 
-                CONCAT('Activo: ', 7 - (CURRENT_DATE - h.fechaInicio), ' días restantes')::VARCHAR
+            WHEN 7 - EXTRACT(DAY FROM (CURRENT_TIMESTAMP - h.fechaInicio))::INTEGER > 0 THEN 
+                CONCAT('Activo: ', 7 - EXTRACT(DAY FROM (CURRENT_TIMESTAMP - h.fechaInicio))::INTEGER, ' días restantes')::VARCHAR
             ELSE 
                 'Necesita actualización'::VARCHAR
         END AS estado
