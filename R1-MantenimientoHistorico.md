@@ -378,6 +378,7 @@ CREATE TRIGGER trg_auditoria_delete
 AFTER DELETE ON HISTORICO_PRECIO_FLOR
 FOR EACH ROW
 EXECUTE FUNCTION trg_auditoria_cambios_precios();
+
 ```
 
 ## Caso de Prueba para "agregar_o_cambiar_precio_flor"
@@ -403,4 +404,5 @@ SELECT abrir_nuevo_periodo_precio(
     p_tamanoTallo       => 50,
     p_fechaInicio       => '2025-01-01 09:00:00'
 );
+
 ```

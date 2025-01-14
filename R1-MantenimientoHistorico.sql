@@ -279,17 +279,21 @@ CREATE OR REPLACE FUNCTION cambiar_precio_flor_floristeria(
     p_nuevo_precio NUMERIC,
     p_idCatalogocodigo NUMERIC DEFAULT NULL,
     p_nombreFlor TEXT DEFAULT NULL,
+
     p_idCorteFlor NUMERIC DEFAULT NULL,
     p_tamanoTallo NUMERIC DEFAULT NULL
+
 )
 RETURNS TEXT AS $$
 DECLARE
     v_idFloristeria NUMERIC;
     v_idCatalogoFloristeria NUMERIC;
     v_idCatalogoCodigo NUMERIC;
+
     last_fechaInicio TIMESTAMP;
     last_tamanoTallo NUMERIC;
     today TIMESTAMP := CURRENT_TIMESTAMP;
+
     dias_transcurridos INTEGER;
 BEGIN
     -- Validar que se proporcione al menos un método de identificación
@@ -297,9 +301,11 @@ BEGIN
         RETURN 'Debe proporcionar al menos uno de los siguientes parámetros para identificar la flor: p_idCatalogocodigo, p_nombreFlor, o p_idCorteFlor.';
     END IF;
 
+
     IF p_tamanoTallo IS NULL THEN
         RETURN 'Debe especificar un tamaño de tallo para identificar la flor.';
     END IF;
+
 
     -- Obtener el idFloristeria a partir del usuario actual
     SELECT floristeriaId
@@ -363,6 +369,7 @@ BEGIN
      WHERE idCatalogoFloristeria = v_idCatalogoFloristeria
        AND idCatalogocodigo = v_idCatalogoCodigo
        AND tamanoTallo = p_tamanoTallo
+
      ORDER BY fechaInicio DESC
      LIMIT 1;
 
@@ -416,10 +423,12 @@ BEGIN
             today,
             NULL,
             p_nuevo_precio,
+
             p_tamanoTallo
         );
 
         RAISE NOTICE 'Insertado nuevo registro con precio=% y tamanoTallo=%', p_nuevo_precio, p_tamanoTallo;
+
         RETURN 'Precio actualizado exitosamente.';
     ELSE
         RETURN 'No es posible cambiar el precio por las políticas de la floristería que permiten un máximo de 7 días por precio.';
@@ -432,12 +441,14 @@ EXCEPTION
 END;
 $$ LANGUAGE plpgsql;
 
+
 /*
 SELECT cambiar_precio_flor_floristeria(
     p_nuevo_precio := 30.00,
     p_nombreFlor := 'Peonía Rosa',
 	p_tamanotallo := 65
 );*/
+
 
 /* COMO HICE LA CONEXION DE UN NUEVO USER QUE SE LLAME COMO UNA FLORISTERIA DE LA TABLA
 
@@ -713,6 +724,7 @@ EXECUTE FUNCTION trg_auditoria_cambios_precios();
 /* SELECT * FROM AUDITORIA_CAMBIOS_PRECIOS
 ORDER BY fecha DESC; */
 
+
 -- Función para abrir un nuevo período de precios
 CREATE OR REPLACE FUNCTION abrir_nuevo_periodo_precio(
     p_nombreFloristeria TEXT,
@@ -773,3 +785,4 @@ SELECT abrir_nuevo_periodo_precio(
     p_tamanoTallo       => 50,
     p_fechaInicio       => '2025-01-01 09:00:00'
 );*/
+
