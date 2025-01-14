@@ -379,3 +379,28 @@ AFTER DELETE ON HISTORICO_PRECIO_FLOR
 FOR EACH ROW
 EXECUTE FUNCTION trg_auditoria_cambios_precios();
 ```
+
+## Caso de Prueba para "agregar_o_cambiar_precio_flor"
+Utilizando la función "agregar_o_cambiar_precio_flor", se puede insertar un nuevo histórico si no existe registro previo o cambiarlo si ya existe. Ejemplo:
+```sql
+SELECT agregar_o_cambiar_precio_flor(
+    p_nombreFloristeria => 'FloraPrima',
+    p_nuevo_precio      => 29.90,
+    p_nombreFlor        => 'Rosa Blanca',
+    p_tamanoTallo       => 55,
+    p_fechaInicio       => '2025-01-01 09:00:00',
+    p_esFloristeria     => FALSE
+);
+```
+
+## Caso de Prueba para "abrir_nuevo_periodo_precio"
+Utilizando la función "abrir_nuevo_periodo_precio", se puede insertar un nuevo registro en el histórico de precios si el registro existe en `Catalogo_floristeria`. Ejemplo:
+```sql
+SELECT abrir_nuevo_periodo_precio(
+    p_nombreFloristeria => 'FloraPrima',
+    p_idCatalogocodigo  => 1,
+    p_nuevo_precio      => 25.00,
+    p_tamanoTallo       => 50,
+    p_fechaInicio       => '2025-01-01 09:00:00'
+);
+```

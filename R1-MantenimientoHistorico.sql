@@ -68,21 +68,26 @@ CREATE OR REPLACE FUNCTION cambiar_precio_flor_super(
     p_nuevo_precio NUMERIC,
     p_idCatalogocodigo NUMERIC DEFAULT NULL,
     p_nombreFlor TEXT DEFAULT NULL,
-    p_idCorteFlor NUMERIC DEFAULT NULL
+    p_idCorteFlor NUMERIC DEFAULT NULL,
+    p_tamanoTallo NUMERIC DEFAULT NULL
 )
 RETURNS TEXT AS $$
 DECLARE
     v_idFloristeria NUMERIC;
     v_idCatalogoFloristeria NUMERIC;
     v_idCatalogocodigo NUMERIC;
-    last_fechaInicio DATE;
+    last_fechaInicio TIMESTAMP;
     last_tamanoTallo NUMERIC;
-    today DATE := CURRENT_DATE;
+    today TIMESTAMP := CURRENT_TIMESTAMP;
     dias_transcurridos INTEGER;
 BEGIN
     -- Validar que se proporcione al menos uno de los métodos de identificación adicionales
     IF p_idCatalogocodigo IS NULL AND p_nombreFlor IS NULL AND p_idCorteFlor IS NULL THEN
         RETURN 'Debe proporcionar al menos uno de los siguientes parámetros para identificar la flor: p_idCatalogocodigo, p_nombreFlor, o p_idCorteFlor.';
+    END IF;
+
+    IF p_tamanoTallo IS NULL THEN
+        RETURN 'Debe especificar un tamaño de tallo para identificar la flor.';
     END IF;
 
     -- Obtener floristeriaId basado en p_nombreFloristeria
@@ -149,6 +154,7 @@ BEGIN
     FROM HISTORICO_PRECIO_FLOR
     WHERE idCatalogoFloristeria = v_idCatalogoFloristeria
       AND idCatalogocodigo = v_idCatalogocodigo
+      AND tamanoTallo = p_tamanoTallo
     ORDER BY fechaInicio DESC
     LIMIT 1;
 
@@ -205,10 +211,10 @@ BEGIN
             today,
             NULL,
             p_nuevo_precio,
-            last_tamanoTallo
+            p_tamanoTallo
         );
 
-        RAISE NOTICE 'Insertado nuevo registro con precio=% y tamanoTallo=%', p_nuevo_precio, last_tamanoTallo;
+        RAISE NOTICE 'Insertado nuevo registro con precio=% y tamanoTallo=%', p_nuevo_precio, p_tamanoTallo;
 
         RETURN 'Precio actualizado exitosamente.';
     ELSE
@@ -224,21 +230,10 @@ $$ LANGUAGE plpgsql;
 
 /* Ejemplos de solicitud
 SELECT cambiar_precio_flor_super(
-    p_nombreFloristeria := 'Floristería Central',
-    p_nuevo_precio := 20.00,
-    p_idCatalogocodigo := 1
-);
-
-SELECT cambiar_precio_flor_super(
-    p_nombreFloristeria := 'Floristería Central',
-    p_nuevo_precio := 25.00,
-    p_nombreFlor := 'Rosa Roja'
-);
-
-SELECT cambiar_precio_flor_super(
-    p_nombreFloristeria := 'Floristería Central',
+    p_nombreFloristeria := 'FloraPrima',
     p_nuevo_precio := 30.00,
-    p_idCorteFlor := 5
+    p_nombreFlor := 'Peonía Rosa',
+	p_tamanotallo := 65
 );*/ 
 
 -----------------------------------------------------------------------------------
@@ -284,21 +279,26 @@ CREATE OR REPLACE FUNCTION cambiar_precio_flor_floristeria(
     p_nuevo_precio NUMERIC,
     p_idCatalogocodigo NUMERIC DEFAULT NULL,
     p_nombreFlor TEXT DEFAULT NULL,
-    p_idCorteFlor NUMERIC DEFAULT NULL
+    p_idCorteFlor NUMERIC DEFAULT NULL,
+    p_tamanoTallo NUMERIC DEFAULT NULL
 )
 RETURNS TEXT AS $$
 DECLARE
     v_idFloristeria NUMERIC;
     v_idCatalogoFloristeria NUMERIC;
     v_idCatalogoCodigo NUMERIC;
-    last_fechaInicio DATE;
+    last_fechaInicio TIMESTAMP;
     last_tamanoTallo NUMERIC;
-    today DATE := CURRENT_DATE;
+    today TIMESTAMP := CURRENT_TIMESTAMP;
     dias_transcurridos INTEGER;
 BEGIN
     -- Validar que se proporcione al menos un método de identificación
     IF p_idCatalogocodigo IS NULL AND p_nombreFlor IS NULL AND p_idCorteFlor IS NULL THEN
         RETURN 'Debe proporcionar al menos uno de los siguientes parámetros para identificar la flor: p_idCatalogocodigo, p_nombreFlor, o p_idCorteFlor.';
+    END IF;
+
+    IF p_tamanoTallo IS NULL THEN
+        RETURN 'Debe especificar un tamaño de tallo para identificar la flor.';
     END IF;
 
     -- Obtener el idFloristeria a partir del usuario actual
@@ -362,6 +362,7 @@ BEGIN
       FROM HISTORICO_PRECIO_FLOR
      WHERE idCatalogoFloristeria = v_idCatalogoFloristeria
        AND idCatalogocodigo = v_idCatalogoCodigo
+       AND tamanoTallo = p_tamanoTallo
      ORDER BY fechaInicio DESC
      LIMIT 1;
 
@@ -415,10 +416,10 @@ BEGIN
             today,
             NULL,
             p_nuevo_precio,
-            last_tamanoTallo
+            p_tamanoTallo
         );
 
-        RAISE NOTICE 'Insertado nuevo registro con precio=% y tamanoTallo=%', p_nuevo_precio, last_tamanoTallo;
+        RAISE NOTICE 'Insertado nuevo registro con precio=% y tamanoTallo=%', p_nuevo_precio, p_tamanoTallo;
         RETURN 'Precio actualizado exitosamente.';
     ELSE
         RETURN 'No es posible cambiar el precio por las políticas de la floristería que permiten un máximo de 7 días por precio.';
@@ -431,20 +432,12 @@ EXCEPTION
 END;
 $$ LANGUAGE plpgsql;
 
-/* Comandos de prueba
+/*
 SELECT cambiar_precio_flor_floristeria(
-  p_nuevo_precio => 60.00,
-  p_nombreFlor   => 'Rosa Imperial'
-);
-
-SELECT cambiar_precio_flor_floristeria(
-  p_nuevo_precio      => 70.00,
-  p_idCatalogocodigo  => 202,
-  p_nombreFlor        => 'Tulipán Real',
-  p_idCorteFlor       => 12
-);
-
-*/
+    p_nuevo_precio := 30.00,
+    p_nombreFlor := 'Peonía Rosa',
+	p_tamanotallo := 65
+);*/
 
 /* COMO HICE LA CONEXION DE UN NUEVO USER QUE SE LLAME COMO UNA FLORISTERIA DE LA TABLA
 
@@ -720,3 +713,63 @@ EXECUTE FUNCTION trg_auditoria_cambios_precios();
 /* SELECT * FROM AUDITORIA_CAMBIOS_PRECIOS
 ORDER BY fecha DESC; */
 
+-- Función para abrir un nuevo período de precios
+CREATE OR REPLACE FUNCTION abrir_nuevo_periodo_precio(
+    p_nombreFloristeria TEXT,
+    p_idCatalogocodigo NUMERIC,
+    p_nuevo_precio NUMERIC,
+    p_tamanoTallo NUMERIC,
+    p_fechaInicio TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
+RETURNS TEXT AS $$
+DECLARE
+    v_idFloristeria NUMERIC;
+BEGIN
+    -- Obtener el ID de la floristería
+    SELECT floristeriaId INTO v_idFloristeria
+    FROM FLORISTERIAS
+    WHERE nombre ILIKE p_nombreFloristeria
+    LIMIT 1;
+
+    IF v_idFloristeria IS NULL THEN
+        RETURN 'No se encontró una floristería con el nombre especificado.';
+    END IF;
+
+    -- Validar que el registro exista en Catalogo_floristeria
+    IF NOT EXISTS (
+        SELECT 1 FROM CATALOGO_FLORISTERIA
+        WHERE idFloristeria = v_idFloristeria
+          AND codigo = p_idCatalogocodigo
+    ) THEN
+        RETURN 'El registro no existe en Catalogo_floristeria.';
+    END IF;
+
+    -- Insertar el nuevo registro en el histórico de precios
+    INSERT INTO HISTORICO_PRECIO_FLOR (
+        idCatalogoFloristeria,
+        idCatalogocodigo,
+        fechaInicio,
+        fechaFin,
+        precio,
+        tamanoTallo
+    ) VALUES (
+        v_idFloristeria,
+        p_idCatalogocodigo,
+        p_fechaInicio,
+        NULL,
+        p_nuevo_precio,
+        p_tamanoTallo
+    );
+
+    RETURN 'Nuevo período de precio abierto exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+/*
+SELECT abrir_nuevo_periodo_precio(
+    p_nombreFloristeria => 'FloraPrima',
+    p_idCatalogocodigo  => 1,
+    p_nuevo_precio      => 25.00,
+    p_tamanoTallo       => 50,
+    p_fechaInicio       => '2025-01-01 09:00:00'
+);*/
