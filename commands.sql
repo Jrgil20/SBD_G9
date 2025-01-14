@@ -2053,7 +2053,6 @@ INSERT INTO CATALOGO_FLORISTERIA (idFloristeria, codigo, idCorteFlor, idColor, n
 (3, 3, 3, 11, 'Orquídea Púrpura', 'Orquídea exótica y elegante en color púrpura'),
 (4, 4, 4, 5, 'Girasol', 'Girasol alto y brillante que sigue al sol'),
 (6, 6, 6, 2, 'Clavel Rojo', 'Clavel rojo popular en ramos y arreglos'),
-(1, 7, 7, 1, 'Margarita Blanca', 'Margarita sencilla y alegre en color blanco'),
 (2, 8, 8, 10, 'Hortensia Azul', 'Hortensia ornamental en racimos de color azul'),
 (2, 9, 9, 4, 'Peonía Rosa', 'Peonía grande y fragante en color rosa'),
 (2, 5, 5, 1, 'Lirio Blanco', 'Lirio blanco elegante y fragante para cualquier ocasión'),
