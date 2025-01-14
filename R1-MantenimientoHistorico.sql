@@ -276,3 +276,191 @@ END;
 $$ LANGUAGE plpgsql;
 
 /* FIN DEL REQUERIMIENTO 1 */
+
+/* FUNCION DEL REQUERIMIENTO 1 PARA CUANDO LA FLORISTERIA TENGA SU USER */
+
+CREATE OR REPLACE FUNCTION cambiar_precio_flor_floristeria(
+    p_nuevo_precio NUMERIC,
+    p_idCatalogocodigo NUMERIC DEFAULT NULL,
+    p_nombreFlor TEXT DEFAULT NULL,
+    p_idCorteFlor NUMERIC DEFAULT NULL
+)
+RETURNS TEXT AS $$
+DECLARE
+    v_idFloristeria NUMERIC;
+    v_idCatalogoFloristeria NUMERIC;
+    v_idCatalogoCodigo NUMERIC;
+    last_fechaInicio DATE;
+    last_tamanoTallo NUMERIC;
+    today DATE := CURRENT_DATE;
+    dias_transcurridos INTEGER;
+BEGIN
+    -- Validar que se proporcione al menos un método de identificación
+    IF p_idCatalogocodigo IS NULL AND p_nombreFlor IS NULL AND p_idCorteFlor IS NULL THEN
+        RETURN 'Debe proporcionar al menos uno de los siguientes parámetros para identificar la flor: p_idCatalogocodigo, p_nombreFlor, o p_idCorteFlor.';
+    END IF;
+
+    -- Obtener el idFloristeria a partir del usuario actual
+    SELECT floristeriaId
+      INTO v_idFloristeria
+      FROM FLORISTERIAS
+     WHERE nombre ILIKE CURRENT_USER
+     LIMIT 1;
+
+    IF NOT FOUND THEN
+        RETURN 'No se encontró la floristería asociada al usuario actual.';
+    END IF;
+
+    -- Obtener un idCatalogoFloristeria de referencia (aunque sea para validaciones)
+    SELECT codigo
+      INTO v_idCatalogoFloristeria
+      FROM CATALOGO_FLORISTERIA
+     WHERE idFloristeria = v_idFloristeria
+     LIMIT 1;
+
+    IF NOT FOUND THEN
+        RETURN 'No se encontró catálogo asignado a la floristería del usuario actual.';
+    END IF;
+
+    -- Determinar v_idCatalogoCodigo según el método de identificación
+    IF p_idCatalogocodigo IS NOT NULL THEN
+        v_idCatalogoCodigo := p_idCatalogocodigo;
+        RAISE NOTICE 'Método de identificación: idCatalogocodigo=%', v_idCatalogoCodigo;
+    ELSIF p_nombreFlor IS NOT NULL THEN
+        SELECT codigo
+          INTO v_idCatalogoCodigo
+          FROM CATALOGO_FLORISTERIA
+         WHERE nombrePropio ILIKE p_nombreFlor
+           AND idFloristeria = v_idFloristeria
+         ORDER BY codigo DESC
+         LIMIT 1;
+        IF NOT FOUND THEN
+            RETURN 'No se encontró la flor con el nombre especificado en la floristería del usuario actual.';
+        END IF;
+        RAISE NOTICE 'Método de identificación: nombreFlor=% con idCatalogocodigo=%', p_nombreFlor, v_idCatalogoCodigo;
+    ELSIF p_idCorteFlor IS NOT NULL THEN
+        SELECT codigo
+          INTO v_idCatalogoCodigo
+          FROM CATALOGO_FLORISTERIA
+         WHERE idCorteFlor = p_idCorteFlor
+           AND idFloristeria = v_idFloristeria
+         LIMIT 1;
+        IF NOT FOUND THEN
+            RETURN 'No se encontró la flor con el idCorteFlor especificado en la floristería del usuario actual.';
+        END IF;
+        RAISE NOTICE 'Método de identificación: idCorteFlor=% con idCatalogocodigo=%', p_idCorteFlor, v_idCatalogoCodigo;
+    END IF;
+
+    IF v_idCatalogoCodigo IS NULL THEN
+        RETURN 'No se pudo determinar el idCatalogocodigo de la flor especificada.';
+    END IF;
+
+    -- Obtener la última fechaInicio y tamanoTallo del historial
+    SELECT fechaInicio, tamanoTallo
+      INTO last_fechaInicio, last_tamanoTallo
+      FROM HISTORICO_PRECIO_FLOR
+     WHERE idCatalogoFloristeria = v_idCatalogoFloristeria
+       AND idCatalogocodigo = v_idCatalogoCodigo
+     ORDER BY fechaInicio DESC
+     LIMIT 1;
+
+    IF last_fechaInicio IS NULL THEN
+        RETURN 'No existen registros de precio para esta flor en la floristería del usuario actual.';
+    END IF;
+
+    RAISE NOTICE 'Último registro encontrado: fechaInicio=%, tamanoTallo=%', last_fechaInicio, last_tamanoTallo;
+
+    -- Si tamanoTallo es NULL, buscar el último valor válido
+    IF last_tamanoTallo IS NULL THEN
+        RAISE NOTICE 'El tamanoTallo del último registro es NULL, buscando el último valor válido.';
+        SELECT tamanoTallo
+          INTO last_tamanoTallo
+          FROM HISTORICO_PRECIO_FLOR
+         WHERE idCatalogoFloristeria = v_idCatalogoFloristeria
+           AND idCatalogocodigo = v_idCatalogoCodigo
+           AND tamanoTallo IS NOT NULL
+         ORDER BY fechaInicio DESC
+         LIMIT 1;
+        IF last_tamanoTallo IS NULL THEN
+            RETURN 'No se encontró un valor válido para tamanoTallo en los registros anteriores.';
+        END IF;
+        RAISE NOTICE 'Último tamanoTallo válido encontrado: tamanoTallo=%', last_tamanoTallo;
+    END IF;
+
+    -- Calcular días transcurridos
+    dias_transcurridos := today - last_fechaInicio;
+    RAISE NOTICE 'Días transcurridos desde la última actualización: %', dias_transcurridos;
+
+    IF dias_transcurridos >= 7 THEN
+        UPDATE HISTORICO_PRECIO_FLOR
+           SET fechaFin = today
+         WHERE idCatalogoFloristeria = v_idCatalogoFloristeria
+           AND idCatalogocodigo = v_idCatalogoCodigo
+           AND fechaFin IS NULL
+           AND fechaInicio = last_fechaInicio;
+
+        RAISE NOTICE 'Actualizado fechaFin del último registro a %', today;
+
+        INSERT INTO HISTORICO_PRECIO_FLOR (
+            idCatalogoFloristeria,
+            idCatalogocodigo,
+            fechaInicio,
+            fechaFin,
+            precio,
+            tamanoTallo
+        ) VALUES (
+            v_idCatalogoFloristeria,
+            v_idCatalogoCodigo,
+            today,
+            NULL,
+            p_nuevo_precio,
+            last_tamanoTallo
+        );
+
+        RAISE NOTICE 'Insertado nuevo registro con precio=% y tamanoTallo=%', p_nuevo_precio, last_tamanoTallo;
+        RETURN 'Precio actualizado exitosamente.';
+    ELSE
+        RETURN 'No es posible cambiar el precio por las políticas de la floristería que permiten un máximo de 7 días por precio.';
+    END IF;
+
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE NOTICE 'Ocurrió un error: %', SQLERRM;
+        RETURN 'Ocurrió un error al intentar cambiar el precio de la flor: ' || SQLERRM;
+END;
+$$ LANGUAGE plpgsql;
+
+/* Comandos de prueba
+SELECT cambiar_precio_flor_floristeria(
+  p_nuevo_precio => 60.00,
+  p_nombreFlor   => 'Rosa Imperial'
+);
+
+SELECT cambiar_precio_flor_floristeria(
+  p_nuevo_precio      => 70.00,
+  p_idCatalogocodigo  => 202,
+  p_nombreFlor        => 'Tulipán Real',
+  p_idCorteFlor       => 12
+);
+
+*/
+
+/* COMO HICE LA CONEXION DE UN NUEVO USER QUE SE LLAME COMO UNA FLORISTERIA DE LA TABLA
+
+-- 1. Crear usuario "FloraPrima" con contraseña
+CREATE ROLE "FloraPrima" WITH
+    LOGIN
+    ENCRYPTED PASSWORD 'FloraPrimaPass';
+
+-- 2. Otorgar permisos básicos para que pueda conectarse a la base de datos
+GRANT CONNECT ON DATABASE "SubastaHolandesa" TO "FloraPrima";
+GRANT USAGE ON SCHEMA public TO "FloraPrima";
+
+-- Opcional: otorgar permisos para manipular tablas en public
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO "FloraPrima";
+
+-- Te valida que user es el que esta conectado
+SELECT floristeriaId
+FROM FLORISTERIAS
+WHERE nombre ILIKE CURRENT_USER;
+*/
