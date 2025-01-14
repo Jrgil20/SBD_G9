@@ -323,6 +323,9 @@ ADD CONSTRAINT fk_idSubastadora_afiliacion FOREIGN KEY (idSubastadora) REFERENCE
 
 --------------------------------------------------------------------------------------------------------------------
 
+-- Crear la secuencia para FACTURA
+CREATE SEQUENCE factura_seq START WITH 1 INCREMENT BY 1;
+
 -- Crear la tabla
 CREATE TABLE FACTURA(
   facturaId NUMERIC NOT NULL,
@@ -333,6 +336,10 @@ CREATE TABLE FACTURA(
   numeroEnvio NUMERIC,
   PRIMARY KEY (facturaId)
 );
+
+-- Modificar la tabla FACTURA para usar la secuencia
+ALTER TABLE FACTURA
+ALTER COLUMN facturaId SET DEFAULT nextval('factura_seq');
 
 -- Agregar claves foráneas
 ALTER TABLE FACTURA
@@ -427,6 +434,9 @@ ADD Constraint fk_Catalogo_DetalleBouquet FOREIGN KEY (idCatalogoFloristeria, id
 
 --------------------------------------------------------------------------------------------------------------------
 
+-- Crear la secuencia para FACTURA_FINAL
+CREATE SEQUENCE factura_final_seq START WITH 1 INCREMENT BY 1;
+
 -- Crear la tabla 
 CREATE TABLE FACTURA_FINAL(
   idFloristeria NUMERIC NOT NULL,
@@ -454,6 +464,10 @@ ADD CONSTRAINT chk_FacturaFinal_ArcoExclusivo CHECK (
   (idClienteNatural IS NOT NULL AND idClienteJuridico IS NULL) OR 
   (idClienteNatural IS NULL AND idClienteJuridico IS NOT NULL)
 );
+
+-- Modificar la tabla FACTURA_FINAL para usar la secuencia
+ALTER TABLE FACTURA_FINAL
+ALTER COLUMN numFactura SET DEFAULT nextval('factura_final_seq');
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -1392,6 +1406,193 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION Paises_floristerias()
+RETURNS TABLE (
+  nombrePais TEXT
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT DISTINCT p.nombrePais
+  FROM FLORISTERIAS f
+  JOIN PAIS p ON f.idPais = p.paisId;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION Paises_productoras()
+RETURNS TABLE (
+  nombrePais TEXT
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT DISTINCT p.nombrePais
+  FROM PRODUCTORAS pr
+  JOIN PAIS p ON pr.idPais = p.paisId;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION floristerias_con_factura()
+RETURNS TABLE (
+  floristeriaId NUMERIC,
+  nombre VARCHAR
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT DISTINCT f.floristeriaId, f.nombre
+  FROM FLORISTERIAS f
+  JOIN FACTURA fa ON f.floristeriaId = fa.idAfiliacionFloristeria;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION subastadoras_con_factura()
+RETURNS TABLE (
+  subastadoraId NUMERIC,
+  nombreSubastadora VARCHAR
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT DISTINCT s.subastadoraId, s.nombreSubastadora
+  FROM SUBASTADORA s
+  JOIN FACTURA fa ON s.subastadoraId = fa.idAfiliacionSubastadora;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION facturas_afiliacion(
+  p_idAfiliacionFloristeria NUMERIC DEFAULT NULL,
+  p_idAfiliacionSubastadora NUMERIC DEFAULT NULL
+) RETURNS TABLE (
+  facturaId NUMERIC,
+  idAfiliacionFloristeria NUMERIC,
+  idAfiliacionSubastadora NUMERIC,
+  fechaEmision TIMESTAMP,
+  montoTotal NUMERIC,
+  numeroEnvio NUMERIC
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    facturaId,
+    idAfiliacionFloristeria,
+    idAfiliacionSubastadora,
+    fechaEmision,
+    montoTotal,
+    numeroEnvio
+  FROM FACTURA
+  WHERE (p_idAfiliacionFloristeria IS NULL OR idAfiliacionFloristeria = p_idAfiliacionFloristeria)
+    AND (p_idAfiliacionSubastadora IS NULL OR idAfiliacionSubastadora = p_idAfiliacionSubastadora);
+END;
+$$ LANGUAGE plpgsql;
+
+/* FUNCIONES HECHAS POR GABO */ 
+
+CREATE OR REPLACE FUNCTION obtener_flor_cortes()
+RETURNS TABLE (
+  corteId NUMERIC,
+  nombreComun VARCHAR,
+  Descripcion VARCHAR,
+  genero_especie VARCHAR,
+  etimologia VARCHAR,
+  colores VARCHAR,
+  temperatura NUMERIC
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    fc.corteId,
+    fc.nombreComun,
+    fc.Descripcion,
+    fc.genero_especie,
+    fc.etimologia,
+    fc.colores,
+    fc.temperatura
+  FROM FLOR_CORTES fc;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION obtener_contratos_productora(
+    p_productora_id NUMERIC
+)
+RETURNS TABLE (
+    idSubastadora NUMERIC,
+    idProductora NUMERIC,
+    nContrato NUMERIC,
+    fechaEmision DATE,
+    porcentajeProduccion NUMERIC(3,2),
+    tipoProductor VARCHAR,
+    fechaRenovacion DATE,
+    fechaCancelacion DATE,
+    esActivo BOOLEAN
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        c.idSubastadora,
+        c.idProductora,
+        c.nContrato,
+        c.fechaEmision,
+        c.porcentajeProduccion,
+        c.tipoProductor,
+        CASE 
+            WHEN c.idrenovS IS NOT NULL AND c.idrenovS::VARCHAR LIKE '[0-9][0-9][0-9][0-9]' THEN TO_DATE(c.idrenovS::VARCHAR, 'YYYYMMDD')
+            ELSE NULL
+        END AS fechaRenovacion,
+        CASE 
+            WHEN c.cancelado IS NOT NULL AND c.cancelado::VARCHAR LIKE '[0-9][0-9][0-9][0-9]' THEN TO_DATE(c.cancelado::VARCHAR, 'YYYYMMDD')
+            ELSE NULL
+        END AS fechaCancelacion,
+        CASE 
+            WHEN c.cancelado IS NOT NULL THEN FALSE
+            ELSE TRUE
+        END AS esActivo
+    FROM 
+        contrato c
+    WHERE 
+        c.idProductora = p_productora_id;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION match_flowers(p_floristeria_id INTEGER, p_ocasion VARCHAR, p_emocion VARCHAR)
+RETURNS TABLE (
+    idFloristeria INTEGER,
+    nombre_comun VARCHAR,
+    color VARCHAR,
+    significado VARCHAR,
+    precio NUMERIC,
+    desc_color VARCHAR,
+    desc_enlace VARCHAR
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        cf.idFloristeria::INTEGER,
+        fc.nombreComun,
+        c.Nombre AS color,
+        s.Descripcion AS significado,
+        hpf.precio,
+        c.descripcion AS desc_color,
+        e.descripcion AS desc_enlace
+    FROM 
+        CATALOGO_FLORISTERIA cf
+    JOIN 
+        FLOR_CORTES fc ON cf.idCorteFlor = fc.corteId
+    JOIN 
+        COLOR c ON cf.idColor = c.colorId
+    LEFT JOIN 
+        ENLACES e ON c.colorId = e.idColor
+    JOIN 
+        SIGNIFICADO s ON e.IdSignificado = s.SignificadoId
+    JOIN 
+        HISTORICO_PRECIO_FLOR hpf ON cf.idFloristeria = hpf.idCatalogoFloristeria AND cf.codigo = hpf.idCatalogocodigo
+    WHERE 
+        cf.idFloristeria = p_floristeria_id
+        AND (REGEXP_LIKE(s.Descripcion, p_ocasion, 'i')
+            OR REGEXP_LIKE(e.Descripcion, p_emocion, 'i')
+            OR REGEXP_LIKE(c.descripcion, p_ocasion, 'i')
+            OR REGEXP_LIKE(c.descripcion, p_emocion, 'i')
+            OR REGEXP_LIKE(e.descripcion, p_ocasion, 'i')
+            OR REGEXP_LIKE(e.descripcion, p_emocion, 'i'));
+END;
+$$ LANGUAGE plpgsql;
 
 -------------------------------------------------------------------------------------------------------------------
 --  ===========================================================================================================  --
@@ -1685,16 +1886,122 @@ SELECT * FROM AFILIACION;
 
 
 -- Insertar datos de prueba en la tabla FACTURA
-INSERT INTO FACTURA (facturaId, idAfiliacionFloristeria, idAfiliacionSubastadora, fechaEmision, montoTotal, numeroEnvio) VALUES
-(1, 1, 1, '2021-01-18 16:00:00', 10000.00, NULL),
-(2, 1, 1, '2021-02-15 16:00:00', 1100.00, 3232),
-(3, 2, 2, '2023-05-01 16:00:00', 750.00, 12346),
-(4, 3, 3, '2023-06-01 16:00:00', 1000.00, 12347),
-(5, 4, 1, '2023-07-01 16:00:00', 1250.00, 12348),
-(6, 5, 2, '2023-08-01 16:00:00', 1500.00, 12349),
-(7, 6, 3, '2023-09-01 16:00:00', 1750.00, 12350),
-(8, 1, 2, '2023-10-01 16:00:00', 2000.00, 12351),
-(9, 2, 3, '2023-11-01 16:00:00', 2250.00, 12352);
+INSERT INTO FACTURA (idAfiliacionFloristeria, idAfiliacionSubastadora, fechaEmision, montoTotal, numeroEnvio) VALUES
+(1, 1, '2023-04-10 16:00:00', 10010.00, 3262),
+(1, 1, '2023-05-10 16:00:00', 10040.00, 3263),
+(2, 2, '2023-05-01 16:00:00', 75000, 12346),
+(1, 1, '2023-06-10 16:00:00', 10025.00, 3264),
+(2, 3, '2023-06-04 16:00:00', 74000, 121237),
+(3, 3, '2023-06-01 16:00:00', 1000.00, 12347),
+(1, 1, '2023-07-10 16:00:00', 10035.00, 3265),
+(2, 2, '2023-07-08 16:00:00', 75300, 123476),
+(3, 3, '2023-07-11 16:00:00', 900.00, 12134),
+(4, 1, '2023-07-01 16:00:00', 1250.70, 22348),
+(1, 1, '2023-08-10 16:00:00', 10015.00, 3266),
+(2, 3, '2023-08-11 16:00:00', 72500, 12546),
+(3, 1, '2023-08-01 16:00:00', 1100.00, 12347),
+(4, 1, '2023-08-01 16:00:00', 1239.00, 22349),
+(5, 2, '2023-08-01 16:00:00', 500.00, 69349),
+(6, 3, '2023-08-01 16:00:00', 1750.00, 42349),
+(1, 1, '2023-09-10 16:00:00', 10045.00, 3267),
+(2, 2, '2023-09-05 16:00:00', 80000, 12333),
+(3, 3, '2023-09-11 16:00:00', 980.00, 12567),
+(4, 1, '2023-09-01 16:00:00', 1250.50, 22350),
+(5, 2, '2023-09-01 16:00:00', 900.00, 69350),
+(6, 3, '2023-09-01 16:00:00', 1750.00, 42350),
+(1, 1, '2023-10-10 16:00:00', 10050.00, 3268),
+(1, 2, '2023-10-01 16:00:00', 2000.00, 12351),
+(2, 3, '2023-10-03 16:00:00', 7200, 12556),
+(3, 1, '2023-10-11 16:00:00', 1090.00, 12447),
+(4, 1, '2023-10-01 16:00:00', 1245.30, 22351),
+(5, 2, '2023-10-01 16:00:00', 15000.00, 69351),
+(6, 3, '2023-10-01 16:00:00', 1750.00, 42351),
+(1, 1, '2023-11-10 16:00:00', 10020.00, 3269),
+(2, 2, '2023-11-01 16:00:00', 90000, 15246),
+(3, 3, '2023-11-15 16:00:00', 800.00, 12347),
+(4, 1, '2023-11-01 16:00:00', 1250.90, 22352),
+(5, 2, '2023-11-01 16:00:00', 700.00, 69352),
+(6, 3, '2023-11-01 16:00:00', 1750.00, 42352),
+(1, 1, '2023-12-10 16:00:00', 10030.00, 3270),
+(2, 2, '2023-12-09 16:00:00', 65000, 9246),
+(3, 3, '2023-12-01 16:00:00', 1300.00, 12350),
+(4, 1, '2023-12-01 16:00:00', 1248.20, 22353),
+(5, 2, '2023-12-01 16:00:00', 750.00, 69353),
+(6, 3, '2023-12-01 16:00:00', 1750.00, 42353),
+(1, 1, '2024-01-20 16:00:00', 10010.00, 3271),
+(2, 3, '2024-01-04 16:00:00', 7900, 19846),
+(3, 1, '2024-01-01 16:00:00', 1600.00, 12353),
+(4, 1, '2024-01-01 16:00:00', 1250.10, 22354),
+(5, 2, '2024-01-01 16:00:00', 1200.00, 69354),
+(6, 3, '2024-01-01 16:00:00', 1750.00, 42354),
+(1, 1, '2024-02-20 16:00:00', 13010.00, 3272),
+(2, 2, '2024-02-03 16:00:00', 7500, 123131),
+(3, 1, '2024-02-01 16:00:00', 1400.00, 12351),
+(4, 1, '2024-02-01 16:00:00', 1249.80, 22355),
+(5, 2, '2024-02-01 16:00:00', 800.00, 69355),
+(6, 3, '2024-02-01 16:00:00', 1750.00, 42355),
+(1, 1, '2024-03-02 16:00:00', 19010.00, 3273),
+(2, 3, '2024-03-07 16:00:00', 9500, 92546),
+(3, 3, '2024-03-01 16:00:00', 1500.00, 12352),
+(4, 1, '2024-03-01 16:00:00', 1250.60, 22356),
+(5, 2, '2024-03-01 16:00:00', 350.00, 69356),
+(6, 3, '2024-03-01 16:00:00', 1750.00, 412356),
+(1, 1, '2024-04-10 16:00:00', 13010.00, 327423423),
+(2, 3, '2024-04-08 16:00:00', 7520, 12372),
+(3, 3, '2024-04-01 16:00:00', 1700.00, 12354),
+(4, 1, '2024-04-01 16:00:00', 1247.40, 22357),
+(5, 2, '2024-04-01 16:00:00', 900.00, 69357),
+(6, 3, '2024-04-01 16:00:00', 1750.00, 42357),
+(1, 1, '2024-05-26 16:00:00', 13010.00, 3271234234),
+(2, 3, '2024-05-07 16:00:00', 7190, 12982),
+(3, 1, '2024-05-01 16:00:00', 1800.00, 12355),
+(4, 1, '2024-05-01 16:00:00', 1250.30, 22358),
+(5, 2, '2024-05-01 16:00:00', 1500.00, 69358),
+(6, 3, '2024-05-01 16:00:00', 1750.00, 42358),
+(1, 1, '2024-06-19 16:00:00', 8000.00, 3271545),
+(2, 2, '2024-06-09 16:00:00', 7550, 132146),
+(3, 3, '2024-06-01 16:00:00', 1900.00, 12356),
+(4, 1, '2024-06-01 16:00:00', 1246.50, 22359),
+(5, 2, '2024-06-01 16:00:00', 400.00, 69359),
+(6, 3, '2024-06-01 16:00:00', 1750.00, 42359),
+(1, 1, '2024-07-14 16:00:00', 13010.00, 327142),
+(2, 3, '2024-07-12 16:00:00', 6400, 121346),
+(3, 1, '2024-07-01 16:00:00', 2000.00, 12357),
+(4, 1, '2024-07-01 16:00:00', 1250.20, 22360),
+(5, 2, '2024-07-01 16:00:00', 1100.00, 69360),
+(6, 3, '2024-07-01 16:00:00', 1750.00, 42360),
+(1, 1, '2024-08-12 16:00:00', 7010.00, 3271243),
+(2, 2, '2024-08-15 16:00:00', 7580, 123216),
+(3, 3, '2024-08-01 16:00:00', 2100.00, 12358),
+(4, 1, '2024-08-01 16:00:00', 1249.70, 22361),
+(5, 2, '2024-08-01 16:00:00', 600.00, 69361),
+(6, 3, '2024-08-01 16:00:00', 1750.00, 42361),
+(1, 1, '2024-09-04 16:00:00', 10310.00, 3271123),
+(2, 3, '2024-09-02 16:00:00', 7520, 23216),
+(3, 1, '2024-09-01 16:00:00', 2200.00, 12359),
+(4, 1, '2024-09-01 16:00:00', 1250.40, 22362),
+(5, 2, '2024-09-01 16:00:00', 320.00, 69362),
+(6, 3, '2024-09-01 16:00:00', 1750.00, 42362),
+(1, 1, '2024-10-08 16:00:00', 13090.00, 32715464),
+(2, 2, '2024-10-09 16:00:00', 7450, 56346),
+(3, 3, '2024-10-01 16:00:00', 2300.00, 12360),
+(4, 1, '2024-10-01 16:00:00', 1248.90, 22363),
+(5, 2, '2024-10-01 16:00:00', 1400.00, 69363),
+(6, 3, '2024-10-01 16:00:00', 1750.00, 42363),
+(1, 1, '2024-11-03 16:00:00', 14010.00, 32715464),
+(2, 3, '20234-11-04 16:00:00', 7531.00, 43346),
+(3, 1, '2024-11-01 16:00:00', 2400.00, 12361),
+(4, 1, '2024-11-01 16:00:00', 1250.80, 22364),
+(5, 2, '2024-11-01 16:00:00', 100.00, 69364),
+(6, 3, '2024-11-01 16:00:00', 1750.00, 42364),
+(6, 3, '2024-12-01 16:00:00', 1750.00, 42365),
+(1, 1, '2024-12-09 16:00:00', 15010.00, 32715464),
+(2, 2, '2024-12-08 16:00:00', 8000, 442432),
+(3, 3, '2024-12-01 16:00:00', 2500.00, 12362),
+(4, 1, '2024-12-01 16:00:00', 1247.60, 22365),
+(5, 2, '2024-12-01 16:00:00', 270.00, 69365),
+(5, 2, '2025-01-01 16:00:00', 13000.00, 69366),
+(4, 1, '2025-01-02 16:00:00', 1250.00, 22366);
 
 -- Verificar los datos insertados
 SELECT * FROM FACTURA;
@@ -1734,14 +2041,46 @@ SELECT * FROM LOTE;
 -- Insertar datos de prueba en la tabla CATALOGO_FLORISTERIA
 INSERT INTO CATALOGO_FLORISTERIA (idFloristeria, codigo, idCorteFlor, idColor, nombrePropio, descripcion) VALUES
 (1, 1, 1, 2, 'Rosa Roja', 'Rosa roja clásica para ocasiones románticas'),
+(1, 7, 7, 1, 'Margarita Blanca', 'Margarita sencilla y alegre en color blanco'),
+(1, 2, 2, 3, 'Tulipán Amarillo', 'Tulipán amarillo brillante para alegrar el día'),
+(1, 8, 8, 10, 'Hortensia Azul', 'Hortensia ornamental en racimos de color azul'),
+(1, 3, 3, 11, 'Orquídea Púrpura', 'Orquídea exótica y elegante en color púrpura'),
+(1, 4, 4, 5, 'Girasol', 'Girasol alto y brillante que sigue al sol'),
+(1, 9, 9, 4, 'Peonía Rosa', 'Peonía grande y fragante en color rosa'),
+(1, 5, 5, 1, 'Lirio Blanco', 'Lirio blanco elegante y fragante para cualquier ocasión'),
+(1, 6, 6, 2, 'Clavel Rojo', 'Clavel rojo popular en ramos y arreglos'),
 (2, 2, 2, 3, 'Tulipán Amarillo', 'Tulipán amarillo brillante para alegrar el día'),
 (3, 3, 3, 11, 'Orquídea Púrpura', 'Orquídea exótica y elegante en color púrpura'),
 (4, 4, 4, 5, 'Girasol', 'Girasol alto y brillante que sigue al sol'),
-(5, 5, 5, 1, 'Lirio Blanco', 'Lirio blanco elegante y fragante para cualquier ocasión'),
 (6, 6, 6, 2, 'Clavel Rojo', 'Clavel rojo popular en ramos y arreglos'),
 (1, 7, 7, 1, 'Margarita Blanca', 'Margarita sencilla y alegre en color blanco'),
 (2, 8, 8, 10, 'Hortensia Azul', 'Hortensia ornamental en racimos de color azul'),
-(3, 9, 9, 4, 'Peonía Rosa', 'Peonía grande y fragante en color rosa');
+(2, 9, 9, 4, 'Peonía Rosa', 'Peonía grande y fragante en color rosa'),
+(2, 5, 5, 1, 'Lirio Blanco', 'Lirio blanco elegante y fragante para cualquier ocasión'),
+(2, 8, 8, 10, 'Hortensia Azul', 'Hortensia ornamental en racimos de color azul'),
+(3, 3, 3, 11, 'Orquídea Púrpura', 'Orquídea exótica y elegante en color púrpura'),
+(3, 1, 1, 2, 'Rosa Roja', 'Rosa roja clásica para ocasiones románticas'),
+(3, 7, 7, 1, 'Margarita Blanca', 'Margarita sencilla y alegre en color blanco'),
+(3, 2, 2, 3, 'Tulipán Amarillo', 'Tulipán amarillo brillante para alegrar el día'),
+(3, 8, 8, 10, 'Hortensia Azul', 'Hortensia ornamental en racimos de color azul'),
+(3, 9, 9, 4, 'Peonía Rosa', 'Peonía grande y fragante en color rosa'),
+(4, 4, 4, 5, 'Girasol', 'Girasol alto y brillante que sigue al sol'),
+(4, 1, 1, 2, 'Rosa Roja', 'Rosa roja clásica para ocasiones románticas'),
+(4, 7, 7, 1, 'Margarita Blanca', 'Margarita sencilla y alegre en color blanco'),
+(4, 2, 2, 3, 'Tulipán Amarillo', 'Tulipán amarillo brillante para alegrar el día'),
+(4, 8, 8, 10, 'Hortensia Azul', 'Hortensia ornamental en racimos de color azul'),
+(4, 9, 9, 4, 'Peonía Rosa', 'Peonía grande y fragante en color rosa'),
+(5, 5, 5, 1, 'Lirio Blanco', 'Lirio blanco elegante y fragante para cualquier ocasión'),
+(5, 2, 2, 3, 'Tulipán Amarillo', 'Tulipán amarillo brillante para alegrar el día'),
+(5, 3, 3, 11, 'Orquídea Púrpura', 'Orquídea exótica y elegante en color púrpura'),
+(5, 4, 4, 5, 'Girasol', 'Girasol alto y brillante que sigue al sol'),
+(6, 8, 8, 10, 'Hortensia Azul', 'Hortensia ornamental en racimos de color azul'),
+(6, 9, 9, 4, 'Peonía Rosa', 'Peonía grande y fragante en color rosa'),
+(6, 4, 4, 5, 'Girasol', 'Girasol alto y brillante que sigue al sol'),
+(6, 1, 1, 2, 'Rosa Roja', 'Rosa roja clásica para ocasiones románticas'),
+(6, 7, 7, 1, 'Margarita Blanca', 'Margarita sencilla y alegre en color blanco'),
+(6, 6, 6, 2, 'Clavel Rojo', 'Clavel rojo popular en ramos y arreglos');
+
 
 -- Verificar los datos insertados
 SELECT * FROM CATALOGO_FLORISTERIA;
@@ -1749,15 +2088,45 @@ SELECT * FROM CATALOGO_FLORISTERIA;
 
 -- Insertar datos de prueba en la tabla HISTORICO_PRECIO_FLOR
 INSERT INTO HISTORICO_PRECIO_FLOR (idCatalogoFloristeria, idCatalogocodigo, fechaInicio, fechaFin, precio, tamanoTallo) VALUES
-(1, 1, '2023-01-01', NULL, 10.00, 50),
-(2, 2, '2023-01-01', NULL, 15.00, 60),
-(3, 3, '2023-01-01', NULL, 20.00, 70),
-(4, 4, '2023-01-01', NULL, 25.00, 80),
-(5, 5, '2023-01-01', NULL, 30.00, 90),
-(1, 7, '2023-02-01', NULL, 12.00, 55),
-(2, 8, '2023-02-01', NULL, 18.00, 65),
-(3, 9, '2023-02-01', NULL, 22.00, 75),
-(4, 4, '2023-02-01', NULL, 28.00, 85);
+(1, 1, '2023-04-15', NULL, 10.00, 50),
+(1, 7, '2023-05-01', NULL, 12.50, 55),
+(1, 2, '2023-03-01', NULL, 15.00, 65),
+(1, 8, '2023-04-01', NULL, 17.50, 70),
+(1, 3, '2023-05-01', NULL, 20.00, 50),
+(1, 4, '2023-06-01', NULL, 22.50, 55),
+(1, 9, '2023-07-01', NULL, 25.00, 65),
+(1, 5, '2023-08-01', NULL, 27.50, 70),
+(1, 6, '2023-09-01', NULL, 30.00, 50),
+(2, 2, '2023-10-01', NULL, 32.50, 55),
+(2, 3, '2023-11-01', NULL, 35.00, 65),
+(2, 4, '2023-12-01', NULL, 37.50, 70),
+(2, 9, '2024-01-01', NULL, 40.00, 50),
+(2, 5, '2024-02-01', NULL, 42.50, 55),
+(2, 8, '2024-03-01', NULL, 45.00, 65),
+(3, 3, '2024-04-01', NULL, 47.50, 70),
+(3, 1, '2024-05-01', NULL, 10.00, 50),
+(3, 7, '2024-06-01', NULL, 12.50, 55),
+(3, 2, '2024-07-01', NULL, 15.00, 65),
+(3, 8, '2024-08-01', NULL, 17.50, 70),
+(3, 9, '2024-09-01', NULL, 20.00, 50),
+(4, 4, '2024-10-01', NULL, 22.50, 55),
+(4, 1, '2024-11-01', NULL, 25.00, 65),
+(4, 7, '2024-12-01', NULL, 27.50, 70),
+(4, 2, '2025-01-01', NULL, 30.00, 50),
+(4, 8, '2024-02-01', NULL, 32.50, 55),
+(4, 9, '2024-03-01', NULL, 35.00, 65),
+(5, 5, '2024-04-01', NULL, 37.50, 70),
+(5, 6, '2024-05-01', NULL, 40.00, 50),
+(5, 2, '2024-06-01', NULL, 42.50, 55),
+(5, 3, '2024-07-01', NULL, 45.00, 65),
+(5, 4, '2024-08-01', NULL, 47.50, 70),
+(6, 8, '2023-09-01', NULL, 10.00, 50),
+(6, 9, '2023-09-01', NULL, 12.50, 55),
+(6, 4, '2023-11-01', NULL, 15.00, 65),
+(6, 1, '2023-12-01', NULL, 17.50, 70),
+(6, 7, '2024-01-01', NULL, 20.00, 50),
+(6, 6, '2024-02-01', NULL, 22.50, 55);
+
 
 -- Verificar los datos insertados
 SELECT * FROM HISTORICO_PRECIO_FLOR;
@@ -1781,17 +2150,163 @@ SELECT * FROM DETALLE_BOUQUET;
 SELECT * FROM DETALLE_BOUQUET;
 
 
--- Insertar datos de prueba en la tabla FACTURA_FINAL
-INSERT INTO FACTURA_FINAL (idFloristeria, numFactura, fechaEmision, montoTotal, idClienteNatural, idClienteJuridico) VALUES
-(1, 1, '2023-07-01', 500.00, 1, NULL),
-(2, 2, '2023-08-01', 750.00, NULL, 1),
-(3, 3, '2023-09-01', 1000.00, 2, NULL),
-(4, 4, '2023-10-01', 1250.00, NULL, 2),
-(5, 5, '2023-11-01', 1500.00, 3, NULL),
-(2, 6, '2023-12-01', 1750.00, NULL, 3),
-(3, 7, '2024-01-01', 2000.00, 4, NULL),
-(4, 8, '2024-02-01', 2250.00, NULL, 4),
-(5, 9, '2024-03-01', 2500.00, 5, NULL);
+INSERT INTO FACTURA_FINAL (idFloristeria, fechaEmision, montoTotal, idClienteNatural, idClienteJuridico) VALUES
+(1, '2023-04-01', 11000.00, 1, NULL),
+(2, '2023-05-01', 75000.00, NULL, 1),
+(3, '2023-09-01', 1200.00, 2, NULL),
+(4, '2023-10-01', 1250.00, NULL, 2),
+(5, '2023-11-01', 15000.00, 3, NULL),
+(2, '2023-12-01', 75050.00, NULL, 3),
+(3, '2024-07-01', 14000.00, 4, NULL),
+(4, '2024-08-01', 2250.00, NULL, 4),
+(5, '2024-08-01', 2500.00, 5, NULL),
+(1, '2023-05-01', 10500.00, NULL, 3),
+(1, '2023-06-01', 10900.00, NULL, 3),
+(1, '2023-07-01', 12000.00, NULL, 3),
+(1, '2023-08-01', 11000.00, NULL, 3),
+(1, '2023-09-15', 4000.00, NULL, 1),
+(1, '2023-09-01', 700.00, 2, NULL),
+(1, '2023-09-15', 8000.00, NULL, 2),
+(1, '2023-10-01', 900.00, 3, NULL),
+(1, '2023-10-15', 10000.00, NULL, 3),
+(1, '2023-11-01', 1100.00, 4, NULL),
+(1, '2023-11-15', 12000.00, NULL, 4),
+(1, '2023-08-01', 1300.00, 5, NULL),
+(1, '2023-08-15', 2000.00, NULL, 5),
+(1, '2023-09-01', 500.00, 1, NULL),
+(1, '2023-09-15', 600.00, NULL, 1),
+(1, '2023-10-01', 700.00, 2, NULL),
+(1, '2023-10-15', 800.00, NULL, 2),
+(1, '2023-11-01', 900.00, 3, NULL),
+(1, '2023-11-15', 1000.00, NULL, 3),
+(1, '2023-12-01', 11000.00, 4, NULL),
+(1, '2023-12-15', 1200.00, NULL, 4),
+(1, '2024-01-01', 1300.00, 5, NULL),
+(1, '2024-01-15', 99000.00, NULL, 5),
+(1, '2024-02-01', 500.00, 1, NULL),
+(1, '2024-02-15', 63000.00, NULL, 1),
+(1, '2024-03-01', 1700.00, 2, NULL),
+(1, '2024-03-15', 18000.00, NULL, 2),
+(1, '2024-04-01', 900.00, 3, NULL),
+(1, '2024-04-15', 10000.00, NULL, 3),
+(1, '2024-05-01', 1100.00, 4, NULL),
+(1, '2024-05-15', 12000.00, NULL, 4),
+(1, '2024-06-01', 1300.00, 5, NULL),
+(1, '2024-06-15', 9000.00, NULL, 5),
+(1, '2024-07-01', 500.00, 1, NULL),
+(1, '2024-07-15', 11000.00, NULL, 1),
+(1, '2024-08-01', 700.00, 2, NULL),
+(1, '2024-08-15', 8000.00, NULL, 2),
+(1, '2024-09-01', 900.00, 3, NULL),
+(1, '2024-09-15', 10000.00, NULL, 3),
+(1, '2024-10-01', 1100.00, 4, NULL),
+(1, '2024-10-15', 12000.00, NULL, 4),
+(1, '2024-11-01', 1300.00, 5, NULL),
+(1, '2024-11-15', 3000.00, NULL, 5),
+(1, '2024-12-01', 1100.00, 1, NULL),
+(1, '2024-12-15', 6000.00, NULL, 1),
+(2, '2023-06-10', 700.00, 2, NULL),
+(2, '2023-06-10', 70000.00, NULL, 1),
+(2, '2023-07-01', 80000.00, NULL, 2),
+(2, '2023-08-01', 900.00, 3, NULL),
+(2, '2023-08-01', 50000.00, NULL, 1),
+(2, '2023-09-01', 100000.00, NULL, 3),
+(2, '2023-10-01', 1100.00, 4, NULL),
+(2, '2023-11-01', 120000.00, NULL, 4),
+(2, '2023-12-01', 1300.00, 5, NULL),
+(2, '2024-01-01', 30000.00, NULL, 5),
+(2, '2024-02-01', 500.00, 1, NULL),
+(2, '2024-03-01', 60000.00, NULL, 1),
+(2, '2024-04-01', 700.00, 2, NULL),
+(2, '2024-05-01', 80000.00, NULL, 2),
+(2, '2024-06-01', 9000.00, 3, NULL),
+(2, '2024-07-01', 1000.00, NULL, 3),
+(2, '2024-08-01', 1100.00, 4, NULL),
+(2, '2024-09-01', 120000.00, NULL, 4),
+(2, '2024-10-01', 1300.00, 5, NULL),
+(2, '2024-11-01', 90000.00, NULL, 5),
+(2, '2024-12-01', 500.00, 1, NULL),
+(2, '2025-01-01', 60000.00, NULL, 1),
+(3, '2023-06-10', 700.00, 2, NULL),
+(3, '2023-07-01', 80000.00, NULL, 2),
+(3, '2023-08-01', 900.00, 3, NULL),
+(3, '2023-09-01', 10000.00, NULL, 3),
+(3, '2023-10-01', 1100.00, 4, NULL),
+(3, '2023-11-01', 1200.00, NULL, 4),
+(3, '2023-12-01', 1300.00, 5, NULL),
+(3, '2024-01-01', 3000.00, NULL, 5),
+(3, '2024-02-01', 500.00, 1, NULL),
+(3, '2024-03-01', 6000.00, NULL, 1),
+(3, '2024-04-01', 700.00, 2, NULL),
+(3, '2024-05-01', 800.00, NULL, 2),
+(3, '2024-06-01', 900.00, 3, NULL),
+(3, '2024-07-01', 1000.00, NULL, 3),
+(3, '2024-08-01', 1100.00, 4, NULL),
+(3, '2024-09-01', 1200.00, NULL, 4),
+(3, '2024-10-01', 13000.00, 5, NULL),
+(3, '2024-11-01', 3000.00, NULL, 5),
+(3, '2024-12-01', 5000.00, 1, NULL),
+(3, '2025-01-01', 6000.00, NULL, 1),
+(4, '2023-06-10', 7000.00, 2, NULL),
+(4, '2023-07-01', 800.00, NULL, 2),
+(4, '2023-08-01', 900.00, 3, NULL),
+(4, '2023-09-01', 10000.00, NULL, 3),
+(4, '2023-10-01', 1100.00, 4, NULL),
+(4, '2023-11-01', 1200.00, NULL, 4),
+(4, '2023-12-01', 1300.00, 5, NULL),
+(4, '2024-01-01', 300.00, NULL, 5),
+(4, '2024-02-01', 500.00, 1, NULL),
+(4, '2024-03-01', 600.00, NULL, 1),
+(4, '2024-04-01', 700.00, 2, NULL),
+(4, '2024-05-01', 800.00, NULL, 2),
+(4, '2024-06-01', 900.00, 3, NULL),
+(4, '2024-07-01', 1000.00, NULL, 3),
+(4, '2024-08-01', 1100.00, 4, NULL),
+(4, '2024-09-01', 1200.00, NULL, 4),
+(4, '2024-10-01', 1300.00, 5, NULL),
+(4, '2024-11-01', 300.00, NULL, 5),
+(4, '2024-12-01', 500.00, 1, NULL),
+(4, '2025-01-01', 600.00, NULL, 1),
+(5, '2023-06-10', 700.00, 2, NULL),
+(5, '2023-07-01', 800.00, NULL, 2),
+(5, '2023-08-01', 900.00, 3, NULL),
+(5, '2023-09-01', 1000.00, NULL, 3),
+(5, '2023-10-01', 1100.00, 4, NULL),
+(5, '2023-11-01', 1200.00, NULL, 4),
+(5, '2023-12-01', 1300.00, 5, NULL),
+(5, '2024-01-01', 300.00, NULL, 5),
+(5, '2024-02-01', 500.00, 1, NULL),
+(5, '2024-03-01', 600.00, NULL, 1),
+(5, '2024-04-01', 700.00, 2, NULL),
+(5, '2024-05-01', 800.00, NULL, 2),
+(5, '2024-06-01', 900.00, 3, NULL),
+(5, '2024-07-01', 1000.00, NULL, 3),
+(5, '2024-08-01', 1100.00, 4, NULL),
+(5, '2024-09-01', 1200.00, NULL, 4),
+(5, '2024-10-01', 1300.00, 5, NULL),
+(5, '2024-11-01', 300.00, NULL, 5),
+(5, '2024-12-01', 500.00, 1, NULL),
+(5, '2025-01-01', 600.00, NULL, 1),
+(6, '2023-06-10', 700.00, 2, NULL),
+(6, '2023-07-01', 800.00, NULL, 2),
+(6, '2023-08-01', 900.00, 3, NULL),
+(6, '2023-09-01', 1000.00, NULL, 3),
+(6, '2023-10-01', 1100.00, 4, NULL),
+(6, '2023-11-01', 1200.00, NULL, 4),
+(6, '2023-12-01', 1300.00, 5, NULL),
+(6, '2024-01-01', 300.00, NULL, 5),
+(6, '2024-02-01', 500.00, 1, NULL),
+(6, '2024-03-01', 600.00, NULL, 1),
+(6, '2024-04-01', 700.00, 2, NULL),
+(6, '2024-05-01', 800.00, NULL, 2),
+(6, '2024-06-01', 900.00, 3, NULL),
+(6, '2024-07-01', 1000.00, NULL, 3),
+(6, '2024-08-01', 1100.00, 4, NULL),
+(6, '2024-09-01', 1200.00, NULL, 4),
+(6, '2024-10-01', 1300.00, 5, NULL),
+(6, '2024-11-01', 300.00, NULL, 5),
+(6, '2024-12-01', 500.00, 1, NULL),
+(6, '2025-01-01', 600.00, NULL, 1);
 
 -- Verificar los datos insertados
 SELECT * FROM FACTURA_FINAL;
@@ -1860,199 +2375,2768 @@ SELECT * FROM obtener_informacion_de_flor(1, 1);
 
 SELECT * FROM Traer_lotes(1);
 
-CREATE OR REPLACE FUNCTION Paises_floristerias()
-RETURNS TABLE (
-  nombrePais TEXT
-) AS $$
-BEGIN
-  RETURN QUERY
-  SELECT DISTINCT p.nombrePais
-  FROM FLORISTERIAS f
-  JOIN PAIS p ON f.idPais = p.paisId;
-END;
-$$ LANGUAGE plpgsql;
 
 -- Ejecutar la función para obtener los nombres de los países de las floristerías
 SELECT * FROM Paises_floristerias();
-CREATE OR REPLACE FUNCTION Paises_productoras()
-RETURNS TABLE (
-  nombrePais TEXT
-) AS $$
-BEGIN
-  RETURN QUERY
-  SELECT DISTINCT p.nombrePais
-  FROM PRODUCTORAS pr
-  JOIN PAIS p ON pr.idPais = p.paisId;
-END;
-$$ LANGUAGE plpgsql;
 
 -- Ejecutar la función para obtener los nombres de los países de las productoras
 SELECT * FROM Paises_productoras();
 
 
-CREATE OR REPLACE FUNCTION floristerias_con_factura()
-RETURNS TABLE (
-  floristeriaId NUMERIC,
-  nombre VARCHAR
-) AS $$
-BEGIN
-  RETURN QUERY
-  SELECT DISTINCT f.floristeriaId, f.nombre
-  FROM FLORISTERIAS f
-  JOIN FACTURA fa ON f.floristeriaId = fa.idAfiliacionFloristeria;
-END;
-$$ LANGUAGE plpgsql;
+-------------------------------------------------------------------------------------------------------------------
+--  ===========================================================================================================  --
+--  ==================================== Requerimientos individuales  =========================================  --
+--  ===========================================================================================================  --
+-------------------------------------------------------------------------------------------------------------------
 
-CREATE OR REPLACE FUNCTION subastadoras_con_factura()
-RETURNS TABLE (
-  subastadoraId NUMERIC,
-  nombreSubastadora VARCHAR
-) AS $$
-BEGIN
-  RETURN QUERY
-  SELECT DISTINCT s.subastadoraId, s.nombreSubastadora
-  FROM SUBASTADORA s
-  JOIN FACTURA fa ON s.subastadoraId = fa.idAfiliacionSubastadora;
-END;
-$$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION facturas_afiliacion(
-  p_idAfiliacionFloristeria NUMERIC DEFAULT NULL,
-  p_idAfiliacionSubastadora NUMERIC DEFAULT NULL
-) RETURNS TABLE (
-  facturaId NUMERIC,
-  idAfiliacionFloristeria NUMERIC,
-  idAfiliacionSubastadora NUMERIC,
-  fechaEmision TIMESTAMP,
-  montoTotal NUMERIC,
-  numeroEnvio NUMERIC
-) AS $$
-BEGIN
-  RETURN QUERY
-  SELECT 
-    facturaId,
-    idAfiliacionFloristeria,
-    idAfiliacionSubastadora,
-    fechaEmision,
-    montoTotal,
-    numeroEnvio
-  FROM FACTURA
-  WHERE (p_idAfiliacionFloristeria IS NULL OR idAfiliacionFloristeria = p_idAfiliacionFloristeria)
-    AND (p_idAfiliacionSubastadora IS NULL OR idAfiliacionSubastadora = p_idAfiliacionSubastadora);
-END;
-$$ LANGUAGE plpgsql;
 
-/* FUNCIONES HECHAS POR GABO */ 
+-------------------------------------------------------------------------------------------------------------------
+--  ===========================================================================================================  --
+--  ========================================= vistas y grants  ================================================  --
+--  ===========================================================================================================  --
+-------------------------------------------------------------------------------------------------------------------
+-- Issue: PAIS Vista principal (SELECT con columnas clave)
+CREATE OR REPLACE VIEW vista_pais AS
+SELECT 
+  paisId,
+  nombrePais,
+  continente
+FROM PAIS;
 
-CREATE OR REPLACE FUNCTION obtener_flor_cortes()
-RETURNS TABLE (
-  corteId NUMERIC,
-  nombreComun VARCHAR,
-  Descripcion VARCHAR,
-  genero_especie VARCHAR,
-  etimologia VARCHAR,
-  colores VARCHAR,
-  temperatura NUMERIC
-) AS $$
-BEGIN
-  RETURN QUERY
-  SELECT 
-    fc.corteId,
-    fc.nombreComun,
-    fc.Descripcion,
-    fc.genero_especie,
-    fc.etimologia,
-    fc.colores,
-    fc.temperatura
-  FROM FLOR_CORTES fc;
-END;
-$$ LANGUAGE plpgsql;
+-- Issue: SUBASTADORA Vista principal (SELECT con columnas clave)
+CREATE OR REPLACE VIEW vista_subastadora AS
+SELECT 
+  subastadoraId,
+  nombreSubastadora,
+  idPais
+FROM SUBASTADORA;
 
-CREATE OR REPLACE FUNCTION obtener_contratos_productora(
-    p_productora_id NUMERIC
+-- Issue: SUBASTADORA, Vista de detalles (JOIN con PAIS y tablas relacionadas)
+CREATE OR REPLACE VIEW vista_detalles_subastadora AS
+SELECT 
+  s.subastadoraId,
+  s.nombreSubastadora,
+  p.nombrePais,
+  p.continente
+FROM SUBASTADORA s
+JOIN PAIS p ON s.idPais = p.paisId;
+
+-- Issue: Función para actualizar Subastadora(UPDATE con lógica de negocio)
+CREATE OR REPLACE FUNCTION actualizar_subastadora(
+  p_subastadoraId NUMERIC,
+  p_nombreSubastadora TEXT,
+  p_idPais NUMERIC
 )
-RETURNS TABLE (
-    idSubastadora NUMERIC,
-    idProductora NUMERIC,
-    nContrato NUMERIC,
-    fechaEmision DATE,
-    porcentajeProduccion NUMERIC(3,2),
-    tipoProductor VARCHAR,
-    fechaRenovacion DATE,
-    fechaCancelacion DATE,
-    esActivo BOOLEAN
-) AS $$
+RETURNS TEXT AS $$
 BEGIN
-    RETURN QUERY
-    SELECT 
-        c.idSubastadora,
-        c.idProductora,
-        c.nContrato,
-        c.fechaEmision,
-        c.porcentajeProduccion,
-        c.tipoProductor,
-        CASE 
-            WHEN c.idrenovS IS NOT NULL AND c.idrenovS::VARCHAR LIKE '[0-9][0-9][0-9][0-9]' THEN TO_DATE(c.idrenovS::VARCHAR, 'YYYYMMDD')
-            ELSE NULL
-        END AS fechaRenovacion,
-        CASE 
-            WHEN c.cancelado IS NOT NULL AND c.cancelado::VARCHAR LIKE '[0-9][0-9][0-9][0-9]' THEN TO_DATE(c.cancelado::VARCHAR, 'YYYYMMDD')
-            ELSE NULL
-        END AS fechaCancelacion,
-        CASE 
-            WHEN c.cancelado IS NOT NULL THEN FALSE
-            ELSE TRUE
-        END AS esActivo
-    FROM 
-        contrato c
-    WHERE 
-        c.idProductora = p_productora_id;
+  -- Verificar si la subastadora existe
+  IF NOT EXISTS (SELECT 1 FROM SUBASTADORA WHERE subastadoraId = p_subastadoraId) THEN
+    RETURN 'Subastadora no encontrada.';
+  END IF;
+
+  -- Actualizar la subastadora
+  UPDATE SUBASTADORA
+  SET nombreSubastadora = p_nombreSubastadora,
+      idPais = p_idPais
+  WHERE subastadoraId = p_subastadoraId;
+
+  RETURN 'Subastadora actualizada exitosamente.';
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION match_flowers(p_floristeria_id INTEGER, p_ocasion VARCHAR, p_emocion VARCHAR)
-RETURNS TABLE (
-    idFloristeria INTEGER,
-    nombre_comun VARCHAR,
-    color VARCHAR,
-    significado VARCHAR,
-    precio NUMERIC,
-    desc_color VARCHAR,
-    desc_enlace VARCHAR
-) AS $$
+-- Caso de prueba:
+-- SELECT actualizar_subastadora(1, 'Nueva Subastadora', 2);
+
+-- Issue: Vista principal para PRODUCTORAS
+CREATE OR REPLACE VIEW vista_productoras AS
+SELECT 
+  productoraId,
+  nombreProductora,
+  paginaWeb,
+  idPais
+FROM PRODUCTORAS;
+
+-- Issue: Vista de detalles para PRODUCTORAS
+CREATE OR REPLACE VIEW vista_detalles_productoras AS
+SELECT 
+  p.productoraId,
+  p.nombreProductora,
+  p.paginaWeb,
+  pais.nombrePais,
+  pais.continente
+FROM PRODUCTORAS p
+JOIN PAIS pais ON p.idPais = pais.paisId;
+
+-- Issue: Función para actualizar Productoras (UPDATE con lógica de negocio)
+CREATE OR REPLACE FUNCTION actualizar_productora(
+  p_productoraId NUMERIC,
+  p_nombreProductora TEXT,
+  p_paginaWeb TEXT,
+  p_idPais NUMERIC
+)
+RETURNS TEXT AS $$
 BEGIN
-    RETURN QUERY
-    SELECT 
-        cf.idFloristeria::INTEGER,
-        fc.nombreComun,
-        c.Nombre AS color,
-        s.Descripcion AS significado,
-        hpf.precio,
-        c.descripcion AS desc_color,
-        e.descripcion AS desc_enlace
-    FROM 
-        CATALOGO_FLORISTERIA cf
-    JOIN 
-        FLOR_CORTES fc ON cf.idCorteFlor = fc.corteId
-    JOIN 
-        COLOR c ON cf.idColor = c.colorId
-    LEFT JOIN 
-        ENLACES e ON c.colorId = e.idColor
-    JOIN 
-        SIGNIFICADO s ON e.IdSignificado = s.SignificadoId
-    JOIN 
-        HISTORICO_PRECIO_FLOR hpf ON cf.idFloristeria = hpf.idCatalogoFloristeria AND cf.codigo = hpf.idCatalogocodigo
-    WHERE 
-        cf.idFloristeria = p_floristeria_id
-        AND (REGEXP_LIKE(s.Descripcion, p_ocasion, 'i')
-            OR REGEXP_LIKE(e.Descripcion, p_emocion, 'i')
-            OR REGEXP_LIKE(c.descripcion, p_ocasion, 'i')
-            OR REGEXP_LIKE(c.descripcion, p_emocion, 'i')
-            OR REGEXP_LIKE(e.descripcion, p_ocasion, 'i')
-            OR REGEXP_LIKE(e.descripcion, p_emocion, 'i'));
+  -- Verificar si la productora existe
+  IF NOT EXISTS (SELECT 1 FROM PRODUCTORAS WHERE productoraId = p_productoraId) THEN
+    RETURN 'Productora no encontrada.';
+  END IF;
+
+  -- Verificar duplicidad de nombre
+  IF EXISTS (SELECT 1 FROM PRODUCTORAS WHERE nombreProductora = p_nombreProductora AND productoraId <> p_productoraId) THEN
+    RETURN 'El nombre de la productora ya está registrado.';
+  END IF;
+
+  -- Actualizar la productora
+  UPDATE PRODUCTORAS
+  SET nombreProductora = p_nombreProductora,
+      paginaWeb = p_paginaWeb,
+      idPais = p_idPais
+  WHERE productoraId = p_productoraId;
+
+  RETURN 'Productora actualizada exitosamente.';
 END;
 $$ LANGUAGE plpgsql;
 
+-- Caso de prueba:
+-- SELECT actualizar_productora(1, 'Nueva Productora', 'http://nueva-productora.com', 2);
+
+-- Issue: Vista principal para FLORISTERIAS
+CREATE OR REPLACE VIEW vista_floristerias AS
+SELECT 
+  floristeriaId,
+  nombre,
+  email,
+  paginaWeb,
+  idPais
+FROM FLORISTERIAS;
+
+-- Issue: Vista de detalles para FLORISTERIAS
+CREATE OR REPLACE VIEW vista_detalles_floristerias AS
+SELECT 
+  f.floristeriaId,
+  f.nombre,
+  f.email,
+  f.paginaWeb,
+  p.nombrePais,
+  p.continente
+FROM FLORISTERIAS f
+JOIN PAIS p ON f.idPais = p.paisId;
+
+-- Issue: Función para insertar Floristerias (INSERT con validaciones específicas)
+CREATE OR REPLACE FUNCTION insertar_floristeria(
+  p_nombre TEXT,
+  p_email TEXT,
+  p_paginaWeb TEXT,
+  p_idPais NUMERIC
+)
+RETURNS TEXT AS $$
+BEGIN
+  -- Validar que el país exista
+  IF NOT EXISTS (SELECT 1 FROM PAIS WHERE paisId = p_idPais) THEN
+    RETURN 'País no encontrado.';
+  END IF;
+
+  -- Validar que no haya registros con el mismo nombre
+  IF EXISTS (SELECT 1 FROM FLORISTERIAS WHERE nombre = p_nombre) THEN
+    RETURN 'El nombre de la floristería ya está registrado.';
+  END IF;
+
+  -- Insertar la nueva floristería
+  INSERT INTO FLORISTERIAS (nombre, email, paginaWeb, idPais)
+  VALUES (p_nombre, p_email, p_paginaWeb, p_idPais);
+
+  RETURN 'Floristería insertada exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT insertar_floristeria('Floristeria Nueva', 'contacto@floristerianueva.com', 'http://floristerianueva.com', 1);
+
+-- Issue: Función para actualizar Floristerias (UPDATE con lógica de negocio)
+CREATE OR REPLACE FUNCTION actualizar_floristeria(
+  p_floristeriaId NUMERIC,
+  p_nombre TEXT,
+  p_email TEXT,
+  p_paginaWeb TEXT,
+  p_idPais NUMERIC
+)
+RETURNS TEXT AS $$
+BEGIN
+  -- Verificar si la floristería existe
+  IF NOT EXISTS (SELECT 1 FROM FLORISTERIAS WHERE floristeriaId = p_floristeriaId) THEN
+    RETURN 'Floristería no encontrada.';
+  END IF;
+
+  -- Validar que no haya registros con el mismo nombre
+  IF EXISTS (SELECT 1 FROM FLORISTERIAS WHERE nombre = p_nombre AND floristeriaId <> p_floristeriaId) THEN
+    RETURN 'El nombre de la floristería ya está registrado.';
+  END IF;
+
+  -- Actualizar la floristería
+  UPDATE FLORISTERIAS
+  SET nombre = p_nombre,
+      email = p_email,
+      paginaWeb = p_paginaWeb,
+      idPais = p_idPais
+  WHERE floristeriaId = p_floristeriaId;
+
+  RETURN 'Floristería actualizada exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT actualizar_floristeria(1, 'Floristeria Actualizada', 'nuevoemail@floristeria.com', 'http://floristeriaactualizada.com', 2);
+
+-- Issue: Vista principal para CLIENTE_NATURAL
+CREATE OR REPLACE VIEW vista_cliente_natural AS
+SELECT 
+  cliNaturalId,
+  documentoIdentidad,
+  primernombre,
+  primerApellido,
+  segundoApellido,
+  segundonombre
+FROM CLIENTE_NATURAL;
+
+-- Issue: Vista de detalles para CLIENTE_NATURAL
+CREATE OR REPLACE VIEW vista_detalles_cliente_natural AS
+SELECT 
+  cn.cliNaturalId,
+  cn.documentoIdentidad,
+  cn.primernombre,
+  cn.primerApellido,
+  cn.segundoApellido,
+  cn.segundonombre,
+  ff.numFactura,
+  ff.fechaEmision,
+  ff.montoTotal
+FROM CLIENTE_NATURAL cn
+JOIN FACTURA_FINAL ff ON cn.cliNaturalId = ff.idClienteNatural;
+
+-- Issue: Función para insertar Cliente Natural (INSERT con validaciones específicas)
+CREATE OR REPLACE FUNCTION insertar_cliente_natural(
+  p_documentoIdentidad NUMERIC,
+  p_primernombre VARCHAR,
+  p_primerApellido VARCHAR,
+  p_segundoApellido VARCHAR,
+  p_segundonombre VARCHAR DEFAULT NULL
+)
+RETURNS TEXT AS $$
+BEGIN
+  -- Validar que el documento de identidad no exista
+  IF EXISTS (SELECT 1 FROM CLIENTE_NATURAL WHERE documentoIdentidad = p_documentoIdentidad) THEN
+    RETURN 'El documento de identidad ya está registrado.';
+  END IF;
+
+  -- Insertar el nuevo cliente natural
+  INSERT INTO CLIENTE_NATURAL (documentoIdentidad, primernombre, primerApellido, segundoApellido, segundonombre)
+  VALUES (p_documentoIdentidad, p_primernombre, p_primerApellido, p_segundoApellido, p_segundonombre);
+
+  RETURN 'Cliente natural insertado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT insertar_cliente_natural(12345678, 'Juan', 'Perez', 'Gomez', 'Carlos');
+
+-- Issue: Función para actualizar Cliente Natural (UPDATE con lógica de negocio)
+CREATE OR REPLACE FUNCTION actualizar_cliente_natural(
+  p_cliNaturalId NUMERIC,
+  p_documentoIdentidad NUMERIC,
+  p_primernombre VARCHAR,
+  p_primerApellido VARCHAR,
+  p_segundoApellido VARCHAR,
+  p_segundonombre VARCHAR DEFAULT NULL
+)
+RETURNS TEXT AS $$
+BEGIN
+  -- Verificar si el cliente natural existe
+  IF NOT EXISTS (SELECT 1 FROM CLIENTE_NATURAL WHERE cliNaturalId = p_cliNaturalId) THEN
+    RETURN 'Cliente natural no encontrado.';
+  END IF;
+
+  -- Validar que no haya otro registro con el mismo documento de identidad
+  IF EXISTS (SELECT 1 FROM CLIENTE_NATURAL WHERE documentoIdentidad = p_documentoIdentidad AND cliNaturalId <> p_cliNaturalId) THEN
+    RETURN 'El documento de identidad ya está registrado.';
+  END IF;
+
+  -- Actualizar el cliente natural
+  UPDATE CLIENTE_NATURAL
+  SET documentoIdentidad = p_documentoIdentidad,
+      primernombre = p_primernombre,
+      primerApellido = p_primerApellido,
+      segundoApellido = p_segundoApellido,
+      segundonombre = p_segundonombre
+  WHERE cliNaturalId = p_cliNaturalId;
+
+  RETURN 'Cliente natural actualizado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT actualizar_cliente_natural(1, 87654321, 'Carlos', 'Lopez', 'Martinez', 'Andres');
+
+-- Issue: Vista principal para CLIENTE_JURIDICO
+CREATE OR REPLACE VIEW vista_cliente_juridico AS
+SELECT 
+  cliJuridicoId,
+  RIF,
+  nombre
+FROM CLIENTE_JURIDICO;
+
+-- Issue: Vista de detalles para CLIENTE_JURIDICO
+CREATE OR REPLACE VIEW vista_detalles_cliente_juridico AS
+SELECT 
+  cj.cliJuridicoId,
+  cj.RIF,
+  cj.nombre,
+  ff.numFactura,
+  ff.fechaEmision,
+  ff.montoTotal
+FROM CLIENTE_JURIDICO cj
+JOIN FACTURA_FINAL ff ON cj.cliJuridicoId = ff.idClienteJuridico;
+
+-- Issue: Función para insertar Cliente Juridico (INSERT con validaciones específicas)
+CREATE OR REPLACE FUNCTION insertar_cliente_juridico(
+  p_RIF NUMERIC,
+  p_nombre VARCHAR
+)
+RETURNS TEXT AS $$
+BEGIN
+  -- Validar que el RIF no exista
+  IF EXISTS (SELECT 1 FROM CLIENTE_JURIDICO WHERE RIF = p_RIF) THEN
+    RETURN 'El RIF ya está registrado.';
+  END IF;
+
+  -- Insertar el nuevo cliente juridico
+  INSERT INTO CLIENTE_JURIDICO (RIF, nombre)
+  VALUES (p_RIF, p_nombre);
+
+  RETURN 'Cliente juridico insertado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT insertar_cliente_juridico(123456789, 'Empresa XYZ');
+
+-- Issue: Función para actualizar Cliente Juridico (UPDATE con lógica de negocio)
+CREATE OR REPLACE FUNCTION actualizar_cliente_juridico(
+  p_cliJuridicoId NUMERIC,
+  p_RIF NUMERIC,
+  p_nombre VARCHAR
+)
+RETURNS TEXT AS $$
+BEGIN
+  -- Verificar si el cliente juridico existe
+  IF NOT EXISTS (SELECT 1 FROM CLIENTE_JURIDICO WHERE cliJuridicoId = p_cliJuridicoId) THEN
+    RETURN 'Cliente juridico no encontrado.';
+  END IF;
+
+  -- Validar que no haya otro registro con el mismo RIF
+  IF EXISTS (SELECT 1 FROM CLIENTE_JURIDICO WHERE RIF = p_RIF AND cliJuridicoId <> p_cliJuridicoId) THEN
+    RETURN 'El RIF ya está registrado.';
+  END IF;
+
+  -- Actualizar el cliente juridico
+  UPDATE CLIENTE_JURIDICO
+  SET RIF = p_RIF,
+      nombre = p_nombre
+  WHERE cliJuridicoId = p_cliJuridicoId;
+
+  RETURN 'Cliente juridico actualizado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT actualizar_cliente_juridico(1, 987654321, 'Empresa ABC');
+
+-- Issue: Vista principal para FLOR_CORTES
+CREATE OR REPLACE VIEW vista_flor_cortes AS
+SELECT 
+  corteId,
+  nombreComun,
+  Descripcion,
+  genero_especie,
+  etimologia,
+  colores,
+  temperatura
+FROM FLOR_CORTES;
+
+-- Issue: Vista de detalles para FLOR_CORTES
+CREATE OR REPLACE VIEW vista_detalles_flor_cortes AS
+SELECT 
+  fc.corteId,
+  fc.nombreComun,
+  fc.Descripcion,
+  fc.genero_especie,
+  fc.etimologia,
+  fc.colores,
+  fc.temperatura,
+  e.Descripcion AS descripcionEnl,
+  cp.nombrepropio AS nombrePropioCP
+FROM FLOR_CORTES fc
+LEFT JOIN ENLACES e ON fc.corteId = e.idCorte
+LEFT JOIN CATALOGOPRODUCTOR cp ON fc.corteId = cp.idCorte;
+
+-- Issue: Función para insertar Flor Cortes (INSERT con validaciones específicas)
+CREATE OR REPLACE FUNCTION insertar_flor_cortes(
+  p_nombreComun VARCHAR,
+  p_Descripcion VARCHAR,
+  p_genero_especie VARCHAR,
+  p_etimologia VARCHAR,
+  p_colores VARCHAR,
+  p_temperatura NUMERIC
+)
+RETURNS TEXT AS $$
+BEGIN
+  -- Validar que el nombre común no exista
+  IF EXISTS (SELECT 1 FROM FLOR_CORTES WHERE nombreComun = p_nombreComun) THEN
+    RETURN 'El nombre común ya está registrado.';
+  END IF;
+
+  -- Insertar la nueva flor
+  INSERT INTO FLOR_CORTES (nombreComun, Descripcion, genero_especie, etimologia, colores, temperatura)
+  VALUES (p_nombreComun, p_Descripcion, p_genero_especie, p_etimologia, p_colores, p_temperatura);
+
+  RETURN 'Flor insertada exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT insertar_flor_cortes('Rosa', 'Flor roja', 'Rosae', 'Del latín rosa', 'Rojo', 20);
+
+-- Issue: Función para actualizar Flor Cortes (UPDATE con lógica de negocio)
+CREATE OR REPLACE FUNCTION actualizar_flor_cortes(
+  p_corteId NUMERIC,
+  p_nombreComun VARCHAR,
+  p_Descripcion VARCHAR,
+  p_genero_especie VARCHAR,
+  p_etimologia VARCHAR,
+  p_colores VARCHAR,
+  p_temperatura NUMERIC
+)
+RETURNS TEXT AS $$
+BEGIN
+  -- Verificar si la flor existe
+  IF NOT EXISTS (SELECT 1 FROM FLOR_CORTES WHERE corteId = p_corteId) THEN
+    RETURN 'Flor no encontrada.';
+  END IF;
+
+  -- Validar que no haya otra flor con el mismo nombre común
+  IF EXISTS (SELECT 1 FROM FLOR_CORTES WHERE nombreComun = p_nombreComun AND corteId <> p_corteId) THEN
+    RETURN 'El nombre común ya está registrado para otra flor.';
+  END IF;
+
+  -- Actualizar la flor
+  UPDATE FLOR_CORTES
+  SET nombreComun = p_nombreComun,
+      Descripcion = p_Descripcion,
+      genero_especie = p_genero_especie,
+      etimologia = p_etimologia,
+      colores = p_colores,
+      temperatura = p_temperatura
+  WHERE corteId = p_corteId;
+
+  RETURN 'Flor actualizada exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT actualizar_flor_cortes(1, 'Tulipán', 'Flor amarilla', 'Tulipa', 'Del turco tülbend', 'Amarillo', 15);
+
+-- Issue: Función para eliminar Flor Cortes (DELETE con consideraciones de integridad referencial)
+CREATE OR REPLACE FUNCTION eliminar_flor_cortes(
+  p_corteId NUMERIC DEFAULT NULL,
+  p_nombreComun VARCHAR DEFAULT NULL
+)
+RETURNS TEXT AS $$
+BEGIN
+  -- Verificar que al menos uno de los parámetros tenga un valor
+  IF p_corteId IS NULL AND p_nombreComun IS NULL THEN
+    RETURN 'Debe proporcionar un valor para corteId o nombreComun.';
+  END IF;
+
+  -- Verificar si la flor existe
+  IF p_corteId IS NOT NULL THEN
+    IF NOT EXISTS (SELECT 1 FROM FLOR_CORTES WHERE corteId = p_corteId) THEN
+      RETURN 'Flor no encontrada por corteId.';
+    END IF;
+  ELSIF p_nombreComun IS NOT NULL THEN
+    IF NOT EXISTS (SELECT 1 FROM FLOR_CORTES WHERE nombreComun = p_nombreComun) THEN
+      RETURN 'Flor no encontrada por nombreComun.';
+    END IF;
+  END IF;
+
+  -- Verificar si la flor está referenciada en otras tablas
+  IF p_corteId IS NOT NULL THEN
+    IF EXISTS (SELECT 1 FROM ENLACES WHERE idCorte = p_corteId) THEN
+      RETURN 'No se puede eliminar la flor porque está referenciada en la tabla ENLACES.';
+    END IF;
+
+    IF EXISTS (SELECT 1 FROM CATALOGOPRODUCTOR WHERE idCorte = p_corteId) THEN
+      RETURN 'No se puede eliminar la flor porque está referenciada en la tabla CATALOGOPRODUCTOR.';
+    END IF;
+  ELSIF p_nombreComun IS NOT NULL THEN
+    IF EXISTS (SELECT 1 FROM ENLACES e JOIN FLOR_CORTES fc ON e.idCorte = fc.corteId WHERE fc.nombreComun = p_nombreComun) THEN
+      RETURN 'No se puede eliminar la flor porque está referenciada en la tabla ENLACES.';
+    END IF;
+
+    IF EXISTS (SELECT 1 FROM CATALOGOPRODUCTOR cp JOIN FLOR_CORTES fc ON cp.idCorte = fc.corteId WHERE fc.nombreComun = p_nombreComun) THEN
+      RETURN 'No se puede eliminar la flor porque está referenciada en la tabla CATALOGOPRODUCTOR.';
+    END IF;
+  END IF;
+
+  -- Eliminar la flor
+  IF p_corteId IS NOT NULL THEN
+    DELETE FROM FLOR_CORTES WHERE corteId = p_corteId;
+  ELSIF p_nombreComun IS NOT NULL THEN
+    DELETE FROM FLOR_CORTES WHERE nombreComun = p_nombreComun;
+  END IF;
+
+  RETURN 'Flor eliminada exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT eliminar_flor_cortes(1);
+
+-- Issue: Vista principal para SIGNIFICADO
+CREATE OR REPLACE VIEW vista_significado AS
+SELECT 
+  SignificadoId,
+  Tipo,
+  Descripcion
+FROM SIGNIFICADO;
+
+-- Issue: Vista de detalles para SIGNIFICADO
+CREATE OR REPLACE VIEW vista_detalles_significado AS
+SELECT 
+  s.SignificadoId,
+  s.Tipo,
+  s.Descripcion,
+  e.Descripcion AS descripcionEnlace,
+  c.Nombre AS nombreColor,
+  fc.nombreComun AS nombreFlor
+FROM SIGNIFICADO s
+LEFT JOIN ENLACES e ON s.SignificadoId = e.IdSignificado
+LEFT JOIN COLOR c ON e.idColor = c.colorId
+LEFT JOIN FLOR_CORTES fc ON e.idCorte = fc.corteId;
+
+-- Issue: Función para insertar Significado (INSERT con validaciones específicas)
+CREATE OR REPLACE FUNCTION insertar_significado(
+  p_Tipo VARCHAR,
+  p_Descripcion VARCHAR
+)
+RETURNS TEXT AS $$
+BEGIN
+  -- Validar que el tipo sea válido
+  IF p_Tipo NOT IN ('Oc', 'Se') THEN
+    RETURN 'Tipo inválido. Debe ser "Oc" o "Se".';
+  END IF;
+
+  -- Insertar el nuevo significado
+  INSERT INTO SIGNIFICADO (Tipo, Descripcion)
+  VALUES (p_Tipo, p_Descripcion);
+
+  RETURN 'Significado insertado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT insertar_significado('Oc', 'Ocasión especial');
+
+-- Issue: Función para actualizar Significado (UPDATE con lógica de negocio)
+CREATE OR REPLACE FUNCTION actualizar_significado(
+  p_SignificadoId NUMERIC,
+  p_Tipo VARCHAR,
+  p_Descripcion VARCHAR
+)
+RETURNS TEXT AS $$
+BEGIN
+  -- Verificar si el significado existe
+  IF NOT EXISTS (SELECT 1 FROM SIGNIFICADO WHERE SignificadoId = p_SignificadoId) THEN
+    RETURN 'Significado no encontrado.';
+  END IF;
+
+  -- Validar que el tipo sea válido
+  IF p_Tipo NOT IN ('Oc', 'Se') THEN
+    RETURN 'Tipo inválido. Debe ser "Oc" o "Se".';
+  END IF;
+
+  -- Actualizar el significado
+  UPDATE SIGNIFICADO
+  SET Tipo = p_Tipo,
+      Descripcion = p_Descripcion
+  WHERE SignificadoId = p_SignificadoId;
+
+  RETURN 'Significado actualizado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT actualizar_significado(1, 'Se', 'Significado especial');
+
+-- Issue: Función para eliminar Significado (DELETE con consideraciones de integridad referencial)
+CREATE OR REPLACE FUNCTION eliminar_significado(
+  p_SignificadoId NUMERIC
+)
+RETURNS TEXT AS $$
+BEGIN
+  -- Verificar si el significado existe
+  IF NOT EXISTS (SELECT 1 FROM SIGNIFICADO WHERE SignificadoId = p_SignificadoId) THEN
+    RETURN 'Significado no encontrado.';
+  END IF;
+
+  -- Verificar si el significado está referenciado en otras tablas
+  IF EXISTS (SELECT 1 FROM ENLACES WHERE IdSignificado = p_SignificadoId) THEN
+    RETURN 'No se puede eliminar el significado porque está referenciado en la tabla ENLACES.';
+  END IF;
+
+  -- Eliminar el significado
+  DELETE FROM SIGNIFICADO WHERE SignificadoId = p_SignificadoId;
+
+  RETURN 'Significado eliminado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT eliminar_significado(1);
+
+-- Issue: Vista principal para COLOR
+CREATE OR REPLACE VIEW vista_color AS
+SELECT 
+  colorId,
+  Nombre,
+  Descripcion
+FROM COLOR;
+
+-- Issue: Vista de detalles para COLOR
+CREATE OR REPLACE VIEW vista_detalles_color AS
+SELECT 
+  c.colorId,
+  c.Nombre,
+  c.Descripcion,
+  e.Descripcion AS descripcionEnlace,
+  cf.nombrePropio AS nombreFlor
+FROM COLOR c
+LEFT JOIN ENLACES e ON c.colorId = e.idColor
+LEFT JOIN CATALOGO_FLORISTERIA cf ON c.colorId = cf.idColor;
+
+-- Issue: Función para insertar Color (INSERT con validaciones específicas)
+CREATE OR REPLACE FUNCTION insertar_color(
+  p_Nombre VARCHAR,
+  p_Descripcion VARCHAR
+)
+RETURNS TEXT AS $$
+BEGIN
+  -- Validar que el nombre no exista
+  IF EXISTS (SELECT 1 FROM COLOR WHERE Nombre = p_Nombre) THEN
+    RETURN 'El nombre del color ya está registrado.';
+  END IF;
+
+  -- Insertar el nuevo color
+  INSERT INTO COLOR (Nombre, Descripcion)
+  VALUES (p_Nombre, p_Descripcion);
+
+  RETURN 'Color insertado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT insertar_color('Azul', 'Color azul claro');
+
+-- Issue: Función para actualizar Color (UPDATE con lógica de negocio)
+CREATE OR REPLACE FUNCTION actualizar_color(
+  p_colorId NUMERIC,
+  p_Nombre VARCHAR,
+  p_Descripcion VARCHAR
+)
+RETURNS TEXT AS $$
+BEGIN
+  -- Verificar si el color existe
+  IF NOT EXISTS (SELECT 1 FROM COLOR WHERE colorId = p_colorId) THEN
+    RETURN 'Color no encontrado.';
+  END IF;
+
+  -- Validar que no haya otro registro con el mismo nombre
+  IF EXISTS (SELECT 1 FROM COLOR WHERE Nombre = p_Nombre AND colorId <> p_colorId) THEN
+    RETURN 'El nombre del color ya está registrado para otro color.';
+  END IF;
+
+  -- Actualizar el color
+  UPDATE COLOR
+  SET Nombre = p_Nombre,
+      Descripcion = p_Descripcion
+  WHERE colorId = p_colorId;
+
+  RETURN 'Color actualizado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT actualizar_color(1, 'Verde', 'Color verde oscuro');
+
+-- Issue: Función para eliminar Color (DELETE con consideraciones de integridad referencial)
+CREATE OR REPLACE FUNCTION eliminar_color(
+  p_colorId NUMERIC DEFAULT NULL,
+  p_nombre VARCHAR DEFAULT NULL
+)
+RETURNS TEXT AS $$
+BEGIN
+  -- Verificar que al menos uno de los parámetros tenga un valor
+  IF p_colorId IS NULL AND p_nombre IS NULL THEN
+    RETURN 'Debe proporcionar un valor para colorId o nombre.';
+  END IF;
+
+  -- Verificar si el color existe
+  IF p_colorId IS NOT NULL THEN
+    IF NOT EXISTS (SELECT 1 FROM COLOR WHERE colorId = p_colorId) THEN
+      RETURN 'Color no encontrado por colorId.';
+    END IF;
+  ELSIF p_nombre IS NOT NULL THEN
+    IF NOT EXISTS (SELECT 1 FROM COLOR WHERE Nombre = p_nombre) THEN
+      RETURN 'Color no encontrado por nombre.';
+    END IF;
+  END IF;
+
+  -- Verificar si el color está referenciado en otras tablas
+  IF p_colorId IS NOT NULL THEN
+    IF EXISTS (SELECT 1 FROM ENLACES WHERE idColor = p_colorId) THEN
+      RETURN 'No se puede eliminar el color porque está referenciado en la tabla ENLACES.';
+    END IF;
+
+    IF EXISTS (SELECT 1 FROM CATALOGO_FLORISTERIA WHERE idColor = p_colorId) THEN
+      RETURN 'No se puede eliminar el color porque está referenciado en la tabla CATALOGO_FLORISTERIA.';
+    END IF;
+  ELSIF p_nombre IS NOT NULL THEN
+    IF EXISTS (SELECT 1 FROM ENLACES e JOIN COLOR c ON e.idColor = c.colorId WHERE c.Nombre = p_nombre) THEN
+      RETURN 'No se puede eliminar el color porque está referenciado en la tabla ENLACES.';
+    END IF;
+
+    IF EXISTS (SELECT 1 FROM CATALOGO_FLORISTERIA cf JOIN COLOR c ON cf.idColor = c.colorId WHERE c.Nombre = p_nombre) THEN
+      RETURN 'No se puede eliminar el color porque está referenciado en la tabla CATALOGO_FLORISTERIA.';
+    END IF;
+  END IF;
+
+  -- Eliminar el color
+  IF p_colorId IS NOT NULL THEN
+    DELETE FROM COLOR WHERE colorId = p_colorId;
+  ELSIF p_nombre IS NOT NULL THEN
+    DELETE FROM COLOR WHERE Nombre = p_nombre;
+  END IF;
+
+  RETURN 'Color eliminado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT eliminar_color(1);
+
+-- Issue: Vista principal para ENLACES
+CREATE OR REPLACE VIEW vista_enlaces AS
+SELECT 
+  IdSignificado,
+  enlaceId,
+  Descripcion,
+  idColor,
+  idCorte
+FROM ENLACES;
+
+-- Issue: Vista de detalles para ENLACES
+CREATE OR REPLACE VIEW vista_detalles_enlaces AS
+SELECT 
+  e.IdSignificado,
+  e.enlaceId,
+  e.Descripcion,
+  c.Nombre AS nombreColor,
+  fc.nombreComun AS nombreFlor,
+  s.Descripcion AS significado
+FROM ENLACES e
+LEFT JOIN COLOR c ON e.idColor = c.colorId
+LEFT JOIN FLOR_CORTES fc ON e.idCorte = fc.corteId
+LEFT JOIN SIGNIFICADO s ON e.IdSignificado = s.SignificadoId;
+
+-- Issue: Función para insertar Enlaces (INSERT con validaciones específicas)
+CREATE OR REPLACE FUNCTION insertar_enlace(
+  p_IdSignificado NUMERIC,
+  p_Descripcion VARCHAR,
+  p_idColor NUMERIC DEFAULT NULL,
+  p_idCorte NUMERIC DEFAULT NULL
+)
+RETURNS TEXT AS $$
+BEGIN
+  -- Validar que al menos uno de los campos idColor o idCorte tenga un valor
+  IF p_idColor IS NULL AND p_idCorte IS NULL THEN
+    RETURN 'Debe proporcionar al menos un valor para idColor o idCorte.';
+  END IF;
+
+  -- Insertar el nuevo enlace
+  INSERT INTO ENLACES (IdSignificado, Descripcion, idColor, idCorte)
+  VALUES (p_IdSignificado, p_Descripcion, p_idColor, p_idCorte);
+
+  RETURN 'Enlace insertado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT insertar_enlace(1, 'Enlace de prueba', 1, NULL);
+
+-- Issue: Función para actualizar Enlaces (UPDATE con lógica de negocio)
+CREATE OR REPLACE FUNCTION actualizar_enlace(
+  p_IdSignificado NUMERIC,
+  p_enlaceId NUMERIC,
+  p_Descripcion VARCHAR,
+  p_idColor NUMERIC DEFAULT NULL,
+  p_idCorte NUMERIC DEFAULT NULL
+)
+RETURNS TEXT AS $$
+BEGIN
+  -- Verificar si el enlace existe
+  IF NOT EXISTS (SELECT 1 FROM ENLACES WHERE IdSignificado = p_IdSignificado AND enlaceId = p_enlaceId) THEN
+    RETURN 'Enlace no encontrado.';
+  END IF;
+
+  -- Validar que al menos uno de los campos idColor o idCorte tenga un valor
+  IF p_idColor IS NULL AND p_idCorte IS NULL THEN
+    RETURN 'Debe proporcionar al menos un valor para idColor o idCorte.';
+  END IF;
+
+  -- Actualizar el enlace
+  UPDATE ENLACES
+  SET Descripcion = p_Descripcion,
+      idColor = p_idColor,
+      idCorte = p_idCorte
+  WHERE IdSignificado = p_IdSignificado AND enlaceId = p_enlaceId;
+
+  RETURN 'Enlace actualizado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT actualizar_enlace(1, 1, 'Descripción actualizada', 2, NULL);
+
+-- Issue: Función para eliminar Enlaces (DELETE con consideraciones de integridad referencial)
+CREATE OR REPLACE FUNCTION eliminar_enlace(
+  p_IdSignificado NUMERIC,
+  p_enlaceId NUMERIC
+)
+RETURNS TEXT AS $$
+BEGIN
+  -- Verificar si el enlace existe
+  IF NOT EXISTS (SELECT 1 FROM ENLACES WHERE IdSignificado = p_IdSignificado AND enlaceId = p_enlaceId) THEN
+    RETURN 'Enlace no encontrado.';
+  END IF;
+
+  -- Eliminar el enlace
+  DELETE FROM ENLACES WHERE IdSignificado = p_IdSignificado AND enlaceId = p_enlaceId;
+
+  RETURN 'Enlace eliminado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT eliminar_enlace(1, 1);
+
+-- Issue: Vista principal para CATALOGOPRODUCTOR
+CREATE OR REPLACE VIEW vista_catalogoproductor AS
+SELECT 
+  idProductora,
+  idCorte,
+  vbn,
+  nombrepropio,
+  descripcion
+FROM CATALOGOPRODUCTOR;
+
+-- Issue: Vista de detalles para CATALOGOPRODUCTOR
+CREATE OR REPLACE VIEW vista_detalles_catalogoproductor AS
+SELECT 
+  cp.idProductora,
+  p.nombreProductora,
+  cp.idCorte,
+  fc.nombreComun AS nombreFlor,
+  cp.vbn,
+  cp.nombrepropio,
+  cp.descripcion
+FROM CATALOGOPRODUCTOR cp
+JOIN PRODUCTORAS p ON cp.idProductora = p.productoraId
+JOIN FLOR_CORTES fc ON cp.idCorte = fc.corteId;
+
+-- Issue: Función para insertar CatalogoProductor
+CREATE OR REPLACE FUNCTION insertar_catalogoproductor(
+  p_idProductora NUMERIC,
+  p_idCorte NUMERIC,
+  p_vbn NUMERIC,
+  p_nombrepropio VARCHAR,
+  p_descripcion VARCHAR DEFAULT NULL
+)
+RETURNS TEXT AS $$
+BEGIN
+  -- Verificar referencias
+  IF NOT EXISTS (SELECT 1 FROM PRODUCTORAS WHERE productoraId = p_idProductora) THEN
+    RETURN 'Productora no encontrada.';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM FLOR_CORTES WHERE corteId = p_idCorte) THEN
+    RETURN 'Flor no encontrada.';
+  END IF;
+
+  INSERT INTO CATALOGOPRODUCTOR (idProductora, idCorte, vbn, nombrepropio, descripcion)
+  VALUES (p_idProductora, p_idCorte, p_vbn, p_nombrepropio, p_descripcion);
+
+  RETURN 'CatalogoProductor insertado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT insertar_catalogoproductor(1, 1, 123, 'Nombre Propio', 'Descripción');
+
+-- Issue: Función para actualizar CatalogoProductor
+CREATE OR REPLACE FUNCTION actualizar_catalogoproductor(
+  p_idProductora NUMERIC,
+  p_idCorte NUMERIC,
+  p_vbn NUMERIC,
+  p_nombrepropio VARCHAR,
+  p_descripcion VARCHAR DEFAULT NULL
+)
+RETURNS TEXT AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 
+    FROM CATALOGOPRODUCTOR 
+    WHERE idProductora = p_idProductora 
+      AND idCorte = p_idCorte 
+      AND vbn = p_vbn
+  ) THEN
+    RETURN 'Registro de CatalogoProductor no encontrado.';
+  END IF;
+
+  UPDATE CATALOGOPRODUCTOR
+  SET nombrepropio = p_nombrepropio,
+      descripcion = p_descripcion
+  WHERE idProductora = p_idProductora
+    AND idCorte = p_idCorte
+    AND vbn = p_vbn;
+
+  RETURN 'CatalogoProductor actualizado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT actualizar_catalogoproductor(1, 1, 123, 'Nombre Propio Actualizado', 'Descripción Actualizada');
+
+-- Issue: Función para eliminar CatalogoProductor (consideraciones de integridad referencial)
+CREATE OR REPLACE FUNCTION eliminar_catalogoproductor(
+  p_idProductora NUMERIC,
+  p_idCorte NUMERIC,
+  p_vbn NUMERIC
+)
+RETURNS TEXT AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 
+    FROM CATALOGOPRODUCTOR 
+    WHERE idProductora = p_idProductora 
+      AND idCorte = p_idCorte 
+      AND vbn = p_vbn
+  ) THEN
+    RETURN 'Registro de CatalogoProductor no encontrado.';
+  END IF;
+
+  -- Verificar referencias en CANTIDAD_OFRECIDA
+  IF EXISTS (
+    SELECT 1 FROM CANTIDAD_OFRECIDA
+    WHERE idCatalogoProductora = p_idProductora
+      AND idCatalogoCorte = p_idCorte
+      AND idVnb = p_vbn
+  ) THEN
+    RETURN 'No se puede eliminar porque está referenciado en la tabla CANTIDAD_OFRECIDA.';
+  END IF;
+
+  DELETE FROM CATALOGOPRODUCTOR
+  WHERE idProductora = p_idProductora
+    AND idCorte = p_idCorte
+    AND vbn = p_vbn;
+
+  RETURN 'CatalogoProductor eliminado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT eliminar_catalogoproductor(1, 1, 123);
+
+-- Issue: Vista principal para CONTRATO
+CREATE OR REPLACE VIEW vista_contrato AS
+SELECT 
+  idSubastadora,
+  idProductora,
+  nContrato,
+  fechaemision,
+  porcentajeProduccion,
+  tipoProductor,
+  idrenovS,
+  idrenovP,
+  ren_nContrato,
+  cancelado
+FROM CONTRATO;
+
+-- Issue: Vista de detalles para CONTRATO
+CREATE OR REPLACE VIEW vista_detalles_contrato AS
+SELECT 
+  c.idSubastadora,
+  s.nombreSubastadora,
+  c.idProductora,
+  p.nombreProductora,
+  c.nContrato,
+  c.fechaemision,
+  c.porcentajeProduccion,
+  c.tipoProductor,
+  c.idrenovS,
+  c.idrenovP,
+  c.ren_nContrato,
+  c.cancelado
+FROM CONTRATO c
+JOIN SUBASTADORA s ON c.idSubastadora = s.subastadoraId
+JOIN PRODUCTORAS p ON c.idProductora = p.productoraId;
+
+-- Issue: Función para insertar Contrato
+CREATE OR REPLACE FUNCTION insertar_contrato(
+  p_idSubastadora NUMERIC,
+  p_idProductora NUMERIC,
+  p_nContrato NUMERIC,
+  p_fechaemision DATE,
+  p_porcentajeProduccion NUMERIC,
+  p_tipoProductor VARCHAR,
+  p_idrenovS NUMERIC DEFAULT NULL,
+  p_idrenovP NUMERIC DEFAULT NULL,
+  p_ren_nContrato NUMERIC DEFAULT NULL,
+  p_cancelado DATE DEFAULT NULL
+)
+RETURNS TEXT AS $$
+BEGIN
+  -- Validar subastadora y productora
+  IF NOT EXISTS (SELECT 1 FROM SUBASTADORA WHERE subastadoraId = p_idSubastadora) THEN
+    RETURN 'Subastadora no encontrada.';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM PRODUCTORAS WHERE productoraId = p_idProductora) THEN
+    RETURN 'Productora no encontrada.';
+  END IF;
+
+  INSERT INTO CONTRATO (
+    idSubastadora, idProductora, nContrato, fechaemision, porcentajeProduccion, 
+    tipoProductor, idrenovS, idrenovP, ren_nContrato, cancelado
+  )
+  VALUES (
+    p_idSubastadora, p_idProductora, p_nContrato, p_fechaemision, p_porcentajeProduccion, 
+    p_tipoProductor, p_idrenovS, p_idrenovP, p_ren_nContrato, p_cancelado
+  );
+
+  RETURN 'Contrato insertado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT insertar_contrato(1, 1, 123, '2023-01-01', 50, 'Tipo A', NULL, NULL, NULL, NULL);
+
+-- Issue: Función para actualizar Contrato
+CREATE OR REPLACE FUNCTION actualizar_contrato(
+  p_idSubastadora NUMERIC,
+  p_idProductora NUMERIC,
+  p_nContrato NUMERIC,
+  p_fechaemision DATE,
+  p_porcentajeProduccion NUMERIC,
+  p_tipoProductor VARCHAR,
+  p_idrenovS NUMERIC DEFAULT NULL,
+  p_idrenovP NUMERIC DEFAULT NULL,
+  p_ren_nContrato NUMERIC DEFAULT NULL,
+  p_cancelado DATE DEFAULT NULL
+)
+RETURNS TEXT AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM CONTRATO
+    WHERE idSubastadora = p_idSubastadora
+      AND idProductora = p_idProductora
+      AND nContrato = p_nContrato
+  ) THEN
+    RETURN 'Contrato no encontrado.';
+  END IF;
+
+  UPDATE CONTRATO
+  SET fechaemision = p_fechaemision,
+      porcentajeProduccion = p_porcentajeProduccion,
+      tipoProductor = p_tipoProductor,
+      idrenovS = p_idrenovS,
+      idrenovP = p_idrenovP,
+      ren_nContrato = p_ren_nContrato,
+      cancelado = p_cancelado
+  WHERE idSubastadora = p_idSubastadora
+    AND idProductora = p_idProductora
+    AND nContrato = p_nContrato;
+
+  RETURN 'Contrato actualizado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT actualizar_contrato(1, 1, 123, '2023-01-01', 60, 'Tipo B', NULL, NULL, NULL, NULL);
+
+-- Issue: Función para eliminar Contrato (consideraciones de integridad referencial)
+CREATE OR REPLACE FUNCTION eliminar_contrato(
+  p_idSubastadora NUMERIC,
+  p_idProductora NUMERIC,
+  p_nContrato NUMERIC
+)
+RETURNS TEXT AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM CONTRATO
+    WHERE idSubastadora = p_idSubastadora
+      AND idProductora = p_idProductora
+      AND nContrato = p_nContrato
+  ) THEN
+    RETURN 'Contrato no encontrado.';
+  END IF;
+
+  -- Verificar referencias en CANTIDAD_OFRECIDA o PAGOS
+  IF EXISTS (
+    SELECT 1 FROM CANTIDAD_OFRECIDA
+    WHERE idContratoSubastadora = p_idSubastadora
+      AND idContratoProductora = p_idProductora
+      AND idNContrato = p_nContrato
+  ) THEN
+    RETURN 'No se puede eliminar el contrato porque está referenciado en la tabla CANTIDAD_OFRECIDA.';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM PAGOS
+    WHERE idContratoSubastadora = p_idSubastadora
+      AND idContratoProductora = p_idProductora
+      AND idNContrato = p_nContrato
+  ) THEN
+    RETURN 'No se puede eliminar el contrato porque está referenciado en la tabla PAGOS.';
+  END IF;
+
+  DELETE FROM CONTRATO
+  WHERE idSubastadora = p_idSubastadora
+    AND idProductora = p_idProductora
+    AND nContrato = p_nContrato;
+
+  RETURN 'Contrato eliminado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT eliminar_contrato(1, 1, 123);
+
+-- Issue: CANTIDAD_OFRECIDA Vista principal
+CREATE OR REPLACE VIEW vista_cantidad_ofrecida AS
+SELECT 
+  idContratoSubastadora,
+  idContratoProductora,
+  idNContrato,
+  idCatalogoProductora,
+  idCatalogoCorte,
+  idVnb,
+  cantidad
+FROM CANTIDAD_OFRECIDA;
+
+-- Issue: CANTIDAD_OFRECIDA Vista de detalles
+CREATE OR REPLACE VIEW vista_detalles_cantidad_ofrecida AS
+SELECT 
+    co.idContratoSubastadora,
+    s.nombreSubastadora,
+    co.idContratoProductora,
+    p.nombreProductora,
+    co.idNContrato,
+    p.nombreProductora AS nombreProductoraCat,
+    fc.nombreComun AS nombreFlor,
+    co.idVnb,
+    co.cantidad
+FROM CANTIDAD_OFRECIDA co
+JOIN CONTRATO c ON co.idContratoSubastadora = c.idSubastadora
+    AND co.idContratoProductora = c.idProductora
+    AND co.idNContrato = c.nContrato
+JOIN CATALOGOPRODUCTOR cp ON co.idCatalogoProductora = cp.idProductora
+    AND co.idCatalogoCorte = cp.idCorte
+    AND co.idVnb = cp.vbn
+JOIN SUBASTADORA s ON c.idSubastadora = s.subastadoraId
+JOIN PRODUCTORAS p ON c.idProductora = p.productoraId
+JOIN FLOR_CORTES fc ON cp.idCorte = fc.corteId;
+
+-- Issue: Función para insertar CANTIDAD_OFRECIDA
+CREATE OR REPLACE FUNCTION insertar_cantidad_ofrecida(
+  p_idContratoSubastadora NUMERIC,
+  p_idContratoProductora NUMERIC,
+  p_idNContrato NUMERIC,
+  p_idCatalogoProductora NUMERIC,
+  p_idCatalogoCorte NUMERIC,
+  p_idVnb NUMERIC,
+  p_cantidad NUMERIC
+)
+RETURNS TEXT AS $$
+BEGIN
+  -- Verificar contrato
+  IF NOT EXISTS (
+    SELECT 1 FROM CONTRATO
+    WHERE idSubastadora = p_idContratoSubastadora
+      AND idProductora = p_idContratoProductora
+      AND nContrato = p_idNContrato
+  ) THEN
+    RETURN 'Contrato no encontrado.';
+  END IF;
+
+  -- Verificar catalogoproductor
+  IF NOT EXISTS (
+    SELECT 1 FROM CATALOGOPRODUCTOR
+    WHERE idProductora = p_idCatalogoProductora
+      AND idCorte = p_idCatalogoCorte
+      AND vbn = p_idVnb
+  ) THEN
+    RETURN 'CatalogoProductor no encontrado.';
+  END IF;
+
+  INSERT INTO CANTIDAD_OFRECIDA (
+    idContratoSubastadora, idContratoProductora, idNContrato,
+    idCatalogoProductora, idCatalogoCorte, idVnb, cantidad
+  ) VALUES (
+    p_idContratoSubastadora, p_idContratoProductora, p_idNContrato,
+    p_idCatalogoProductora, p_idCatalogoCorte, p_idVnb, p_cantidad
+  );
+
+  RETURN 'Cantidad_ofrecida insertada exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT insertar_cantidad_ofrecida(1, 1, 123, 1, 1, 123, 100);
+
+-- Issue: Función para actualizar CANTIDAD_OFRECIDA
+CREATE OR REPLACE FUNCTION actualizar_cantidad_ofrecida(
+  p_idContratoSubastadora NUMERIC,
+  p_idContratoProductora NUMERIC,
+  p_idNContrato NUMERIC,
+  p_idCatalogoProductora NUMERIC,
+  p_idCatalogoCorte NUMERIC,
+  p_idVnb NUMERIC,
+  p_cantidad NUMERIC
+)
+RETURNS TEXT AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM CANTIDAD_OFRECIDA
+    WHERE idContratoSubastadora = p_idContratoSubastadora
+      AND idContratoProductora = p_idContratoProductora
+      AND idNContrato = p_idNContrato
+      AND idCatalogoProductora = p_idCatalogoProductora
+      AND idCatalogoCorte = p_idCatalogoCorte
+      AND idVnb = p_idVnb
+  ) THEN
+    RETURN 'Registro de CANTIDAD_OFRECIDA no encontrado.';
+  END IF;
+
+  UPDATE CANTIDAD_OFRECIDA
+  SET cantidad = p_cantidad
+  WHERE idContratoSubastadora = p_idContratoSubastadora
+    AND idContratoProductora = p_idContratoProductora
+    AND idNContrato = p_idNContrato
+    AND idCatalogoProductora = p_idCatalogoProductora
+    AND idCatalogoCorte = p_idCatalogoCorte
+    AND idVnb = p_idVnb;
+
+  RETURN 'Cantidad_ofrecida actualizada exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT actualizar_cantidad_ofrecida(1, 1, 123, 1, 1, 123, 200);
+
+-- Issue: Función para eliminar CANTIDAD_OFRECIDA
+CREATE OR REPLACE FUNCTION eliminar_cantidad_ofrecida(
+  p_idContratoSubastadora NUMERIC,
+  p_idContratoProductora NUMERIC,
+  p_idNContrato NUMERIC,
+  p_idCatalogoProductora NUMERIC,
+  p_idCatalogoCorte NUMERIC,
+  p_idVnb NUMERIC
+)
+RETURNS TEXT AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM CANTIDAD_OFRECIDA
+    WHERE idContratoSubastadora = p_idContratoSubastadora
+      AND idContratoProductora = p_idContratoProductora
+      AND idNContrato = p_idNContrato
+      AND idCatalogoProductora = p_idCatalogoProductora
+      AND idCatalogoCorte = p_idCatalogoCorte
+      AND idVnb = p_idVnb
+  ) THEN
+    RETURN 'Registro de CANTIDAD_OFRECIDA no encontrado.';
+  END IF;
+
+  DELETE FROM CANTIDAD_OFRECIDA
+  WHERE idContratoSubastadora = p_idContratoSubastadora
+    AND idContratoProductora = p_idContratoProductora
+    AND idNContrato = p_idNContrato
+    AND idCatalogoProductora = p_idCatalogoProductora
+    AND idCatalogoCorte = p_idCatalogoCorte
+    AND idVnb = p_idVnb;
+
+  RETURN 'Cantidad_ofrecida eliminada exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT eliminar_cantidad_ofrecida(1, 1, 123, 1, 1, 123);
+
+-- Issue: PAGOS Vista principal
+CREATE OR REPLACE VIEW vista_pagos AS
+SELECT
+  idContratoSubastadora,
+  idContratoProductora,
+  idNContrato,
+  pagoId,
+  fechaPago,
+  montoComision,
+  tipo
+FROM PAGOS;
+
+-- Issue: PAGOS Vista de detalles
+CREATE OR REPLACE VIEW vista_detalles_pagos AS
+SELECT
+    p.idContratoSubastadora,
+    s.nombreSubastadora AS subastadoraNombre,
+    p.idContratoProductora,
+    pr.nombreProductora,
+    p.idNContrato,
+    p.pagoId,
+    p.fechaPago,
+    p.montoComision,
+    p.tipo
+FROM PAGOS p
+JOIN CONTRATO c ON p.idContratoSubastadora = c.idSubastadora
+    AND p.idContratoProductora = c.idProductora
+    AND p.idNContrato = c.nContrato
+JOIN SUBASTADORA s ON c.idSubastadora = s.subastadoraId
+JOIN PRODUCTORAS pr ON c.idProductora = pr.productoraId;
+
+-- Issue: Función para insertar PAGOS
+CREATE OR REPLACE FUNCTION insertar_pagos(
+  p_idContratoSubastadora NUMERIC,
+  p_idContratoProductora NUMERIC,
+  p_idNContrato NUMERIC,
+  p_pagoId NUMERIC,
+  p_fechaPago DATE,
+  p_montoComision NUMERIC,
+  p_tipo VARCHAR
+)
+RETURNS TEXT AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM CONTRATO
+    WHERE idSubastadora = p_idContratoSubastadora
+      AND idProductora = p_idContratoProductora
+      AND nContrato = p_idNContrato
+  ) THEN
+    RETURN 'Contrato no encontrado.';
+  END IF;
+
+  INSERT INTO PAGOS (
+    idContratoSubastadora, idContratoProductora, idNContrato,
+    pagoId, fechaPago, montoComision, tipo
+  )
+  VALUES (
+    p_idContratoSubastadora, p_idContratoProductora, p_idNContrato,
+    p_pagoId, p_fechaPago, p_montoComision, p_tipo
+  );
+
+  RETURN 'Pago insertado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT insertar_pagos(1, 1, 123, 1, '2023-01-01', 1000, 'Tipo A');
+
+-- Issue: Función para actualizar PAGOS
+CREATE OR REPLACE FUNCTION actualizar_pagos(
+  p_idContratoSubastadora NUMERIC,
+  p_idContratoProductora NUMERIC,
+  p_idNContrato NUMERIC,
+  p_pagoId NUMERIC,
+  p_fechaPago DATE,
+  p_montoComision NUMERIC,
+  p_tipo VARCHAR
+)
+RETURNS TEXT AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM PAGOS
+    WHERE idContratoSubastadora = p_idContratoSubastadora
+      AND idContratoProductora = p_idContratoProductora
+      AND idNContrato = p_idNContrato
+      AND pagoId = p_pagoId
+  ) THEN
+    RETURN 'Pago no encontrado.';
+  END IF;
+
+  UPDATE PAGOS
+  SET fechaPago = p_fechaPago,
+      montoComision = p_montoComision,
+      tipo = p_tipo
+  WHERE idContratoSubastadora = p_idContratoSubastadora
+    AND idContratoProductora = p_idContratoProductora
+    AND idNContrato = p_idNContrato
+    AND pagoId = p_pagoId;
+
+  RETURN 'Pago actualizado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT actualizar_pagos(1, 1, 123, 1, '2023-01-01', 2000, 'Tipo B');
+
+-- Issue: Función para eliminar PAGOS
+CREATE OR REPLACE FUNCTION eliminar_pagos(
+  p_idContratoSubastadora NUMERIC,
+  p_idContratoProductora NUMERIC,
+  p_idNContrato NUMERIC,
+  p_pagoId NUMERIC
+)
+RETURNS TEXT AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM PAGOS
+    WHERE idContratoSubastadora = p_idContratoSubastadora
+      AND idContratoProductora = p_idContratoProductora
+      AND idNContrato = p_idNContrato
+      AND pagoId = p_pagoId
+  ) THEN
+    RETURN 'Pago no encontrado.';
+  END IF;
+
+  DELETE FROM PAGOS
+  WHERE idContratoSubastadora = p_idContratoSubastadora
+    AND idContratoProductora = p_idContratoProductora
+    AND idNContrato = p_idNContrato
+    AND pagoId = p_pagoId;
+
+  RETURN 'Pago eliminado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT eliminar_pagos(1, 1, 123, 1);
+
+-- Issue: CONTACTOS Vista principal
+CREATE OR REPLACE VIEW vista_contactos AS
+SELECT
+  idFloristeria,
+  contactoId,
+  documentoIdentidad,
+  primerNombre,
+  primerApellido,
+  segundoApellido,
+  segundoNombre
+FROM CONTACTOS;
+
+-- Issue: CONTACTOS Vista de detalles
+CREATE OR REPLACE VIEW vista_detalles_contactos AS
+SELECT
+  c.idFloristeria,
+  f.nombre AS nombreFloristeria,
+  c.contactoId,
+  c.documentoIdentidad,
+  c.primerNombre,
+  c.primerApellido,
+  c.segundoApellido,
+  c.segundoNombre
+FROM CONTACTOS c
+JOIN FLORISTERIAS f ON c.idFloristeria = f.floristeriaId;
+
+-- Issue: Función para insertar CONTACTOS
+CREATE OR REPLACE FUNCTION insertar_contacto(
+  p_idFloristeria NUMERIC,
+  p_contactoId NUMERIC,
+  p_documentoIdentidad NUMERIC,
+  p_primerNombre VARCHAR,
+  p_primerApellido VARCHAR,
+  p_segundoApellido VARCHAR DEFAULT NULL,
+  p_segundoNombre VARCHAR DEFAULT NULL
+)
+RETURNS TEXT AS $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM FLORISTERIAS WHERE floristeriaId = p_idFloristeria) THEN
+    RETURN 'Floristería no encontrada.';
+  END IF;
+
+  INSERT INTO CONTACTOS (
+    idFloristeria, contactoId, documentoIdentidad, primerNombre,
+    primerApellido, segundoApellido, segundoNombre
+  )
+  VALUES (
+    p_idFloristeria, p_contactoId, p_documentoIdentidad, p_primerNombre,
+    p_primerApellido, p_segundoApellido, p_segundoNombre
+  );
+
+  RETURN 'Contacto insertado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT insertar_contacto(1, 1, 12345678, 'Juan', 'Perez', 'Gomez', 'Carlos');
+
+-- Issue: Función para actualizar CONTACTOS
+CREATE OR REPLACE FUNCTION actualizar_contacto(
+  p_idFloristeria NUMERIC,
+  p_contactoId NUMERIC,
+  p_documentoIdentidad NUMERIC,
+  p_primerNombre VARCHAR,
+  p_primerApellido VARCHAR,
+  p_segundoApellido VARCHAR DEFAULT NULL,
+  p_segundoNombre VARCHAR DEFAULT NULL
+)
+RETURNS TEXT AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM CONTACTOS
+    WHERE idFloristeria = p_idFloristeria
+      AND contactoId = p_contactoId
+  ) THEN
+    RETURN 'Contacto no encontrado.';
+  END IF;
+
+  UPDATE CONTACTOS
+  SET documentoIdentidad = p_documentoIdentidad,
+      primerNombre = p_primerNombre,
+      primerApellido = p_primerApellido,
+      segundoApellido = p_segundoApellido,
+      segundoNombre = p_segundoNombre
+  WHERE idFloristeria = p_idFloristeria
+    AND contactoId = p_contactoId;
+
+  RETURN 'Contacto actualizado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT actualizar_contacto(1, 1, 87654321, 'Carlos', 'Lopez', 'Martinez', 'Andres');
+
+-- Issue: Función para eliminar CONTACTOS
+CREATE OR REPLACE FUNCTION eliminar_contacto(
+  p_idFloristeria NUMERIC,
+  p_contactoId NUMERIC
+)
+RETURNS TEXT AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM CONTACTOS
+    WHERE idFloristeria = p_idFloristeria
+      AND contactoId = p_contactoId
+  ) THEN
+    RETURN 'Contacto no encontrado.';
+  END IF;
+
+  DELETE FROM CONTACTOS
+  WHERE idFloristeria = p_idFloristeria
+    AND contactoId = p_contactoId;
+
+  RETURN 'Contacto eliminado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT eliminar_contacto(1, 1);
+
+-- Issue: AFILIACION Vista principal
+CREATE OR REPLACE VIEW vista_afiliacion AS
+SELECT
+  idFloristeria,
+  idSubastadora
+FROM AFILIACION;
+
+-- Issue: AFILIACION Vista de detalles
+CREATE OR REPLACE VIEW vista_detalles_afiliacion AS
+SELECT
+  a.idFloristeria,
+  f.nombre AS nombreFloristeria,
+  a.idSubastadora,
+  s.nombreSubastadora
+FROM AFILIACION a
+JOIN FLORISTERIAS f ON a.idFloristeria = f.floristeriaId
+JOIN SUBASTADORA s ON a.idSubastadora = s.subastadoraId;
+
+-- Issue: Función para insertar AFILIACION
+CREATE OR REPLACE FUNCTION insertar_afiliacion(
+  p_idFloristeria NUMERIC,
+  p_idSubastadora NUMERIC
+)
+RETURNS TEXT AS $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM FLORISTERIAS WHERE floristeriaId = p_idFloristeria) THEN
+    RETURN 'Floristería no encontrada.';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM SUBASTADORA WHERE subastadoraId = p_idSubastadora) THEN
+    RETURN 'Subastadora no encontrada.';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM AFILIACION 
+    WHERE idFloristeria = p_idFloristeria 
+      AND idSubastadora = p_idSubastadora
+  ) THEN
+    RETURN 'Ya existe una afiliación entre la floristería y la subastadora.';
+  END IF;
+
+  INSERT INTO AFILIACION (
+    idFloristeria, idSubastadora
+  ) VALUES (
+    p_idFloristeria, p_idSubastadora
+  );
+
+  RETURN 'Afiliación insertada exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT insertar_afiliacion(1, 1, 1, '2023-01-01', 'Tipo A');
+
+-- Issue: Función para actualizar AFILIACION
+CREATE OR REPLACE FUNCTION actualizar_afiliacion(
+  p_idFloristeria NUMERIC,
+  p_idSubastadora NUMERIC
+)
+RETURNS TEXT AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM AFILIACION
+    WHERE idFloristeria = p_idFloristeria
+      AND idSubastadora = p_idSubastadora
+  ) THEN
+    RETURN 'Afiliación no encontrada.';
+  END IF;
+
+  -- Validar que no haya duplicidad
+  IF EXISTS (
+    SELECT 1 FROM AFILIACION
+    WHERE idFloristeria = p_idFloristeria
+      AND idSubastadora = p_idSubastadora
+  ) THEN
+    RETURN 'Ya existe una afiliación entre la floristería y la subastadora.';
+  END IF;
+
+  RETURN 'Afiliación actualizada exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT actualizar_afiliacion(1, 1, 1, '2023-01-01', 'Tipo B');
+
+-- Issue: Función para eliminar AFILIACION
+CREATE OR REPLACE FUNCTION eliminar_afiliacion(
+  p_idFloristeria NUMERIC,
+  p_idSubastadora NUMERIC
+)
+RETURNS TEXT AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM AFILIACION
+    WHERE idFloristeria = p_idFloristeria
+      AND idSubastadora = p_idSubastadora
+  ) THEN
+    RETURN 'Afiliación no encontrada.';
+  END IF;
+
+  -- Verificar referencias en FACTURA (si aplica)
+  IF EXISTS (
+    SELECT 1 FROM FACTURA
+    WHERE idFloristeria = p_idFloristeria
+      AND idSubastadora = p_idSubastadora
+  ) THEN
+    RETURN 'No se puede eliminar la afiliación porque está referenciada en FACTURA.';
+  END IF;
+
+  DELETE FROM AFILIACION
+  WHERE idFloristeria = p_idFloristeria
+    AND idSubastadora = p_idSubastadora;
+
+  RETURN 'Afiliación eliminada exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT eliminar_afiliacion(1, 1, 1);
+
+-- Issue: FACTURA Vista principal
+CREATE OR REPLACE VIEW vista_factura AS
+SELECT
+  idafiliacionfloristeria,
+  idafiliacionsubastadora,
+  facturaid,
+  fechaEmision,
+  montototal,
+  numeroenvio
+FROM FACTURA;
+
+-- Issue: FACTURA Vista de detalles
+CREATE OR REPLACE VIEW vista_detalles_factura AS
+SELECT
+  f.idafiliacionfloristeria,
+  fl.nombre AS nombreFloristeria,
+  f.idafiliacionsubastadora,
+  sb.nombreSubastadora,
+  f.facturaid,
+  f.fechaEmision,
+  f.montoTotal
+FROM FACTURA f
+JOIN AFILIACION a ON f.idafiliacionfloristeria = a.idFloristeria
+  AND f.idafiliacionsubastadora = a.idSubastadora
+JOIN FLORISTERIAS fl ON a.idFloristeria = fl.floristeriaId
+JOIN SUBASTADORA sb ON a.idSubastadora = sb.subastadoraId;
+
+-- Issue: Función para insertar FACTURA
+CREATE OR REPLACE FUNCTION insertar_factura(
+  p_idFloristeria NUMERIC,
+  p_idSubastadora NUMERIC,
+  p_idAfiliacion NUMERIC,
+  p_numFactura NUMERIC,
+  p_fechaEmision TIMESTAMP,
+  p_montoTotal NUMERIC
+)
+RETURNS TEXT AS $$
+BEGIN
+  -- Validar formato de fecha
+  IF p_fechaEmision::TEXT !~ '^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$' THEN
+    RETURN 'Formato de fecha de emisión inválido. Debe ser "YYYY-MM-DD HH:MI:SS".';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM AFILIACION
+    WHERE idFloristeria = p_idFloristeria
+      AND idSubastadora = p_idSubastadora
+      AND afiliacionId = p_idAfiliacion
+  ) THEN
+    RETURN 'Afiliación no encontrada.';
+  END IF;
+
+  INSERT INTO FACTURA (
+    idFloristeria, idSubastadora, idAfiliacion,
+    numFactura, fechaEmision, montoTotal
+  ) VALUES (
+    p_idFloristeria, p_idSubastadora, p_idAfiliacion,
+    p_numFactura, p_fechaEmision, p_montoTotal
+  );
+
+  RETURN 'Factura insertada exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT insertar_factura(1, 1, 1, 123, '2023-01-01', 1000);
+
+-- Issue: Función para actualizar FACTURA
+CREATE OR REPLACE FUNCTION actualizar_factura(
+  p_idFloristeria NUMERIC,
+  p_idSubastadora NUMERIC,
+  p_idAfiliacion NUMERIC,
+  p_numFactura NUMERIC,
+  p_fechaEmision TIMESTAMP,
+  p_montoTotal NUMERIC
+)
+RETURNS TEXT AS $$
+BEGIN
+  -- Validar formato de fecha
+  IF p_fechaEmision::TEXT !~ '^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$' THEN
+    RETURN 'Formato de fecha de emisión inválido. Debe ser "YYYY-MM-DD HH:MI:SS".';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM FACTURA
+    WHERE idFloristeria = p_idFloristeria
+      AND idSubastadora = p_idSubastadora
+      AND idAfiliacion = p_idAfiliacion
+      AND numFactura = p_numFactura
+  ) THEN
+    RETURN 'Factura no encontrada.';
+  END IF;
+
+  UPDATE FACTURA
+  SET fechaEmision = p_fechaEmision,
+      montoTotal = p_montoTotal
+  WHERE idFloristeria = p_idFloristeria
+    AND idSubastadora = p_idSubastadora
+    AND idAfiliacion = p_idAfiliacion
+    AND numFactura = p_numFactura;
+
+  RETURN 'Factura actualizada exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT actualizar_factura(1, 1, 1, 123, '2023-01-01', 2000);
+
+-- Issue: Función para eliminar FACTURA
+CREATE OR REPLACE FUNCTION eliminar_factura(
+  p_idFloristeria NUMERIC,
+  p_idSubastadora NUMERIC,
+  p_idAfiliacion NUMERIC,
+  p_numFactura NUMERIC
+)
+RETURNS TEXT AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM FACTURA
+    WHERE idFloristeria = p_idFloristeria
+      AND idSubastadora = p_idSubastadora
+      AND idAfiliacion = p_idAfiliacion
+      AND numFactura = p_numFactura
+  ) THEN
+    RETURN 'Factura no encontrada.';
+  END IF;
+
+  -- Verificar referencias en LOTE (si aplica)
+  IF EXISTS (
+    SELECT 1 FROM LOTE
+    WHERE idFloristeria = p_idFloristeria
+      AND idSubastadora = p_idSubastadora
+      AND idAfiliacion = p_idAfiliacion
+      AND idFactura = p_numFactura
+  ) THEN
+    RETURN 'No se puede eliminar la factura porque está referenciada en LOTE.';
+  END IF;
+
+  DELETE FROM FACTURA
+  WHERE idFloristeria = p_idFloristeria
+    AND idSubastadora = p_idSubastadora
+    AND idAfiliacion = p_idAfiliacion
+    AND numFactura = p_numFactura;
+
+  RETURN 'Factura eliminada exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT eliminar_factura(1, 1, 1, 123);
+
+-- Issue: LOTE Vista principal
+CREATE OR REPLACE VIEW vista_lote AS
+SELECT
+  idCantidadContratoSubastadora,
+  idCantidadContratoProductora,
+  idCantidad_NContrato,
+  idCantidadCatalogoProductora,
+  idCantidadCorte,
+  idCantidadvnb,
+  NumLote,
+  bi,
+  cantidad,
+  precioInicial,
+  precioFinal,
+  idFactura
+FROM LOTE;
+
+-- Issue: LOTE Vista de detalles
+CREATE OR REPLACE VIEW vista_detalles_lote AS
+SELECT
+  l.idCantidadContratoSubastadora,
+  s.nombreSubastadora,
+  l.idCantidadContratoProductora,
+  p.nombreProductora,
+  l.idCantidad_NContrato,
+  l.idCantidadCatalogoProductora,
+  p.nombreProductora AS nombreProductoraCat,
+  l.idCantidadCorte,
+  fc.nombreComun AS nombreFlor,
+  l.idCantidadvnb,
+  l.NumLote,
+  l.bi,
+  l.cantidad,
+  l.precioInicial,
+  l.precioFinal,
+  l.idFactura,
+  f.fechaEmision AS fechaFactura
+FROM LOTE l
+JOIN CANTIDAD_OFRECIDA co ON l.idCantidadContratoSubastadora = co.idContratoSubastadora
+  AND l.idCantidadContratoProductora = co.idContratoProductora
+  AND l.idCantidad_NContrato = co.idNContrato
+  AND l.idCantidadCatalogoProductora = co.idCatalogoProductora
+  AND l.idCantidadCorte = co.idCatalogoCorte
+  AND l.idCantidadvnb = co.idVnb
+JOIN CONTRATO c ON co.idContratoSubastadora = c.idSubastadora
+  AND co.idContratoProductora = c.idProductora
+  AND co.idNContrato = c.nContrato
+JOIN SUBASTADORA s ON c.idSubastadora = s.subastadoraId
+JOIN PRODUCTORAS p ON c.idProductora = p.productoraId
+JOIN CATALOGOPRODUCTOR cp ON co.idCatalogoProductora = cp.idProductora
+  AND co.idCatalogoCorte = cp.idCorte
+  AND co.idVnb = cp.vbn
+JOIN FLOR_CORTES fc ON cp.idCorte = fc.corteId
+JOIN FACTURA f ON l.idFactura = f.facturaId;
+
+-- Issue: Función para insertar LOTE
+CREATE OR REPLACE FUNCTION insertar_lote(
+  p_idFloristeria NUMERIC,
+  p_idSubastadora NUMERIC,
+  p_idAfiliacion NUMERIC,
+  p_idFactura NUMERIC,
+  p_loteId NUMERIC,
+  p_fechaLote DATE
+)
+RETURNS TEXT AS $$
+BEGIN
+  -- Verificar si existe la factura
+  IF NOT EXISTS (
+    SELECT 1 FROM FACTURA
+    WHERE idFloristeria = p_idFloristeria
+      AND idSubastadora = p_idSubastadora
+      AND idAfiliacion = p_idAfiliacion
+      AND numFactura = p_idFactura
+  ) THEN
+    RETURN 'Factura no encontrada para asociar al lote.';
+  END IF;
+
+  INSERT INTO LOTE (
+    idFloristeria, idSubastadora, idAfiliacion,
+    idFactura, loteId, fechaLote
+  ) VALUES (
+    p_idFloristeria, p_idSubastadora, p_idAfiliacion,
+    p_idFactura, p_loteId, p_fechaLote
+  );
+
+  RETURN 'Lote insertado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT insertar_lote(1, 1, 1, 123, 1, '2023-01-01');
+
+-- Issue: Función para actualizar LOTE
+CREATE OR REPLACE FUNCTION actualizar_lote(
+  p_idFloristeria NUMERIC,
+  p_idSubastadora NUMERIC,
+  p_idAfiliacion NUMERIC,
+  p_idFactura NUMERIC,
+  p_loteId NUMERIC,
+  p_fechaLote DATE
+)
+RETURNS TEXT AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM LOTE
+    WHERE idFloristeria = p_idFloristeria
+      AND idSubastadora = p_idSubastadora
+      AND idAfiliacion = p_idAfiliacion
+      AND idFactura = p_idFactura
+      AND loteId = p_loteId
+  ) THEN
+    RETURN 'Lote no encontrado.';
+  END IF;
+
+  UPDATE LOTE
+  SET fechaLote = p_fechaLote
+  WHERE idFloristeria = p_idFloristeria
+    AND idSubastadora = p_idSubastadora
+    AND idAfiliacion = p_idAfiliacion
+    AND idFactura = p_idFactura
+    AND loteId = p_loteId;
+
+  RETURN 'Lote actualizado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT actualizar_lote(1, 1, 1, 123, 1, '2023-01-01');
+
+-- Issue: Función para eliminar LOTE
+CREATE OR REPLACE FUNCTION eliminar_lote(
+  p_idFloristeria NUMERIC,
+  p_idSubastadora NUMERIC,
+  p_idAfiliacion NUMERIC,
+  p_idFactura NUMERIC,
+  p_loteId NUMERIC
+)
+RETURNS TEXT AS $$
+DECLARE
+  v_msg TEXT;
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM LOTE
+    WHERE idFloristeria = p_idFloristeria
+      AND idSubastadora = p_idSubastadora
+      AND idAfiliacion = p_idAfiliacion
+      AND idFactura = p_idFactura
+      AND loteId = p_loteId
+  ) THEN
+    RETURN 'Lote no encontrado.';
+  END IF;
+
+  -- Ejemplo de verificación adicional e incluir nombre de la ref (si existiera)
+  IF EXISTS (
+    SELECT 1 FROM CANTIDAD_OFRECIDA
+    WHERE idContratoSubastadora = p_idSubastadora
+  ) THEN
+    v_msg := 'No se puede eliminar el Lote porque está relacionado con la subastadora ' 
+             || p_idSubastadora;
+    RETURN v_msg;
+  END IF;
+
+  DELETE FROM LOTE
+  WHERE idFloristeria = p_idFloristeria
+    AND idSubastadora = p_idSubastadora
+    AND idAfiliacion = p_idAfiliacion
+    AND idFactura = p_idFactura
+    AND loteId = p_loteId;
+
+  RETURN 'Lote eliminado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Caso de prueba:
+-- SELECT eliminar_lote(1, 1, 1, 123, 1);
+
+-- Issue: CATALOGO_FLORISTERIA Vista principal
+CREATE OR REPLACE VIEW vista_catalogo_floristeria AS
+SELECT
+  idFloristeria,
+  codigo,
+  idCorteFlor,
+  idColor,
+  nombrePropio,
+  descripcion
+FROM CATALOGO_FLORISTERIA;
+
+-- Issue: CATALOGO_FLORISTERIA Vista de detalles
+CREATE OR REPLACE VIEW vista_detalles_catalogo_floristeria AS
+SELECT
+  cf.idFloristeria,
+  f.nombre AS nombreFloristeria,
+  cf.codigo,
+  fc.nombreComun AS nombreFlor,
+  c.Nombre AS nombreColor,
+  cf.nombrePropio,
+  cf.descripcion
+FROM CATALOGO_FLORISTERIA cf
+JOIN FLORISTERIAS f ON cf.idFloristeria = f.floristeriaId
+JOIN FLOR_CORTES fc ON cf.idCorteFlor = fc.corteId
+JOIN COLOR c ON cf.idColor = c.colorId;
+
+-- Issue: Función para insertar CATALOGO_FLORISTERIA
+CREATE OR REPLACE FUNCTION insertar_catalogo_floristeria(
+  p_idFloristeria NUMERIC,
+  p_codigo NUMERIC,
+  p_idCorteFlor NUMERIC,
+  p_idColor NUMERIC,
+  p_nombrePropio VARCHAR,
+  p_descripcion VARCHAR DEFAULT NULL
+)
+RETURNS TEXT AS $$
+BEGIN
+  -- Validar que la floristería, corte y color existan
+  IF NOT EXISTS (SELECT 1 FROM FLORISTERIAS WHERE floristeriaId = p_idFloristeria) THEN
+    RETURN 'Floristería no encontrada.';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM FLOR_CORTES WHERE corteId = p_idCorteFlor) THEN
+    RETURN 'Flor no encontrada.';
+  END IF;
+  RETURN 'Histórico de precio de flor insertado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Issue: Función para actualizar CATALOGO_FLORISTERIA
+CREATE OR REPLACE FUNCTION actualizar_catalogo_floristeria(
+  p_idFloristeria NUMERIC,
+  p_codigo NUMERIC,
+  p_idCorteFlor NUMERIC,
+  p_idColor NUMERIC,
+  p_nombrePropio VARCHAR,
+  p_descripcion VARCHAR DEFAULT NULL
+)
+RETURNS TEXT AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM CATALOGO_FLORISTERIA
+    WHERE idFloristeria = p_idFloristeria
+      AND codigo = p_codigo
+  ) THEN
+    RETURN 'Catálogo de floristería no encontrado.';
+  END IF;
+  UPDATE CATALOGO_FLORISTERIA
+  SET idCorteFlor = p_idCorteFlor,
+      idColor = p_idColor,
+      nombrePropio = p_nombrePropio,
+      descripcion = p_descripcion
+  WHERE idFloristeria = p_idFloristeria
+    AND codigo = p_codigo;
+  RETURN 'Catálogo de floristería actualizado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+-- Issue: Función para eliminar CATALOGO_FLORISTERIA
+CREATE OR REPLACE FUNCTION eliminar_catalogo_floristeria(
+  p_idFloristeria NUMERIC,
+  p_codigo NUMERIC
+)
+RETURNS TEXT AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM CATALOGO_FLORISTERIA
+    WHERE idFloristeria = p_idFloristeria
+      AND codigo = p_codigo
+  ) THEN
+    RETURN 'Catálogo de floristería no encontrado.';
+  END IF;
+  -- Verificar referencias en otras tablas
+  IF EXISTS (
+    SELECT 1 FROM DETALLE_BOUQUET
+    WHERE idCatalogoFloristeria = p_idFloristeria
+      AND idCatalogocodigo = p_codigo
+  ) THEN
+    RETURN 'No se puede eliminar el catálogo porque está referenciado en la tabla DETALLE_BOUQUET.';
+  END IF;
+  DELETE FROM CATALOGO_FLORISTERIA
+  WHERE idFloristeria = p_idFloristeria
+    AND codigo = p_codigo;
+  RETURN 'Catálogo de floristería eliminado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Issue: HISTORICO_PRECIO_FLOR Vista principal
+CREATE OR REPLACE VIEW vista_historico_precio_flor AS
+SELECT
+  idCatalogoFloristeria,
+  idCatalogocodigo,
+  fechaInicio,
+  fechaFin,
+  precio,
+  tamanoTallo
+FROM HISTORICO_PRECIO_FLOR;
+
+-- Issue: HISTORICO_PRECIO_FLOR Vista de detalles
+CREATE OR REPLACE VIEW vista_detalles_historico_precio_flor AS
+SELECT
+  hp.idCatalogoFloristeria,
+  f.nombre AS nombreFloristeria,
+  hp.idCatalogocodigo,
+  cf.nombrePropio AS nombreFlor,
+  hp.fechaInicio,
+  hp.fechaFin,
+  hp.precio,
+  hp.tamanoTallo
+FROM HISTORICO_PRECIO_FLOR hp
+JOIN CATALOGO_FLORISTERIA cf ON hp.idCatalogoFloristeria = cf.idFloristeria
+  AND hp.idCatalogocodigo = cf.codigo
+JOIN FLORISTERIAS f ON cf.idFloristeria = f.floristeriaId;
+
+-- Issue: Función para insertar HISTORICO_PRECIO_FLOR
+CREATE OR REPLACE FUNCTION insertar_historico_precio_flor(
+  p_idCatalogoFloristeria NUMERIC,
+  p_idCatalogocodigo NUMERIC,
+  p_fechaInicio DATE,
+  p_precio NUMERIC,
+  p_fechaFin DATE DEFAULT NULL,
+  p_tamanoTallo NUMERIC DEFAULT NULL
+)
+RETURNS TEXT AS $$
+BEGIN
+  -- Validar que el catálogo de floristería exista
+  IF NOT EXISTS (
+    SELECT 1 FROM CATALOGO_FLORISTERIA
+    WHERE idFloristeria = p_idCatalogoFloristeria
+      AND codigo = p_idCatalogocodigo
+  ) THEN
+    RETURN 'Catálogo de floristería no encontrado.';
+  END IF;
+  -- Insertar el nuevo registro histórico de precio de flor
+  INSERT INTO HISTORICO_PRECIO_FLOR (
+    idCatalogoFloristeria, idCatalogocodigo, fechaInicio, fechaFin, precio, tamanoTallo
+  ) VALUES (
+    p_idCatalogoFloristeria, p_idCatalogocodigo, p_fechaInicio, p_fechaFin, p_precio, p_tamanoTallo
+  );
+  RETURN 'Histórico de precio de flor insertado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Issue: Función para actualizar HISTORICO_PRECIO_FLOR
+CREATE OR REPLACE FUNCTION actualizar_historico_precio_flor(
+  p_idCatalogoFloristeria NUMERIC,
+  p_idCatalogocodigo NUMERIC,
+  p_fechaInicio DATE,
+  p_precio NUMERIC,
+  p_fechaFin DATE DEFAULT NULL,
+  p_tamanoTallo NUMERIC DEFAULT NULL
+)
+RETURNS TEXT AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM HISTORICO_PRECIO_FLOR
+    WHERE idCatalogoFloristeria = p_idCatalogoFloristeria
+      AND idCatalogocodigo = p_idCatalogocodigo
+      AND fechaInicio = p_fechaInicio
+  ) THEN
+    RETURN 'Histórico de precio de flor no encontrado.';
+  END IF;
+
+  UPDATE HISTORICO_PRECIO_FLOR
+  SET fechaFin = p_fechaFin,
+      precio = p_precio,
+      tamanoTallo = p_tamanoTallo
+  WHERE idCatalogoFloristeria = p_idCatalogoFloristeria
+    AND idCatalogocodigo = p_idCatalogocodigo
+    AND fechaInicio = p_fechaInicio;
+
+  RETURN 'Histórico de precio de flor actualizado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Issue: Función para eliminar HISTORICO_PRECIO_FLOR
+CREATE OR REPLACE FUNCTION eliminar_historico_precio_flor(
+  p_idCatalogoFloristeria NUMERIC,
+  p_idCatalogocodigo NUMERIC,
+  p_fechaInicio DATE
+)
+RETURNS TEXT AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM HISTORICO_PRECIO_FLOR
+    WHERE idCatalogoFloristeria = p_idCatalogoFloristeria
+      AND idCatalogocodigo = p_idCatalogocodigo
+      AND fechaInicio = p_fechaInicio
+  ) THEN
+    RETURN 'Histórico de precio de flor no encontrado.';
+  END IF;
+
+  DELETE FROM HISTORICO_PRECIO_FLOR
+  WHERE idCatalogoFloristeria = p_idCatalogoFloristeria
+    AND idCatalogocodigo = p_idCatalogocodigo
+    AND fechaInicio = p_fechaInicio;
+
+  RETURN 'Histórico de precio de flor eliminado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Issue: DETALLE_BOUQUET Vista principal
+CREATE OR REPLACE VIEW vista_detalle_bouquet AS
+SELECT
+  idCatalogoFloristeria,
+  idCatalogocodigo,
+  bouquetId,
+  cantidad,
+  talloTamano,
+  descripcion
+FROM DETALLE_BOUQUET;
+
+-- Issue: DETALLE_BOUQUET Vista de detalles
+CREATE OR REPLACE VIEW vista_detalles_detalle_bouquet AS
+SELECT
+  db.idCatalogoFloristeria,
+  f.nombre AS nombreFloristeria,
+  db.idCatalogocodigo,
+  cf.nombrePropio AS nombreFlor,
+  db.bouquetId,
+  db.cantidad,
+  db.talloTamano,
+  db.descripcion
+FROM DETALLE_BOUQUET db
+JOIN CATALOGO_FLORISTERIA cf ON db.idCatalogoFloristeria = cf.idFloristeria
+  AND db.idCatalogocodigo = cf.codigo
+JOIN FLORISTERIAS f ON cf.idFloristeria = f.floristeriaId;
+
+-- Issue: Función para insertar DETALLE_BOUQUET
+CREATE OR REPLACE FUNCTION insertar_detalle_bouquet(
+  p_idCatalogoFloristeria NUMERIC,
+  p_idCatalogocodigo NUMERIC,
+  p_bouquetId NUMERIC,
+  p_cantidad NUMERIC,
+  p_talloTamano NUMERIC DEFAULT NULL,
+  p_descripcion VARCHAR DEFAULT NULL
+)
+RETURNS TEXT AS $$
+BEGIN
+  -- Validar que el catálogo de floristería exista
+  IF NOT EXISTS (
+    SELECT 1 FROM CATALOGO_FLORISTERIA
+    WHERE idFloristeria = p_idCatalogoFloristeria
+      AND codigo = p_idCatalogocodigo
+  ) THEN
+    RETURN 'Catálogo de floristería no encontrado.';
+  END IF;
+
+  -- Insertar el nuevo detalle de bouquet
+  INSERT INTO DETALLE_BOUQUET (
+    idCatalogoFloristeria, idCatalogocodigo, bouquetId, cantidad, talloTamano, descripcion
+  ) VALUES (
+    p_idCatalogoFloristeria, p_idCatalogocodigo, p_bouquetId, p_cantidad, p_talloTamano, p_descripcion
+  );
+
+  RETURN 'Detalle de bouquet insertado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Issue: Función para actualizar DETALLE_BOUQUET
+CREATE OR REPLACE FUNCTION actualizar_detalle_bouquet(
+  p_idCatalogoFloristeria NUMERIC,
+  p_idCatalogocodigo NUMERIC,
+  p_bouquetId NUMERIC,
+  p_cantidad NUMERIC,
+  p_talloTamano NUMERIC DEFAULT NULL,
+  p_descripcion VARCHAR DEFAULT NULL
+)
+RETURNS TEXT AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM DETALLE_BOUQUET
+    WHERE idCatalogoFloristeria = p_idCatalogoFloristeria
+      AND idCatalogocodigo = p_idCatalogocodigo
+      AND bouquetId = p_bouquetId
+  ) THEN
+    RETURN 'Detalle de bouquet no encontrado.';
+  END IF;
+
+  UPDATE DETALLE_BOUQUET
+  SET cantidad = p_cantidad,
+      talloTamano = p_talloTamano,
+      descripcion = p_descripcion
+  WHERE idCatalogoFloristeria = p_idCatalogoFloristeria
+    AND idCatalogocodigo = p_idCatalogocodigo
+    AND bouquetId = p_bouquetId;
+
+  RETURN 'Detalle de bouquet actualizado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Issue: Función para eliminar DETALLE_BOUQUET
+CREATE OR REPLACE FUNCTION eliminar_detalle_bouquet(
+  p_idCatalogoFloristeria NUMERIC,
+  p_idCatalogocodigo NUMERIC,
+  p_bouquetId NUMERIC
+)
+RETURNS TEXT AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM DETALLE_BOUQUET
+    WHERE idCatalogoFloristeria = p_idCatalogoFloristeria
+      AND idCatalogocodigo = p_idCatalogocodigo
+      AND bouquetId = p_bouquetId
+  ) THEN
+    RETURN 'Detalle de bouquet no encontrado.';
+  END IF;
+
+  DELETE FROM DETALLE_BOUQUET
+  WHERE idCatalogoFloristeria = p_idCatalogoFloristeria
+    AND idCatalogocodigo = p_idCatalogocodigo
+    AND bouquetId = p_bouquetId;
+
+  RETURN 'Detalle de bouquet eliminado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Issue: FACTURA_FINAL Vista principal
+CREATE OR REPLACE VIEW vista_factura_final AS
+SELECT
+  idFloristeria,
+  numFactura,
+  fechaEmision,
+  montoTotal,
+  idClienteNatural,
+  idClienteJuridico
+FROM FACTURA_FINAL;
+
+-- Issue: FACTURA_FINAL Vista de detalles
+CREATE OR REPLACE VIEW vista_detalles_factura_final AS
+SELECT
+    ff.idFloristeria,
+    f.nombre AS nombreFloristeria,
+    ff.numFactura,
+    ff.fechaEmision,
+    ff.montoTotal,
+    cn.documentoIdentidad AS documentoClienteNatural,
+    cn.primernombre AS primerNombreClienteNatural,
+    cn.primerApellido AS primerApellidoClienteNatural,
+    cj.RIF AS documentoClienteJuridico,
+    cj.nombre AS nombreClienteJuridico
+FROM FACTURA_FINAL ff
+JOIN FLORISTERIAS f ON ff.idFloristeria = f.floristeriaId
+LEFT JOIN CLIENTE_NATURAL cn ON ff.idClienteNatural = cn.cliNaturalId
+LEFT JOIN CLIENTE_JURIDICO cj ON ff.idClienteJuridico = cj.cliJuridicoId;
+
+-- Issue: Función para insertar FACTURA_FINAL
+CREATE OR REPLACE FUNCTION insertar_factura_final(
+  p_idFloristeria NUMERIC,
+  p_numFactura NUMERIC,
+  p_fechaEmision DATE,
+  p_montoTotal NUMERIC,
+  p_idClienteNatural NUMERIC DEFAULT NULL,
+  p_idClienteJuridico NUMERIC DEFAULT NULL
+)
+RETURNS TEXT AS $$
+BEGIN
+  -- Validar que la floristería exista
+  IF NOT EXISTS (SELECT 1 FROM FLORISTERIAS WHERE floristeriaId = p_idFloristeria) THEN
+    RETURN 'Floristería no encontrada.';
+  END IF;
+
+  -- Validar que solo uno de los campos idClienteNatural o idClienteJuridico tenga un valor
+  IF p_idClienteNatural IS NOT NULL AND p_idClienteJuridico IS NOT NULL THEN
+    RETURN 'Solo uno de los campos idClienteNatural o idClienteJuridico debe tener un valor.';
+  END IF;
+
+  -- Insertar la nueva factura final
+  INSERT INTO FACTURA_FINAL (
+    idFloristeria, numFactura, fechaEmision, montoTotal, idClienteNatural, idClienteJuridico
+  ) VALUES (
+    p_idFloristeria, p_numFactura, p_fechaEmision, p_montoTotal, p_idClienteNatural, p_idClienteJuridico
+  );
+
+  RETURN 'Factura final insertada exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Issue: Función para actualizar FACTURA_FINAL
+CREATE OR REPLACE FUNCTION actualizar_factura_final(
+  p_idFloristeria NUMERIC,
+  p_numFactura NUMERIC,
+  p_fechaEmision DATE,
+  p_montoTotal NUMERIC,
+  p_idClienteNatural NUMERIC DEFAULT NULL,
+  p_idClienteJuridico NUMERIC DEFAULT NULL
+)
+RETURNS TEXT AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM FACTURA_FINAL
+    WHERE idFloristeria = p_idFloristeria
+      AND numFactura = p_numFactura
+  ) THEN
+    RETURN 'Factura final no encontrada.';
+  END IF;
+
+  -- Validar que solo uno de los campos idClienteNatural o idClienteJuridico tenga un valor
+  IF p_idClienteNatural IS NOT NULL AND p_idClienteJuridico IS NOT NULL THEN
+    RETURN 'Solo uno de los campos idClienteNatural o idClienteJuridico debe tener un valor.';
+  END IF;
+
+  UPDATE FACTURA_FINAL
+  SET fechaEmision = p_fechaEmision,
+      montoTotal = p_montoTotal,
+      idClienteNatural = p_idClienteNatural,
+      idClienteJuridico = p_idClienteJuridico
+  WHERE idFloristeria = p_idFloristeria
+    AND numFactura = p_numFactura;
+
+  RETURN 'Factura final actualizada exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Issue: Función para eliminar FACTURA_FINAL
+CREATE OR REPLACE FUNCTION eliminar_factura_final(
+  p_idFloristeria NUMERIC,
+  p_numFactura NUMERIC
+)
+RETURNS TEXT AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM FACTURA_FINAL
+    WHERE idFloristeria = p_idFloristeria
+      AND numFactura = p_numFactura
+  ) THEN
+    RETURN 'Factura final no encontrada.';
+  END IF;
+
+  -- Verificar referencias en DETALLE_FACTURA (si aplica)
+  IF EXISTS (
+    SELECT 1 FROM DETALLE_FACTURA
+    WHERE idFActuraFloristeria = p_idFloristeria
+      AND idNumFactura = p_numFactura
+  ) THEN
+    RETURN 'No se puede eliminar la factura final porque está referenciada en DETALLE_FACTURA.';
+  END IF;
+
+  DELETE FROM FACTURA_FINAL
+  WHERE idFloristeria = p_idFloristeria
+    AND numFactura = p_numFactura;
+
+  RETURN 'Factura final eliminada exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Issue: DETALLE_FACTURA Vista principal
+CREATE OR REPLACE VIEW vista_detalle_factura AS
+SELECT
+  idFActuraFloristeria,
+  idNumFactura,
+  detalleId,
+  catalogoFloristeria,
+  catalogoCodigo,
+  bouquetFloristeria,
+  bouquetcodigo,
+  bouquetId,
+  cantidad,
+  valoracionPrecio,
+  valorancionCalidad,
+  valoracionPromedio,
+  detalles
+FROM DETALLE_FACTURA;
+
+-- Issue: DETALLE_FACTURA Vista de detalles
+CREATE OR REPLACE VIEW vista_detalles_detalle_factura AS
+SELECT
+  df.idFActuraFloristeria,
+  f.nombre AS nombreFloristeria,
+  df.idNumFactura,
+  df.detalleId,
+  cf.nombrePropio AS nombreFlor,
+  db.descripcion AS descripcionBouquet,
+  df.cantidad,
+  df.valoracionPrecio,
+  df.valorancionCalidad,
+  df.valoracionPromedio,
+  df.detalles
+FROM DETALLE_FACTURA df
+JOIN FACTURA_FINAL ff ON df.idFActuraFloristeria = ff.idFloristeria
+  AND df.idNumFactura = ff.numFactura
+LEFT JOIN CATALOGO_FLORISTERIA cf ON df.catalogoFloristeria = cf.idFloristeria
+  AND df.catalogoCodigo = cf.codigo
+LEFT JOIN DETALLE_BOUQUET db ON df.bouquetFloristeria = db.idCatalogoFloristeria
+  AND df.bouquetcodigo = db.idCatalogocodigo
+  AND df.bouquetId = db.bouquetId
+JOIN FLORISTERIAS f ON ff.idFloristeria = f.floristeriaId;
+
+-- Issue: Función para insertar DETALLE_FACTURA
+CREATE OR REPLACE FUNCTION insertar_detalle_factura(
+  p_idFActuraFloristeria NUMERIC,
+  p_idNumFactura NUMERIC,
+  p_detalleId NUMERIC,
+  p_catalogoFloristeria NUMERIC DEFAULT NULL,
+  p_catalogoCodigo NUMERIC DEFAULT NULL,
+  p_bouquetFloristeria NUMERIC DEFAULT NULL,
+  p_bouquetcodigo NUMERIC DEFAULT NULL,
+  p_bouquetId NUMERIC DEFAULT NULL,
+  p_cantidad NUMERIC DEFAULT NULL,
+  p_valoracionPrecio NUMERIC DEFAULT NULL,
+  p_valorancionCalidad NUMERIC DEFAULT NULL,
+  p_valoracionPromedio NUMERIC DEFAULT NULL,
+  p_detalles VARCHAR DEFAULT NULL
+)
+RETURNS TEXT AS $$
+BEGIN
+  -- Validar que solo uno de los campos catalogoFloristeria/catalogoCodigo o bouquetFloristeria/bouquetcodigo/bouquetId tenga un valor
+  IF (p_catalogoFloristeria IS NOT NULL AND p_catalogoCodigo IS NOT NULL AND p_bouquetFloristeria IS NULL AND p_bouquetcodigo IS NULL AND p_bouquetId IS NULL) OR 
+     (p_catalogoFloristeria IS NULL AND p_catalogoCodigo IS NULL AND p_bouquetFloristeria IS NOT NULL AND p_bouquetcodigo IS NOT NULL AND p_bouquetId IS NOT NULL) THEN
+    -- Insertar el nuevo detalle de factura
+    INSERT INTO DETALLE_FACTURA (
+      idFActuraFloristeria, idNumFactura, detalleId, catalogoFloristeria, catalogoCodigo, 
+      bouquetFloristeria, bouquetcodigo, bouquetId, cantidad, valoracionPrecio, 
+      valorancionCalidad, valoracionPromedio, detalles
+    ) VALUES (
+      p_idFActuraFloristeria, p_idNumFactura, p_detalleId, p_catalogoFloristeria, p_catalogoCodigo, 
+      p_bouquetFloristeria, p_bouquetcodigo, p_bouquetId, p_cantidad, p_valoracionPrecio, 
+      p_valorancionCalidad, p_valoracionPromedio, p_detalles
+    );
+
+    RETURN 'Detalle de factura insertado exitosamente.';
+  ELSE
+    RETURN 'Debe proporcionar valores válidos para catalogoFloristeria/catalogoCodigo o bouquetFloristeria/bouquetcodigo/bouquetId.';
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Issue: Función para actualizar DETALLE_FACTURA
+CREATE OR REPLACE FUNCTION actualizar_detalle_factura(
+  p_idFActuraFloristeria NUMERIC,
+  p_idNumFactura NUMERIC,
+  p_detalleId NUMERIC,
+  p_catalogoFloristeria NUMERIC DEFAULT NULL,
+  p_catalogoCodigo NUMERIC DEFAULT NULL,
+  p_bouquetFloristeria NUMERIC DEFAULT NULL,
+  p_bouquetcodigo NUMERIC DEFAULT NULL,
+  p_bouquetId NUMERIC DEFAULT NULL,
+  p_cantidad NUMERIC DEFAULT NULL,
+  p_valoracionPrecio NUMERIC DEFAULT NULL,
+  p_valorancionCalidad NUMERIC DEFAULT NULL,
+  p_valoracionPromedio NUMERIC DEFAULT NULL,
+  p_detalles VARCHAR DEFAULT NULL
+)
+RETURNS TEXT AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM DETALLE_FACTURA
+    WHERE idFActuraFloristeria = p_idFActuraFloristeria
+      AND idNumFactura = p_idNumFactura
+      AND detalleId = p_detalleId
+  ) THEN
+    RETURN 'Detalle de factura no encontrado.';
+  END IF;
+
+  -- Validar que solo uno de los campos catalogoFloristeria/catalogoCodigo o bouquetFloristeria/bouquetcodigo/bouquetId tenga un valor
+  IF (p_catalogoFloristeria IS NOT NULL AND p_catalogoCodigo IS NOT NULL AND p_bouquetFloristeria IS NULL AND p_bouquetcodigo IS NULL AND p_bouquetId IS NULL) OR 
+     (p_catalogoFloristeria IS NULL AND p_catalogoCodigo IS NULL AND p_bouquetFloristeria IS NOT NULL AND p_bouquetcodigo IS NOT NULL AND p_bouquetId IS NOT NULL) THEN
+    -- Actualizar el detalle de factura
+    UPDATE DETALLE_FACTURA
+    SET catalogoFloristeria = p_catalogoFloristeria,
+        catalogoCodigo = p_catalogoCodigo,
+        bouquetFloristeria = p_bouquetFloristeria,
+        bouquetcodigo = p_bouquetcodigo,
+        bouquetId = p_bouquetId,
+        cantidad = p_cantidad,
+        valoracionPrecio = p_valoracionPrecio,
+        valorancionCalidad = p_valorancionCalidad,
+        valoracionPromedio = p_valoracionPromedio,
+        detalles = p_detalles
+    WHERE idFActuraFloristeria = p_idFActuraFloristeria
+      AND idNumFactura = p_idNumFactura
+      AND detalleId = p_detalleId;
+
+    RETURN 'Detalle de factura actualizado exitosamente.';
+  ELSE
+    RETURN 'Debe proporcionar valores válidos para catalogoFloristeria/catalogoCodigo o bouquetFloristeria/bouquetcodigo/bouquetId.';
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Issue: Función para eliminar DETALLE_FACTURA
+CREATE OR REPLACE FUNCTION eliminar_detalle_factura(
+  p_idFActuraFloristeria NUMERIC,
+  p_idNumFactura NUMERIC,
+  p_detalleId NUMERIC
+)
+RETURNS TEXT AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM DETALLE_FACTURA
+    WHERE idFActuraFloristeria = p_idFActuraFloristeria
+      AND idNumFactura = p_idNumFactura
+      AND detalleId = p_detalleId
+  ) THEN
+    RETURN 'Detalle de factura no encontrado.';
+  END IF;
+
+  DELETE FROM DETALLE_FACTURA
+  WHERE idFActuraFloristeria = p_idFActuraFloristeria
+    AND idNumFactura = p_idNumFactura
+    AND detalleId = p_detalleId;
+
+  RETURN 'Detalle de factura eliminado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+-- Issue: TELEFONOS Vista principal
+CREATE OR REPLACE VIEW vista_telefonos AS
+SELECT
+  codPais,
+  codArea,
+  numero,
+  idSubastadora,
+  idProductora,
+  idFloristeria
+FROM TELEFONOS;
+
+-- Issue: TELEFONOS Vista de detalles
+CREATE OR REPLACE VIEW vista_detalles_telefonos AS
+SELECT
+  t.codPais,
+  t.codArea,
+  t.numero,
+  s.nombreSubastadora,
+  p.nombreProductora,
+  f.nombre AS nombreFloristeria
+FROM TELEFONOS t
+LEFT JOIN SUBASTADORA s ON t.idSubastadora = s.subastadoraId
+LEFT JOIN PRODUCTORAS p ON t.idProductora = p.productoraId
+LEFT JOIN FLORISTERIAS f ON t.idFloristeria = f.floristeriaId;
+
+-- Issue: Función para insertar TELEFONOS
+CREATE OR REPLACE FUNCTION insertar_telefono(
+  p_codPais NUMERIC,
+  p_codArea NUMERIC,
+  p_numero NUMERIC,
+  p_idSubastadora NUMERIC DEFAULT NULL,
+  p_idProductora NUMERIC DEFAULT NULL,
+  p_idFloristeria NUMERIC DEFAULT NULL
+)
+RETURNS TEXT AS $$
+BEGIN
+  -- Validar que solo uno de los campos idSubastadora, idProductora o idFloristeria tenga un valor
+  IF (p_idSubastadora IS NOT NULL AND p_idProductora IS NULL AND p_idFloristeria IS NULL) OR
+     (p_idSubastadora IS NULL AND p_idProductora IS NOT NULL AND p_idFloristeria IS NULL) OR
+     (p_idSubastadora IS NULL AND p_idProductora IS NULL AND p_idFloristeria IS NOT NULL) THEN
+    -- Insertar el nuevo teléfono
+    INSERT INTO TELEFONOS (
+      codPais, codArea, numero, idSubastadora, idProductora, idFloristeria
+    ) VALUES (
+      p_codPais, p_codArea, p_numero, p_idSubastadora, p_idProductora, p_idFloristeria
+    );
+
+    RETURN 'Teléfono insertado exitosamente.';
+  ELSE
+    RETURN 'Debe proporcionar un valor válido para idSubastadora, idProductora o idFloristeria.';
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Issue: Función para actualizar TELEFONOS
+CREATE OR REPLACE FUNCTION actualizar_telefono(
+  p_codPais NUMERIC,
+  p_codArea NUMERIC,
+  p_numero NUMERIC,
+  p_idSubastadora NUMERIC DEFAULT NULL,
+  p_idProductora NUMERIC DEFAULT NULL,
+  p_idFloristeria NUMERIC DEFAULT NULL
+)
+RETURNS TEXT AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM TELEFONOS
+    WHERE codPais = p_codPais
+      AND codArea = p_codArea
+      AND numero = p_numero
+  ) THEN
+    RETURN 'Teléfono no encontrado.';
+  END IF;
+
+  -- Validar que solo uno de los campos idSubastadora, idProductora o idFloristeria tenga un valor
+  IF (p_idSubastadora IS NOT NULL AND p_idProductora IS NULL AND p_idFloristeria IS NULL) OR
+     (p_idSubastadora IS NULL AND p_idProductora IS NOT NULL AND p_idFloristeria IS NULL) OR
+     (p_idSubastadora IS NULL AND p_idProductora IS NULL AND p_idFloristeria IS NOT NULL) THEN
+    -- Actualizar el teléfono
+    UPDATE TELEFONOS
+    SET idSubastadora = p_idSubastadora,
+        idProductora = p_idProductora,
+        idFloristeria = p_idFloristeria
+    WHERE codPais = p_codPais
+      AND codArea = p_codArea
+      AND numero = p_numero;
+
+    RETURN 'Teléfono actualizado exitosamente.';
+  ELSE
+    RETURN 'Debe proporcionar un valor válido para idSubastadora, idProductora o idFloristeria.';
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Issue: Función para eliminar TELEFONOS
+CREATE OR REPLACE FUNCTION eliminar_telefono(
+  p_codPais NUMERIC,
+  p_codArea NUMERIC,
+  p_numero NUMERIC
+)
+RETURNS TEXT AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM TELEFONOS
+    WHERE codPais = p_codPais
+      AND codArea = p_codArea
+      AND numero = p_numero
+  ) THEN
+    RETURN 'Teléfono no encontrado.';
+  END IF;
+
+  DELETE FROM TELEFONOS
+  WHERE codPais = p_codPais
+    AND codArea = p_codArea
+    AND numero = p_numero;
+
+  RETURN 'Teléfono eliminado exitosamente.';
+END;
+$$ LANGUAGE plpgsql;
+
+
+--------------------------------------------------------- fin vistas --------------------------
 
 -----------------------------------------------------------------------
 -- REQUERIMIENTO 1 - MANTENIMIENTO DE HISTORICO DE PRECIOS DE FLORES --
@@ -2331,4 +5415,106 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
 /* FIN DEL REQUERIMIENTO 1 */
+
+
+-----------------------------------------------------------------------
+-- REQUERIMIENTO 2 - GANANCIAS NETAS UNA FLORISTERIA --
+-----------------------------------------------------------------------
+
+
+CREATE OR REPLACE FUNCTION ganancias_floristeria(
+  p_idFloristeria NUMERIC,
+  p_mes DATE
+)
+RETURNS TABLE(
+  ganancias_brutas NUMERIC,
+  costos NUMERIC,
+  ganancias_netas NUMERIC
+)
+AS $$
+DECLARE
+  fecha_inicio DATE := DATE_TRUNC('month', p_mes);
+  fecha_fin DATE := (DATE_TRUNC('month', p_mes) + INTERVAL '1 month') - INTERVAL '1 day';
+  _ganancias_brutas NUMERIC;
+  _costos NUMERIC;
+BEGIN
+
+  IF fecha_fin > CURRENT_DATE THEN
+    fecha_fin := CURRENT_DATE;
+    RAISE EXCEPTION 'se calcula las ganancias netas hasta el dia de hoy';
+  END IF;
+
+  IF fecha_inicio > CURRENT_DATE THEN
+    RAISE NOTICE 'No se puede calcular aun';
+  END IF;
+
+  SELECT COALESCE(SUM(montoTotal), 0)
+    INTO _ganancias_brutas
+    FROM FACTURA_FINAL
+    WHERE idFloristeria = p_idFloristeria
+      AND fechaEmision >= fecha_inicio
+      AND fechaEmision <= fecha_fin;
+
+  SELECT COALESCE(SUM(montoTotal), 0)
+    INTO _costos
+    FROM FACTURA
+    WHERE idAfiliacionFloristeria = p_idFloristeria
+      AND fechaEmision >= fecha_inicio
+      AND fechaEmision <= fecha_fin;
+
+  RETURN QUERY SELECT _ganancias_brutas, _costos, _ganancias_brutas - _costos;
+END;
+$$ LANGUAGE plpgsql;
+
+SELECT * FROM ganancias_floristeria(2, '2023-09-01');
+
+/* Funcion adicional que llama la anterioir para los 12 meses del anio*/
+
+CREATE OR REPLACE FUNCTION fn_ganancias_por_anio(
+  p_idFloristeria NUMERIC,
+  p_anio INT
+)
+RETURNS TABLE(
+  ganancias_brutas NUMERIC,
+  costos NUMERIC,
+  ganancias_netas NUMERIC,
+  mesdelanio VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  mes INT;
+  anioActual INT := EXTRACT(YEAR FROM CURRENT_DATE);
+  mesActual INT := EXTRACT(MONTH FROM CURRENT_DATE);
+  r RECORD;
+  meses TEXT[] := ARRAY['ene','feb','marzo','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+BEGIN
+  IF p_anio < anioActual THEN
+    mesActual := 12;
+  ELSIF p_anio > anioActual THEN
+    RAISE NOTICE 'El año es mayor al actual, no se calcula.';
+    RETURN;
+  END IF;
+
+  FOR mes IN 1..mesActual LOOP
+    SELECT * INTO r
+    FROM ganancias_floristeria(
+      p_idFloristeria,
+      TO_DATE(p_anio::text || '-' || mes::text || '-01','YYYY-MM-DD')
+    );
+
+    ganancias_brutas := r.ganancias_brutas;
+    costos := r.costos;
+    ganancias_netas := r.ganancias_netas;
+    mesdelanio := meses[mes];
+
+    RETURN NEXT;
+  END LOOP;
+END;
+$$;
+
+SELECT * FROM fn_ganancias_por_anio(2,2023)
+
+/* FIN DEL REQUERIMIENTO 2 */
