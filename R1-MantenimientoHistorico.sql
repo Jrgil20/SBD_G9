@@ -484,7 +484,7 @@ FROM HISTORICO_PRECIO_FLOR h
 JOIN CATALOGO_FLORISTERIA c ON c.codigo = h.idCatalogocodigo
     AND c.idFloristeria = h.idCatalogoFloristeria
 JOIN FLORISTERIAS f ON f.floristeriaId = c.idFloristeria
-WHERE f.nombre ILIKE CURRENT_USER
+WHERE f.nombre ILIKE LEFT(CURRENT_USER, LENGTH(CURRENT_USER) - 1)
 ORDER BY f.nombre, c.nombrePropio, h.fechaInicio DESC;
 
 -- FUNCIÓN para flores activas (obtener_flores_precio_activo) filtrada por la floristería del usuario

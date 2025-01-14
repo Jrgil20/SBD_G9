@@ -177,7 +177,7 @@ Para crear la base de datos utilizando los comandos de `commands.sql` desde el u
 -- Role: "Floristeria "
 -- DROP ROLE IF EXISTS "Floristeria ";
 
-CREATE ROLE "Floristeria " WITH
+CREATE ROLE "Floristeria" WITH
   NOLOGIN
   NOSUPERUSER
   INHERIT
