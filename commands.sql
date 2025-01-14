@@ -2045,6 +2045,8 @@ INSERT INTO CATALOGO_FLORISTERIA (idFloristeria, codigo, idCorteFlor, idColor, n
 (1, 2, 2, 3, 'Tulipán Amarillo', 'Tulipán amarillo brillante para alegrar el día'),
 (1, 8, 8, 10, 'Hortensia Azul', 'Hortensia ornamental en racimos de color azul'),
 (1, 3, 3, 11, 'Orquídea Púrpura', 'Orquídea exótica y elegante en color púrpura'),
+(2, 3, 3, 11, 'Orquídea Púrpura', 'Orquídea exótica y elegante en color púrpura'),
+(2, 4, 3, 11, 'Orquídea Púrpura', 'Orquídea exótica y elegante en color púrpura'),
 (1, 4, 4, 5, 'Girasol', 'Girasol alto y brillante que sigue al sol'),
 (1, 9, 9, 4, 'Peonía Rosa', 'Peonía grande y fragante en color rosa'),
 (1, 5, 5, 1, 'Lirio Blanco', 'Lirio blanco elegante y fragante para cualquier ocasión'),
@@ -2056,14 +2058,11 @@ INSERT INTO CATALOGO_FLORISTERIA (idFloristeria, codigo, idCorteFlor, idColor, n
 (2, 8, 8, 10, 'Hortensia Azul', 'Hortensia ornamental en racimos de color azul'),
 (2, 9, 9, 4, 'Peonía Rosa', 'Peonía grande y fragante en color rosa'),
 (2, 5, 5, 1, 'Lirio Blanco', 'Lirio blanco elegante y fragante para cualquier ocasión'),
-(2, 8, 8, 10, 'Hortensia Azul', 'Hortensia ornamental en racimos de color azul'),
-(3, 3, 3, 11, 'Orquídea Púrpura', 'Orquídea exótica y elegante en color púrpura'),
 (3, 1, 1, 2, 'Rosa Roja', 'Rosa roja clásica para ocasiones románticas'),
 (3, 7, 7, 1, 'Margarita Blanca', 'Margarita sencilla y alegre en color blanco'),
 (3, 2, 2, 3, 'Tulipán Amarillo', 'Tulipán amarillo brillante para alegrar el día'),
 (3, 8, 8, 10, 'Hortensia Azul', 'Hortensia ornamental en racimos de color azul'),
 (3, 9, 9, 4, 'Peonía Rosa', 'Peonía grande y fragante en color rosa'),
-(4, 4, 4, 5, 'Girasol', 'Girasol alto y brillante que sigue al sol'),
 (4, 1, 1, 2, 'Rosa Roja', 'Rosa roja clásica para ocasiones románticas'),
 (4, 7, 7, 1, 'Margarita Blanca', 'Margarita sencilla y alegre en color blanco'),
 (4, 2, 2, 3, 'Tulipán Amarillo', 'Tulipán amarillo brillante para alegrar el día'),
@@ -2077,8 +2076,8 @@ INSERT INTO CATALOGO_FLORISTERIA (idFloristeria, codigo, idCorteFlor, idColor, n
 (6, 9, 9, 4, 'Peonía Rosa', 'Peonía grande y fragante en color rosa'),
 (6, 4, 4, 5, 'Girasol', 'Girasol alto y brillante que sigue al sol'),
 (6, 1, 1, 2, 'Rosa Roja', 'Rosa roja clásica para ocasiones románticas'),
-(6, 7, 7, 1, 'Margarita Blanca', 'Margarita sencilla y alegre en color blanco'),
-(6, 6, 6, 2, 'Clavel Rojo', 'Clavel rojo popular en ramos y arreglos');
+(5, 6, 1, 2, 'Rosa Roja', 'Rosa roja clásica para ocasiones románticas'),
+(6, 7, 7, 1, 'Margarita Blanca', 'Margarita sencilla y alegre en color blanco');
 
 
 -- Verificar los datos insertados
