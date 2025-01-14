@@ -78,7 +78,7 @@ DECLARE
     v_idCatalogocodigo NUMERIC;
     last_fechaInicio TIMESTAMP;
     last_tamanoTallo NUMERIC;
-    today TIMESTAMP := CURRENT_TIMESTAMP;
+    today TIMESTAMP := current_timestamp AT TIME ZONE 'GMT-4';
     dias_transcurridos INTEGER;
 BEGIN
     -- Validar que se proporcione al menos uno de los métodos de identificación adicionales
@@ -183,7 +183,7 @@ BEGIN
     END IF;
 
     -- Calcular los días transcurridos desde la última fecha de inicio
-    dias_transcurridos := today - last_fechaInicio;
+    dias_transcurridos := EXTRACT(DAY FROM AGE(today, last_fechaInicio));
 
     RAISE NOTICE 'Días transcurridos desde la última actualización: %', dias_transcurridos;
 
