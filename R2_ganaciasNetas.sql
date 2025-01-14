@@ -87,4 +87,81 @@ BEGIN
 END;
 $$;
 
-SELECT * FROM fn_ganancias_por_anio(2,2023)
+SELECT * FROM fn_ganancias_por_anio(2,2023);
+
+CREATE OR REPLACE FUNCTION fn_ganancias_usuario_actual(
+  p_anio INT
+)
+RETURNS TABLE(
+  ganancias_brutas NUMERIC,
+  costos NUMERIC,
+  ganancias_netas NUMERIC,
+  mesdelanio VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  es_floristeria BOOLEAN;
+BEGIN
+  -- Verificar si el usuario actual es una floristeria
+  SELECT EXISTS (
+    SELECT 1
+    FROM pg_roles r
+    JOIN pg_auth_members m ON r.oid = m.roleid
+    JOIN pg_roles u ON u.oid = m.member
+    WHERE u.rolname = current_user
+      AND r.rolname LIKE 'floristeria%'
+  ) INTO es_floristeria;
+
+  IF NOT es_floristeria THEN
+    RAISE EXCEPTION 'El usuario actual no es una floristeria.';
+  END IF;
+
+  -- Ejecutar la función fn_ganancias_por_anio
+  RETURN QUERY
+  SELECT * FROM fn_ganancias_por_anio(
+    CAST(substring(current_user FROM length(current_user) FOR 1) AS INTEGER),
+    p_anio
+  );
+END;
+$$;
+
+SELECT * FROM fn_ganancias_usuario_actual(2023);
+
+CREATE OR REPLACE FUNCTION fn_ganancias_usuario_actual_mes(
+  p_mes DATE
+)
+RETURNS TABLE(
+  ganancias_brutas NUMERIC,
+  costos NUMERIC,
+  ganancias_netas NUMERIC
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  es_floristeria BOOLEAN;
+BEGIN
+  -- Verificar si el usuario actual es una floristeria
+  SELECT EXISTS (
+    SELECT 1
+    FROM pg_roles r
+    JOIN pg_auth_members m ON r.oid = m.roleid
+    JOIN pg_roles u ON u.oid = m.member
+    WHERE u.rolname = current_user
+      AND r.rolname LIKE 'floristeria%'
+  ) INTO es_floristeria;
+
+  IF NOT es_floristeria THEN
+    RAISE EXCEPTION 'El usuario actual no es una floristeria.';
+  END IF;
+
+  -- Ejecutar la función ganancias_floristeria
+  RETURN QUERY
+  SELECT * FROM ganancias_floristeria(
+    CAST(substring(current_user FROM length(current_user) FOR 1) AS INTEGER),
+    p_mes
+  );
+END;
+$$;
+
+SELECT * FROM fn_ganancias_usuario_actual_mes('2023-01-01');
