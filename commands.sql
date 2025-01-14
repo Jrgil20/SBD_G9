@@ -2050,8 +2050,11 @@ INSERT INTO CATALOGO_FLORISTERIA (idFloristeria, codigo, idCorteFlor, idColor, n
 (1, 5, 5, 1, 'Lirio Blanco', 'Lirio blanco elegante y fragante para cualquier ocasión'),
 (1, 6, 6, 2, 'Clavel Rojo', 'Clavel rojo popular en ramos y arreglos'),
 (2, 2, 2, 3, 'Tulipán Amarillo', 'Tulipán amarillo brillante para alegrar el día'),
-(2, 3, 3, 11, 'Orquídea Púrpura', 'Orquídea exótica y elegante en color púrpura'),
-(2, 4, 4, 5, 'Girasol', 'Girasol alto y brillante que sigue al sol'),
+(3, 3, 3, 11, 'Orquídea Púrpura', 'Orquídea exótica y elegante en color púrpura'),
+(4, 4, 4, 5, 'Girasol', 'Girasol alto y brillante que sigue al sol'),
+(6, 6, 6, 2, 'Clavel Rojo', 'Clavel rojo popular en ramos y arreglos'),
+(1, 7, 7, 1, 'Margarita Blanca', 'Margarita sencilla y alegre en color blanco'),
+(2, 8, 8, 10, 'Hortensia Azul', 'Hortensia ornamental en racimos de color azul'),
 (2, 9, 9, 4, 'Peonía Rosa', 'Peonía grande y fragante en color rosa'),
 (2, 5, 5, 1, 'Lirio Blanco', 'Lirio blanco elegante y fragante para cualquier ocasión'),
 (2, 8, 8, 10, 'Hortensia Azul', 'Hortensia ornamental en racimos de color azul'),
@@ -2068,7 +2071,6 @@ INSERT INTO CATALOGO_FLORISTERIA (idFloristeria, codigo, idCorteFlor, idColor, n
 (4, 8, 8, 10, 'Hortensia Azul', 'Hortensia ornamental en racimos de color azul'),
 (4, 9, 9, 4, 'Peonía Rosa', 'Peonía grande y fragante en color rosa'),
 (5, 5, 5, 1, 'Lirio Blanco', 'Lirio blanco elegante y fragante para cualquier ocasión'),
-(5, 6, 6, 2, 'Clavel Rojo', 'Clavel rojo popular en ramos y arreglos'),
 (5, 2, 2, 3, 'Tulipán Amarillo', 'Tulipán amarillo brillante para alegrar el día'),
 (5, 3, 3, 11, 'Orquídea Púrpura', 'Orquídea exótica y elegante en color púrpura'),
 (5, 4, 4, 5, 'Girasol', 'Girasol alto y brillante que sigue al sol'),
@@ -2078,6 +2080,7 @@ INSERT INTO CATALOGO_FLORISTERIA (idFloristeria, codigo, idCorteFlor, idColor, n
 (6, 1, 1, 2, 'Rosa Roja', 'Rosa roja clásica para ocasiones románticas'),
 (6, 7, 7, 1, 'Margarita Blanca', 'Margarita sencilla y alegre en color blanco'),
 (6, 6, 6, 2, 'Clavel Rojo', 'Clavel rojo popular en ramos y arreglos');
+
 
 -- Verificar los datos insertados
 SELECT * FROM CATALOGO_FLORISTERIA;
