@@ -464,3 +464,155 @@ SELECT floristeriaId
 FROM FLORISTERIAS
 WHERE nombre ILIKE CURRENT_USER;
 */
+
+/* VISTA PARA VER EL HISTORICO DE LA FLORISTERIA CONECTADA */
+-- VISTA para historial de flores según la floristería del usuario activo
+CREATE OR REPLACE VIEW vista_detalles_historico_precio_flor_floristeria AS
+SELECT 
+    f.nombre AS floristeria_nombre,
+    c.nombrePropio AS flor_nombre,
+    h.precio,
+    h.fechaInicio,
+    h.fechaFin,
+    h.tamanoTallo
+FROM HISTORICO_PRECIO_FLOR h
+JOIN CATALOGO_FLORISTERIA c ON c.codigo = h.idCatalogocodigo
+    AND c.idFloristeria = h.idCatalogoFloristeria
+JOIN FLORISTERIAS f ON f.floristeriaId = c.idFloristeria
+WHERE f.nombre ILIKE CURRENT_USER
+ORDER BY f.nombre, c.nombrePropio, h.fechaInicio DESC;
+
+-- FUNCIÓN para flores activas (obtener_flores_precio_activo) filtrada por la floristería del usuario
+CREATE OR REPLACE FUNCTION obtener_flores_precio_activo_floristeria()
+RETURNS TABLE (
+    floristeria_nombre VARCHAR,
+    flor_nombre VARCHAR,
+    precio_actual NUMERIC,
+    dias_para_expirar INTEGER,
+    estado VARCHAR
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        f.nombre AS floristeria_nombre,
+        c.nombrePropio AS flor_nombre,
+        h.precio AS precio_actual,
+        7 - (CURRENT_DATE - h.fechaInicio) AS dias_para_expirar,
+        CASE 
+            WHEN 7 - (CURRENT_DATE - h.fechaInicio) > 0 THEN 
+                CONCAT('Activo: ', 7 - (CURRENT_DATE - h.fechaInicio), ' días restantes')::VARCHAR
+            ELSE 
+                'Necesita actualización'::VARCHAR
+        END AS estado
+    FROM HISTORICO_PRECIO_FLOR h
+    JOIN CATALOGO_FLORISTERIA c 
+      ON c.codigo = h.idCatalogocodigo
+     AND c.idFloristeria = h.idCatalogoFloristeria
+    JOIN FLORISTERIAS f
+      ON f.floristeriaId = c.idFloristeria
+    WHERE f.nombre ILIKE CURRENT_USER
+    ORDER BY f.nombre, c.nombrePropio;
+END;
+$$ LANGUAGE plpgsql;
+
+-- SELECT * FROM obtener_flores_precio_activo_floristeria();
+
+-- VALIDAR LO SIGUIENTE
+
+-- 1. Crear tabla de auditoría
+CREATE TABLE IF NOT EXISTS AUDITORIA_CAMBIOS_PRECIOS (
+    auditoria_id SERIAL PRIMARY KEY,
+    usuario VARCHAR NOT NULL,
+    accion VARCHAR NOT NULL, -- INSERT, UPDATE, DELETE
+    idCatalogoFloristeria NUMERIC,
+    idCatalogocodigo NUMERIC,
+    precio_anterior NUMERIC,
+    precio_nuevo NUMERIC,
+    tamanoTallo_anterior NUMERIC,
+    tamanoTallo_nuevo NUMERIC,
+    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 2. Crear función trigger para auditoría
+CREATE OR REPLACE FUNCTION trg_auditoria_cambios_precios()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        INSERT INTO AUDITORIA_CAMBIOS_PRECIOS (
+            usuario,
+            accion,
+            idCatalogoFloristeria,
+            idCatalogocodigo,
+            precio_nuevo,
+            tamanoTallo_nuevo
+        ) VALUES (
+            CURRENT_USER,
+            TG_OP,
+            NEW.idCatalogoFloristeria,
+            NEW.idCatalogocodigo,
+            NEW.precio,
+            NEW.tamanoTallo
+        );
+        RETURN NEW;
+    
+    ELSIF TG_OP = 'UPDATE' THEN
+        INSERT INTO AUDITORIA_CAMBIOS_PRECIOS (
+            usuario,
+            accion,
+            idCatalogoFloristeria,
+            idCatalogocodigo,
+            precio_anterior,
+            precio_nuevo,
+            tamanoTallo_anterior,
+            tamanoTallo_nuevo
+        ) VALUES (
+            CURRENT_USER,
+            TG_OP,
+            OLD.idCatalogoFloristeria,
+            OLD.idCatalogocodigo,
+            OLD.precio,
+            NEW.precio,
+            OLD.tamanoTallo,
+            NEW.tamanoTallo
+        );
+        RETURN NEW;
+    
+    ELSIF TG_OP = 'DELETE' THEN
+        INSERT INTO AUDITORIA_CAMBIOS_PRECIOS (
+            usuario,
+            accion,
+            idCatalogoFloristeria,
+            idCatalogocodigo,
+            precio_anterior,
+            tamanoTallo_anterior
+        ) VALUES (
+            CURRENT_USER,
+            TG_OP,
+            OLD.idCatalogoFloristeria,
+            OLD.idCatalogocodigo,
+            OLD.precio,
+            OLD.tamanoTallo
+        );
+        RETURN OLD;
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 3. Crear triggers en la tabla HISTORICO_PRECIO_FLOR
+CREATE TRIGGER trg_auditoria_insert
+AFTER INSERT ON HISTORICO_PRECIO_FLOR
+FOR EACH ROW
+EXECUTE FUNCTION trg_auditoria_cambios_precios();
+
+CREATE TRIGGER trg_auditoria_update
+AFTER UPDATE ON HISTORICO_PRECIO_FLOR
+FOR EACH ROW
+EXECUTE FUNCTION trg_auditoria_cambios_precios();
+
+CREATE TRIGGER trg_auditoria_delete
+AFTER DELETE ON HISTORICO_PRECIO_FLOR
+FOR EACH ROW
+EXECUTE FUNCTION trg_auditoria_cambios_precios();
+
+/* SELECT * FROM AUDITORIA_CAMBIOS_PRECIOS
+ORDER BY fecha DESC; */
