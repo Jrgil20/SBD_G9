@@ -175,3 +175,41 @@ GRANT SELECT ON TABLE public.vista_detalles_subastadora TO "Productora";
 GRANT SELECT ON TABLE public.vista_detalles_subastadora TO "Subastadora";
 
 GRANT SELECT ON TABLE public.vista_detalles_telefonos TO PUBLIC;
+
+
+--ROW LEVEL SECURITY
+-- Habilitar Row Level Security en la tabla PRODUCTORAS
+ALTER TABLE PRODUCTORAS ENABLE ROW LEVEL SECURITY;
+
+-- Crear una función para extraer el ID de la productora del nombre de usuario
+CREATE OR REPLACE FUNCTION get_productora_id_from_user() RETURNS NUMERIC AS $$
+DECLARE
+    productora_id NUMERIC;
+BEGIN
+    -- Suponiendo que el nombre de usuario tiene el formato 'NombreProductoraID'
+    productora_id := CAST(REGEXP_REPLACE(current_user, '^[^0-9]*', '') AS NUMERIC);
+    RETURN productora_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Crear la política de seguridad para permitir acceso solo a los registros de la propia productora
+CREATE POLICY productora_policy ON PRODUCTORAS
+USING (productoraId = get_productora_id_from_user())
+WITH CHECK (productoraId = get_productora_id_from_user());
+
+-- Aplicar la política de seguridad a la tabla PRODUCTORAS
+ALTER TABLE PRODUCTORAS ENABLE ROW LEVEL SECURITY;
+ALTER TABLE PRODUCTORAS FORCE ROW LEVEL SECURITY;
+
+-- Conectar como usuario 'Anthura1'
+-- Suponiendo que el usuario 'Anthura1' tiene el ID de productora 1
+
+-- Intentar actualizar la página web de la productora con ID 2 (debería fallar)
+UPDATE PRODUCTORAS
+SET paginaWeb = 'http://nueva-pagina-web.com'
+WHERE productoraId = 2;
+
+-- Actualizar la página web de la productora con ID 1 (debería tener éxito)
+UPDATE PRODUCTORAS
+SET paginaWeb = 'http://nueva-pagina-web.com'
+WHERE productoraId = 1;
